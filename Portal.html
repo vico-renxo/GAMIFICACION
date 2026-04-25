@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SST GameHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sb-bg: #0f172a; --sb-hover: #1e293b; --sb-active: #1d4ed8;
+  --sb-text: #94a3b8; --sb-active-text: #fff; --sb-border: #1e293b;
+  --bg: #f1f5f9; --card: #ffffff;
+  --accent: #2563eb; --accent-light: #eff6ff;
+  --green: #059669; --red: #dc2626; --orange: #ea580c; --purple: #9333ea;
+  --text: #0f172a; --text-2: #334155; --text-3: #64748b; --text-4: #94a3b8;
+  --border: #e2e8f0;
+  --sh: 0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --sh-md: 0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.05);
+  --sh-lg: 0 12px 28px rgba(0,0,0,.1),0 4px 8px rgba(0,0,0,.06);
+  --r: 12px; --sb-w: 248px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex}
+
+/* ===== LOGIN ===== */
+#loginScreen{
+  position:fixed;inset:0;z-index:300;
+  background:linear-gradient(135deg,#0a0f1e 0%,#0f2044 50%,#0a0f1e 100%);
+  display:flex;align-items:center;justify-content:center;
+}
+.login-box{
+  background:#fff;border-radius:20px;padding:44px 40px;width:100%;max-width:400px;
+  box-shadow:0 32px 64px rgba(0,0,0,.45);
+  animation:fadeUp .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}}
+.login-logo{text-align:center;margin-bottom:32px}
+.login-logo .icon{
+  width:62px;height:62px;margin:0 auto 14px;
+  background:linear-gradient(135deg,#1d4ed8,#3b82f6);
+  border-radius:16px;display:flex;align-items:center;justify-content:center;
+  font-size:28px;box-shadow:0 8px 24px rgba(29,78,216,.35)
+}
+.login-logo h1{font-size:22px;font-weight:800;color:#0f172a;letter-spacing:-.5px}
+.login-logo p{font-size:13px;color:#64748b;margin-top:4px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px}
+.field input{
+  width:100%;padding:12px 14px;font-size:17px;font-weight:700;font-family:'Inter';
+  background:#f8fafc;border:2px solid #e2e8f0;border-radius:10px;
+  color:#0f172a;outline:none;letter-spacing:2px;transition:all .2s
+}
+.field input:focus{border-color:#2563eb;background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.field input::placeholder{color:#cbd5e1;letter-spacing:normal;font-weight:400;font-size:14px}
+.btn-login{
+  width:100%;padding:13px;font-size:15px;font-family:'Inter';font-weight:700;
+  background:#1d4ed8;border:none;border-radius:10px;color:#fff;cursor:pointer;
+  transition:all .2s;box-shadow:0 4px 12px rgba(29,78,216,.3)
+}
+.btn-login:hover{background:#1e40af;box-shadow:0 6px 16px rgba(29,78,216,.4);transform:translateY(-1px)}
+.btn-login:disabled{opacity:.6;cursor:wait;transform:none}
+.btn-login .spinner{display:none;width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.login-error{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:14px;display:none}
+.admin-link{text-align:center;margin-top:16px}
+.admin-link a{color:#64748b;text-decoration:none;font-size:12px;font-weight:600;transition:color .2s}
+.admin-link a:hover{color:#1d4ed8}
+
+/* ===== APP SHELL ===== */
+#appShell{display:none;width:100%;height:100vh}
+#appShell.on{display:flex}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  width:var(--sb-w);min-width:var(--sb-w);height:100vh;
+  background:var(--sb-bg);display:flex;flex-direction:column;
+  border-right:1px solid var(--sb-border);position:relative;z-index:50;
+  transition:transform .28s cubic-bezier(.4,0,.2,1)
+}
+.sb-head{
+  padding:18px 14px 15px;border-bottom:1px solid var(--sb-border);
+  display:flex;align-items:center;gap:10px;flex-shrink:0
+}
+.sb-logo{
+  width:36px;height:36px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0
+}
+.sb-title{font-size:14px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.sb-subtitle{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-top:1px}
+.sb-nav{flex:1;padding:10px 8px;overflow-y:auto;scrollbar-width:none}
+.sb-nav::-webkit-scrollbar{display:none}
+.nav-label{font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.8px;padding:10px 8px 5px}
+.ni{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 10px;border-radius:8px;cursor:pointer;
+  color:var(--sb-text);font-size:13px;font-weight:500;
+  transition:all .15s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left
+}
+.ni:hover{background:var(--sb-hover);color:#e2e8f0}
+.ni.active{background:var(--sb-active);color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(29,78,216,.3)}
+.ni .ni-ic{
+  width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  font-size:15px;background:rgba(255,255,255,.05);flex-shrink:0
+}
+.ni.active .ni-ic{background:rgba(255,255,255,.15)}
+.ni .ni-lbl{flex:1}
+.ni .ni-tag{
+  background:rgba(255,255,255,.1);color:#94a3b8;
+  font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px
+}
+.ni.active .ni-tag{background:rgba(255,255,255,.18);color:#bfdbfe}
+.sb-foot{padding:10px 8px 14px;border-top:1px solid var(--sb-border);flex-shrink:0}
+.user-pill{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 10px;border-radius:9px;background:rgba(255,255,255,.04);margin-bottom:6px
+}
+.user-pill .av{
+  width:34px;height:34px;background:linear-gradient(135deg,#059669,#10b981);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:12px;flex-shrink:0
+}
+.user-pill .ui-name{font-size:13px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-pill .ui-dni{font-size:11px;color:#475569}
+.sb-btn{
+  display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border-radius:8px;
+  background:none;border:none;color:#475569;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Inter'
+}
+.sb-btn:hover{background:var(--sb-hover);color:#94a3b8}
+.sb-btn.danger:hover{color:#f87171}
+
+/* Hamburger */
+.ham{
+  display:none;position:fixed;top:10px;left:10px;z-index:100;
+  width:38px;height:38px;background:#0f172a;border:none;border-radius:9px;
+  cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  box-shadow:0 2px 10px rgba(0,0,0,.35)
+}
+.ham span{width:16px;height:2px;background:#94a3b8;border-radius:2px}
+.sb-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:49;backdrop-filter:blur(2px)}
+
+/* ===== MAIN ===== */
+.main{flex:1;height:100vh;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+
+/* Home */
+#homeView{flex:1;overflow-y:auto;padding:28px 30px;display:none;scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}
+#homeView.on{display:block}
+
+.hero{
+  background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 50%,#2563eb 100%);
+  border-radius:16px;padding:34px 32px;color:#fff;margin-bottom:24px;
+  position:relative;overflow:hidden
+}
+.hero::before,.hero::after{
+  content:'';position:absolute;border-radius:50%;
+  background:rgba(255,255,255,.06)
+}
+.hero::before{width:220px;height:220px;right:-40px;top:-60px}
+.hero::after{width:160px;height:160px;right:80px;bottom:-60px}
+.hero-greet{font-size:12px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.hero-name{font-size:38px;font-weight:800;letter-spacing:-1.2px;margin-bottom:8px;position:relative;z-index:1}
+.hero-sub{font-size:14px;color:rgba(255,255,255,.65);line-height:1.55;max-width:500px;position:relative;z-index:1}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.sc{
+  background:var(--card);border-radius:var(--r);padding:16px;
+  box-shadow:var(--sh);border:1px solid var(--border)
+}
+.sc .si{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:10px}
+.sc:nth-child(1) .si{background:#eff6ff}
+.sc:nth-child(2) .si{background:#f0fdf4}
+.sc:nth-child(3) .si{background:#fff7ed}
+.sc:nth-child(4) .si{background:#fdf4ff}
+.sc .sn{font-size:26px;font-weight:800;color:#0f172a;letter-spacing:-.5px}
+.sc .sl{font-size:11px;color:#64748b;font-weight:500;margin-top:2px}
+
+.sec-label{font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+.modules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px}
+.mc{
+  background:var(--card);border-radius:var(--r);padding:18px;
+  border:1px solid var(--border);box-shadow:var(--sh);
+  cursor:pointer;transition:all .2s;display:flex;align-items:flex-start;gap:13px
+}
+.mc:hover{border-color:#2563eb;box-shadow:var(--sh-md);transform:translateY(-2px)}
+.mc .mc-ic{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+.mc .mc-b{flex:1;min-width:0}
+.mc .mc-name{font-size:14px;font-weight:700;color:#0f172a;margin-bottom:3px}
+.mc .mc-desc{font-size:12px;color:#64748b;line-height:1.45}
+.mc .mc-tag{display:inline-block;margin-top:8px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+
+/* Game view */
+#gameView{flex:1;display:none;flex-direction:column;background:#fff}
+#gameView.on{display:flex}
+.game-bar{
+  padding:9px 14px;background:#fff;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;box-shadow:var(--sh)
+}
+.back-btn{
+  width:30px;height:30px;background:#f1f5f9;border:none;border-radius:7px;
+  cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;color:#475569;flex-shrink:0
+}
+.back-btn:hover{background:#e2e8f0;color:#0f172a}
+.game-bar-title{font-size:14px;font-weight:700;color:#0f172a}
+.game-bar-sep{width:1px;height:16px;background:var(--border)}
+.game-bar-user{font-size:12px;color:#94a3b8;font-weight:500}
+.game-bar-reload{margin-left:auto;width:28px;height:28px;background:#f1f5f9;border:none;border-radius:7px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s;color:#475569}
+.game-bar-reload:hover{background:#e2e8f0;color:#0f172a}
+#gameFrame{flex:1;border:none;width:100%;display:block;background:var(--bg)}
+
+/* Loading indicator for iframe */
+.frame-loading{
+  position:absolute;inset:0;background:#f1f5f9;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  pointer-events:none;transition:opacity .3s
+}
+.frame-loading .fl-ring{
+  width:40px;height:40px;border:3px solid #e2e8f0;border-top-color:#2563eb;
+  border-radius:50%;animation:spin .8s linear infinite
+}
+.frame-loading .fl-txt{font-size:13px;color:#64748b;font-weight:500}
+#gameView{position:relative}
+#gameView .frame-loading{z-index:5}
+
+/* Mobile */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);z-index:50}
+  .sidebar.open{transform:translateX(0)}
+  .sb-ov.show{display:block}
+  .ham{display:flex}
+  .main{width:100%}
+  #homeView{padding:14px;padding-top:58px}
+  .hero{padding:24px 20px}
+  .hero-name{font-size:26px}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .modules-grid{grid-template-columns:1fr}
+  .game-bar{padding-left:50px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="icon">🛡️</div>
+      <h1>SST GameHub</h1>
+      <p>Seguridad y Salud en el Trabajo</p>
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <div class="field">
+      <label>Número de DNI</label>
+      <input type="text" id="dniInput" placeholder="Ej: 12345678" maxlength="15"
+             autocomplete="off" onkeypress="if(event.key==='Enter')handleLogin()">
+    </div>
+    <button class="btn-login" id="btnLogin" onclick="handleLogin()">
+      <span class="btn-text">Ingresar</span>
+      <div class="spinner"></div>
+    </button>
+    <div class="admin-link">
+      <a href="#" onclick="openAdmin();return false;">⚙️ Centro de Mando (Admin)</a>
+    </div>
+  </div>
+</div>
+
+<!-- HAMBURGER (mobile) -->
+<button class="ham" id="ham" onclick="toggleSidebar()">
+  <span></span><span></span><span></span>
+</button>
+<div class="sb-ov" id="sbOv" onclick="closeSidebar()"></div>
+
+<!-- APP SHELL -->
+<div id="appShell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-logo">🛡️</div>
+      <div>
+        <div class="sb-title">SST GameHub</div>
+        <div class="sb-subtitle">Seg. Laboral</div>
+      </div>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="nav-label">Principal</div>
+      <button class="ni active" id="nav-home" onclick="showHome()">
+        <div class="ni-ic">🏠</div>
+        <span class="ni-lbl">Inicio</span>
+      </button>
+
+      <div class="nav-label" style="margin-top:6px">Módulos</div>
+      <button class="ni" id="nav-Quiz" onclick="launchGame('Quiz')">
+        <div class="ni-ic">❓</div>
+        <span class="ni-lbl">Quiz Interactivo</span>
+        <span class="ni-tag">IA</span>
+      </button>
+      <button class="ni" id="nav-Mahjong" onclick="launchGame('Mahjong')">
+        <div class="ni-ic">🀄</div>
+        <span class="ni-lbl">Mahjong SST</span>
+        <span class="ni-tag">IA</span>
+      </button>
+      <button class="ni" id="nav-Memoria" onclick="launchGame('Memoria')">
+        <div class="ni-ic">🧠</div>
+        <span class="ni-lbl">Memoria SST</span>
+        <span class="ni-tag">IA</span>
+      </button>
+      <button class="ni" id="nav-DragDrop" onclick="launchGame('DragDrop')">
+        <div class="ni-ic">🎯</div>
+        <span class="ni-lbl">Arrastra y Clasifica</span>
+        <span class="ni-tag">IA</span>
+      </button>
+      <button class="ni" id="nav-Simulacion" onclick="launchGame('Simulacion')">
+        <div class="ni-ic">🏗️</div>
+        <span class="ni-lbl">Simulación</span>
+        <span class="ni-tag">IA</span>
+      </button>
+    </nav>
+
+    <div class="sb-foot">
+      <div class="user-pill">
+        <div class="av" id="userAvatar">--</div>
+        <div>
+          <div class="ui-name" id="userName">—</div>
+          <div class="ui-dni" id="userDni">DNI: —</div>
+        </div>
+      </div>
+      <button class="sb-btn" onclick="openAdmin()">⚙️ Centro de Mando</button>
+      <button class="sb-btn danger" onclick="handleLogout()">↩ Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- HOME -->
+    <div id="homeView">
+      <div class="hero">
+        <div class="hero-greet">Bienvenido de vuelta</div>
+        <div class="hero-name" id="welcomeName">Usuario</div>
+        <div class="hero-sub">Selecciona un módulo del menú lateral para iniciar tu capacitación en Seguridad y Salud en el Trabajo.</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="sc">
+          <div class="si">🎮</div>
+          <div class="sn" id="statGames">0</div>
+          <div class="sl">Juegos jugados</div>
+        </div>
+        <div class="sc">
+          <div class="si">🏆</div>
+          <div class="sn" id="statBest">0</div>
+          <div class="sl">Mejor puntaje</div>
+        </div>
+        <div class="sc">
+          <div class="si">🔥</div>
+          <div class="sn" id="statStreak">0</div>
+          <div class="sl">Partidas racha</div>
+        </div>
+        <div class="sc">
+          <div class="si">⭐</div>
+          <div class="sn" id="statLevel">1</div>
+          <div class="sl">Nivel</div>
+        </div>
+      </div>
+
+      <div class="sec-label">Módulos disponibles</div>
+      <div class="modules-grid">
+        <div class="mc" onclick="launchGame('Quiz')">
+          <div class="mc-ic" style="background:#eff6ff">❓</div>
+          <div class="mc-b">
+            <div class="mc-name">Quiz Interactivo</div>
+            <div class="mc-desc">Preguntas sobre normativas, EPP y procedimientos de seguridad contra el reloj.</div>
+            <span class="mc-tag" style="background:#eff6ff;color:#2563eb">Difícil · IA</span>
+          </div>
+        </div>
+        <div class="mc" onclick="launchGame('Mahjong')">
+          <div class="mc-ic" style="background:#f0fdf4">🀄</div>
+          <div class="mc-b">
+            <div class="mc-name">Mahjong SST</div>
+            <div class="mc-desc">Empareja conceptos con sus definiciones en fichas apiladas. Estrategia y conocimiento.</div>
+            <span class="mc-tag" style="background:#f0fdf4;color:#059669">Medio · IA</span>
+          </div>
+        </div>
+        <div class="mc" onclick="launchGame('Memoria')">
+          <div class="mc-ic" style="background:#fdf4ff">🧠</div>
+          <div class="mc-b">
+            <div class="mc-name">Memoria SST</div>
+            <div class="mc-desc">Encuentra los pares ocultos. La IA explica cada concepto al descubrirlo.</div>
+            <span class="mc-tag" style="background:#fdf4ff;color:#9333ea">Fácil · IA</span>
+          </div>
+        </div>
+        <div class="mc" onclick="launchGame('DragDrop')">
+          <div class="mc-ic" style="background:#fff7ed">🎯</div>
+          <div class="mc-b">
+            <div class="mc-name">Arrastra y Clasifica</div>
+            <div class="mc-desc">Clasifica elementos de seguridad arrastrándolos a la categoría correcta.</div>
+            <span class="mc-tag" style="background:#fff7ed;color:#ea580c">Medio · IA</span>
+          </div>
+        </div>
+        <div class="mc" onclick="launchGame('Simulacion')">
+          <div class="mc-ic" style="background:#fef2f2">🏗️</div>
+          <div class="mc-b">
+            <div class="mc-name">Simulación de Riesgos</div>
+            <div class="mc-desc">Inspecciona escenarios laborales reales y detecta todos los peligros ocultos.</div>
+            <span class="mc-tag" style="background:#fef2f2;color:#dc2626">Difícil · IA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME VIEW -->
+    <div id="gameView">
+      <div class="frame-loading" id="frameLoading">
+        <div class="fl-ring"></div>
+        <div class="fl-txt" id="frameLoadingTxt">Cargando módulo...</div>
+      </div>
+      <div class="game-bar">
+        <button class="back-btn" onclick="showHome()" title="Volver al inicio">←</button>
+        <span class="game-bar-title" id="gameTitle">Módulo</span>
+        <div class="game-bar-sep"></div>
+        <span class="game-bar-user" id="gameUser"></span>
+        <button class="game-bar-reload" onclick="reloadGame()" title="Reiniciar módulo">↺</button>
+      </div>
+      <iframe id="gameFrame" src="" allowfullscreen
+              onload="hideFrameLoading()" onerror="hideFrameLoading()"></iframe>
+    </div>
+
+  </main>
+</div>
+
+<script>
+let currentUser = null, webAppUrl = '', activeGame = '';
+
+const GAMES = {
+  Quiz:       { name:'Quiz Interactivo',     icon:'❓' },
+  Mahjong:    { name:'Mahjong SST',           icon:'🀄' },
+  Memoria:    { name:'Memoria SST',           icon:'🧠' },
+  DragDrop:   { name:'Arrastra y Clasifica',  icon:'🎯' },
+  Simulacion: { name:'Simulación de Riesgos', icon:'🏗️' }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = sessionStorage.getItem('sst_user');
+  if (saved) { currentUser = JSON.parse(saved); startApp(); }
+  try { google.script.run.withSuccessHandler(u => { webAppUrl = u; }).getWebAppUrl(); } catch(e){}
+  document.getElementById('dniInput').focus();
+});
+
+/* ----- LOGIN ----- */
+function handleLogin() {
+  const dni = document.getElementById('dniInput').value.trim();
+  if (!dni) { showErr('Ingresa tu número de DNI'); return; }
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true;
+  btn.querySelector('.btn-text').style.display = 'none';
+  btn.querySelector('.spinner').style.display = 'block';
+  document.getElementById('loginError').style.display = 'none';
+  try {
+    google.script.run
+      .withSuccessHandler(r => {
+        resetBtn();
+        if (r && r.success) { currentUser = r.user; sessionStorage.setItem('sst_user', JSON.stringify(currentUser)); startApp(); }
+        else showErr((r && r.error) || 'DNI no reconocido');
+      })
+      .withFailureHandler(() => { resetBtn(); showErr('Error de conexión. Intenta de nuevo.'); })
+      .validateLogin(dni);
+  } catch(e) {
+    resetBtn(); currentUser = { dni, nombre:'Usuario', apellido:'' };
+    sessionStorage.setItem('sst_user', JSON.stringify(currentUser)); startApp();
+  }
+}
+function resetBtn() {
+  const b = document.getElementById('btnLogin');
+  b.disabled = false; b.querySelector('.btn-text').style.display = '';
+  b.querySelector('.spinner').style.display = 'none';
+}
+function showErr(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+/* ----- APP ----- */
+function startApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').classList.add('on');
+  const n = currentUser.nombre || 'Usuario';
+  const a = currentUser.apellido || '';
+  const initials = (n[0] + (a[0] || n[1] || '?')).toUpperCase();
+  document.getElementById('userAvatar').textContent = initials;
+  document.getElementById('userName').textContent = n + (a ? ' ' + a : '');
+  document.getElementById('userDni').textContent = 'DNI: ' + currentUser.dni;
+  document.getElementById('welcomeName').textContent = n + (a ? ' ' + a : '');
+  document.getElementById('gameUser').textContent = n + ' · DNI ' + currentUser.dni;
+  showHome();
+  loadStats();
+}
+
+function showHome() {
+  setView('home');
+  setActiveNav('home');
+  document.getElementById('gameFrame').src = '';
+  activeGame = '';
+  closeSidebar();
+}
+
+function launchGame(game) {
+  if (!currentUser) return;
+  activeGame = game;
+  setView('game');
+  setActiveNav(game);
+  document.getElementById('gameTitle').textContent = (GAMES[game] || {}).name || game;
+  document.getElementById('frameLoadingTxt').textContent = 'Cargando ' + ((GAMES[game] || {}).name || game) + '...';
+  document.getElementById('frameLoading').style.opacity = '1';
+  document.getElementById('frameLoading').style.pointerEvents = 'auto';
+  const load = (url) => {
+    document.getElementById('gameFrame').src = url + '?page=' + game
+      + '&dni='     + encodeURIComponent(currentUser.dni)
+      + '&nombre='  + encodeURIComponent(currentUser.nombre || '')
+      + '&apellido='+ encodeURIComponent(currentUser.apellido || '');
+  };
+  if (webAppUrl) load(webAppUrl);
+  else try { google.script.run.withSuccessHandler(u => { webAppUrl = u; load(u); }).getWebAppUrl(); } catch(e){}
+  closeSidebar();
+}
+
+function reloadGame() { if (activeGame) launchGame(activeGame); }
+
+function hideFrameLoading() {
+  const fl = document.getElementById('frameLoading');
+  fl.style.opacity = '0'; fl.style.pointerEvents = 'none';
+}
+
+function setView(v) {
+  document.getElementById('homeView').classList.toggle('on', v === 'home');
+  document.getElementById('gameView').classList.toggle('on', v === 'game');
+}
+
+function setActiveNav(key) {
+  document.querySelectorAll('.ni').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('nav-' + key);
+  if (el) el.classList.add('active');
+}
+
+function loadStats() {
+  try {
+    google.script.run.withSuccessHandler(r => {
+      if (r && r.success && r.scores && r.scores.length) {
+        document.getElementById('statGames').textContent = r.scores.length;
+        document.getElementById('statBest').textContent = Math.max(...r.scores.map(s => +s.puntaje || 0));
+        document.getElementById('statStreak').textContent = Math.min(r.scores.length, 7);
+        document.getElementById('statLevel').textContent = Math.floor(r.scores.length / 3) + 1;
+      }
+    }).getScoreHistory(currentUser.dni);
+  } catch(e) {}
+}
+
+function openAdmin() {
+  const go = u => { window.top.location.href = u + '?page=Admin'; };
+  if (webAppUrl) go(webAppUrl);
+  else try { google.script.run.withSuccessHandler(go).getWebAppUrl(); } catch(e){}
+}
+
+function handleLogout() {
+  currentUser = null; sessionStorage.removeItem('sst_user');
+  document.getElementById('appShell').classList.remove('on');
+  document.getElementById('gameFrame').src = '';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('dniInput').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('dniInput').focus();
+  activeGame = '';
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sbOv').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sbOv').classList.remove('show');
+}
+
+// Listen for messages from game iframes (e.g. goBack request)
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.sst_action === 'goHome') showHome();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SST GameHub - Mahjong</title>
+<?!= include('css'); ?>
+</head>
+<body class="sst-shell page-mahjong">
+
+<div class="loading" id="loadingScreen"><div class="ld-spinner"></div><div class="ld-text">Generando fichas con IA... 🤖</div></div>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="btn-back" onclick="goBack()">← Volver</button>
+    <h1>🀄 Mahjong SST</h1>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="v tone-success" id="score">0</div><div class="l">Puntaje</div></div>
+    <div class="stat"><div class="v tone-primary" id="pairs">0/0</div><div class="l">Parejas</div></div>
+    <div class="stat"><div class="v tone-warning" id="timer">0:00</div><div class="l">Tiempo</div></div>
+  </div>
+  <div class="actions">
+    <button class="btn-sm hint" onclick="showHint()">💡 Pista</button>
+    <button class="btn-sm" onclick="shuffleTiles()">🔀 Mezclar</button>
+    <button class="btn-sm" onclick="startGame()">🔄 Nuevo</button>
+  </div>
+</div>
+
+<div class="game-area"><div class="board" id="board"></div></div>
+<div class="feedback" id="feedback"><h4 id="fbTitle"></h4><p id="fbText"></p></div>
+
+<div class="modal-bg" id="winModal">
+  <div class="modal">
+    <div class="trophy">🏆</div>
+    <h2>¡Completado!</h2>
+    <div class="info" id="winInfo"></div>
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="goBack()">← Menú</button>
+      <button class="btn-primary" onclick="startGame();document.getElementById('winModal').classList.remove('show')">Jugar de nuevo ▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let gameData=null,tiles=[],selectedTile=null,matchedCount=0,totalPairs=0,score=0,timerInt=null,seconds=0,hints=0,currentUser=null;
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);
+  startGame();
+});
+
+async function getDataFromAI(){
+  return new Promise(resolve=>{
+    try{google.script.run
+      .withSuccessHandler(function(d){
+        if(d && d.pairs) resolve(d);
+        else resolve(simAI());
+      })
+      .withFailureHandler(function(){resolve(simAI())})
+      .getAIContent('mahjong',{pairs:12})}
+    catch(e){resolve(simAI())}
+  });
+}
+
+function simAI(){
+  return{pairs:[{id:1,concept:"📊 Sin datos",match:"Llena Mahjong_Manual"}]};
+}
+
+function genLayout(n){
+  const pos=[];const tW=93,tH=73,gX=5,gY=5,oX=40,oY=20;
+  for(let r=0;r<4;r++)for(let c=0;c<6;c++)pos.push({x:oX+c*(tW+gX),y:oY+r*(tH+gY),layer:0,row:r,col:c});
+  while(pos.length>n)pos.splice(Math.floor(Math.random()*pos.length),1);
+  return pos;
+}
+
+function isFree(tile,all){
+  const active=all.filter(t=>!t.matched&&t!==tile);
+  if(active.some(t=>t.layer>tile.layer&&Math.abs(t.x-tile.x)<80&&Math.abs(t.y-tile.y)<60))return false;
+  const lb=active.some(t=>t.layer===tile.layer&&Math.abs(t.y-tile.y)<60&&t.x<tile.x&&(tile.x-t.x)<93);
+  const rb=active.some(t=>t.layer===tile.layer&&Math.abs(t.y-tile.y)<60&&t.x>tile.x&&(t.x-tile.x)<93);
+  return!(lb&&rb);
+}
+
+async function startGame(){
+  selectedTile=null;matchedCount=0;score=0;seconds=0;hints=0;
+  if(timerInt)clearInterval(timerInt);
+  document.getElementById('score').textContent='0';
+  document.getElementById('feedback').classList.remove('show');
+  document.getElementById('loadingScreen').classList.remove('hidden');
+
+  gameData=await getDataFromAI();
+  totalPairs=gameData.pairs.length;
+  document.getElementById('pairs').textContent='0/'+totalPairs;
+
+  const td=[];
+  gameData.pairs.forEach(p=>{
+    td.push({pairId:p.id,type:'concept',text:p.concept,pair:p});
+    td.push({pairId:p.id,type:'match',text:p.match,pair:p});
+  });
+  for(let i=td.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[td[i],td[j]]=[td[j],td[i]]}
+
+  const positions=genLayout(td.length);
+  tiles=td.map((d,i)=>({...d,...positions[i%positions.length],matched:false,el:null,idx:i}));
+
+  renderBoard();
+  setTimeout(()=>{document.getElementById('loadingScreen').classList.add('hidden');startTimer()},300);
+}
+
+function renderBoard(){
+  const b=document.getElementById('board');b.innerHTML='';
+  tiles.forEach((t,i)=>{
+    if(t.matched)return;
+    const el=document.createElement('div');
+    el.className='tile '+(t.type==='concept'?'concept':'match');
+    el.style.left=t.x+'px';el.style.top=t.y+'px';el.style.zIndex=t.layer*10+5;
+
+    const parts=t.text.split(' ');
+    const hasEmoji=/[\u{1F300}-\u{1FAFF}]/u.test(parts[0]);
+    el.innerHTML=hasEmoji?`<div><span class="emoji">${parts[0]}</span><span class="txt">${parts.slice(1).join(' ')}</span></div>`:`<div><span class="txt">${t.text}</span></div>`;
+
+    el.onclick=()=>handleClick(t,el);
+    t.el=el;b.appendChild(el);
+    el.style.opacity='0';el.style.transform='scale(0.5)';
+    setTimeout(()=>{el.style.transition='all 0.3s cubic-bezier(0.34,1.56,0.64,1)';el.style.opacity='1';el.style.transform='scale(1)'},i*25+80);
+  });
+  updateBlocked();
+}
+
+function updateBlocked(){tiles.forEach(t=>{if(t.matched||!t.el)return;t.el.classList.toggle('blocked',!isFree(t,tiles))})}
+
+function handleClick(t,el){
+  if(t.matched||el.classList.contains('blocked'))return;
+  if(selectedTile===t){el.classList.remove('selected');selectedTile=null;return}
+  if(!selectedTile){selectedTile=t;el.classList.add('selected')}
+  else{
+    if(selectedTile.pairId===t.pairId&&selectedTile.type!==t.type)matchOk(selectedTile,t);
+    else matchFail(selectedTile,t,el);
+  }
+}
+
+function matchOk(t1,t2){
+  t1.matched=true;t2.matched=true;matchedCount++;
+  score+=Math.max(100-Math.floor(seconds/5),10);
+  t1.el.classList.remove('selected');t1.el.classList.add('matched');t2.el.classList.add('matched');
+  setTimeout(()=>{t1.el&&t1.el.remove();t2.el&&t2.el.remove();updateBlocked()},500);
+  document.getElementById('score').textContent=score;
+  document.getElementById('pairs').textContent=matchedCount+'/'+totalPairs;
+  showFB('success','✅ ¡Correcto!',t1.pair.concept+' = '+t1.pair.match);
+  selectedTile=null;
+  if(matchedCount>=totalPairs)setTimeout(endGame,700);
+}
+
+function matchFail(t1,t2,el2){
+  t1.el.classList.remove('selected');t1.el.classList.add('wrong');el2.classList.add('wrong');
+  score=Math.max(0,score-15);document.getElementById('score').textContent=score;
+  showFB('error','❌ No es pareja','Busca el concepto con su definición correcta');
+  setTimeout(()=>{t1.el&&t1.el.classList.remove('wrong');el2.classList.remove('wrong')},500);
+  selectedTile=null;
+}
+
+function showHint(){
+  hints++;score=Math.max(0,score-50);document.getElementById('score').textContent=score;
+  const free=tiles.filter(t=>!t.matched&&isFree(t,tiles));
+  for(let i=0;i<free.length;i++)for(let j=i+1;j<free.length;j++){
+    if(free[i].pairId===free[j].pairId){
+      [free[i],free[j]].forEach(t=>{t.el.style.borderColor='var(--yellow)';t.el.style.boxShadow='0 0 12px rgba(255,179,0,0.4)'});
+      setTimeout(()=>[free[i],free[j]].forEach(t=>{if(t.el&&!t.matched){t.el.style.borderColor='';t.el.style.boxShadow=''}}),2000);
+      showFB('success','💡 Pista (-50 pts)','Las fichas amarillas son pareja');return;
+    }
+  }
+  showFB('error','⚠️ Sin parejas libres','Intenta mezclar las fichas');
+}
+
+function shuffleTiles(){
+  score=Math.max(0,score-30);document.getElementById('score').textContent=score;
+  const rem=tiles.filter(t=>!t.matched);const pos=rem.map(t=>({x:t.x,y:t.y,layer:t.layer}));
+  for(let i=pos.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pos[i],pos[j]]=[pos[j],pos[i]]}
+  rem.forEach((t,i)=>{t.x=pos[i].x;t.y=pos[i].y;t.layer=pos[i].layer});
+  renderBoard();showFB('success','🔀 Mezclado (-30 pts)','Fichas reordenadas');
+}
+
+function showFB(type,title,text){
+  const f=document.getElementById('feedback');f.className='feedback show '+type;
+  document.getElementById('fbTitle').textContent=title;document.getElementById('fbText').textContent=text;
+  clearTimeout(f._t);f._t=setTimeout(()=>f.classList.remove('show'),3000);
+}
+
+function startTimer(){
+  if(timerInt)clearInterval(timerInt);
+  timerInt=setInterval(()=>{seconds++;const m=Math.floor(seconds/60),s=seconds%60;document.getElementById('timer').textContent=m+':'+(s<10?'0':'')+s},1000);
+}
+
+function endGame(){
+  clearInterval(timerInt);
+  const tb=Math.max(500-seconds*2,0),fs=score+tb;
+  const m=Math.floor(seconds/60),s=seconds%60;
+  document.getElementById('winInfo').innerHTML=`Puntaje: <strong>${score}</strong><br>Bono tiempo: <strong>+${tb}</strong><br>Tiempo: <strong>${m}:${s<10?'0':''}${s}</strong><br>Pistas: <strong>${hints}</strong><br><br>Total: <strong class="score-total">${fs}</strong>`;
+  document.getElementById('winModal').classList.add('show');
+  if(currentUser)try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Mahjong SST',puntaje:fs,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Parejas:'+totalPairs+',Pistas:'+hints})}catch(e){}
+}
+
+function goBack(){
+  if(timerInt)clearInterval(timerInt);
+  try{
+    google.script.run.withSuccessHandler(function(u){
+      window.top.location.href=u+'?page=Portal';
+    }).withFailureHandler(function(){
+      window.top.location.href='kahoot.html';
+    }).getWebAppUrl();
+  }catch(e){window.top.location.href='kahoot.html'}
+}
+</script>
+</body>
+</html>

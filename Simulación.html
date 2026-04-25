@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SST GameHub - Simulación</title>
+<?!= include('css'); ?>
+</head>
+<body class="sst-shell page-simulacion">
+<div class="loading" id="loadingScreen"><div class="ld-spinner"></div><div class="ld-text">Generando escenario con IA... 🤖</div></div>
+
+<div class="topbar">
+  <div class="topbar-left"><button class="btn-back" onclick="goBack()">← Volver</button><h1>🏗️ Simulación de Riesgos</h1></div>
+  <div class="stats">
+    <div class="stat"><div class="v tone-success" id="score">0</div><div class="l">Puntaje</div></div>
+    <div class="stat"><div class="v tone-warning" id="found">0/0</div><div class="l">Encontrados</div></div>
+  </div>
+  <button class="btn-new" onclick="startGame()">🔄 Nuevo escenario</button>
+</div>
+
+<div class="game-layout">
+  <div class="scene-panel">
+    <div class="scene-header"><h2 id="scTitle">Cargando...</h2><p id="scDesc">La IA está generando un escenario.</p></div>
+    <div class="inspection-area" id="inspArea" onclick="areaClick(event)"><div class="scene-bg" id="sceneBg"></div></div>
+  </div>
+  <div class="info-panel">
+    <div class="timer-card">
+      <div class="time-val" id="timeVal">1:30</div>
+      <div class="time-lbl">Tiempo restante</div>
+      <button class="btn-finish" onclick="finish()">🔍 Finalizar inspección</button>
+    </div>
+    <div class="hazards-list">
+      <h3>Peligros (<span id="fc">0</span>/<span id="tc">0</span>)</h3>
+      <div id="hzList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="resultModal"><div class="modal">
+  <div class="trophy" id="resTrophy">🔍</div>
+  <h2 id="resTitle">Inspección completada</h2>
+  <div class="score-big" id="resFinal">0</div>
+  <div class="info" id="resInfo"></div>
+  <div class="modal-btns">
+    <button class="btn-secondary" onclick="goBack()">← Menú</button>
+    <button class="btn-primary" onclick="startGame();document.getElementById('resultModal').classList.remove('show')">Nuevo escenario ▶</button>
+  </div>
+</div></div>
+
+<script>
+let scenario=null,hazards=[],foundSet=new Set(),score=0,timerInt=null,timeRem=90,gameOver=false,currentUser=null;
+
+document.addEventListener('DOMContentLoaded',()=>{const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);startGame()});
+
+async function getDataFromAI(){return new Promise(r=>{try{google.script.run.withSuccessHandler(function(d){if(d&&d.scenario&&d.hazards)r(d);else r(simAI())}).withFailureHandler(function(){r(simAI())}).getAIContent('simulacion',{})}catch(e){r(simAI())}})}
+function simAI(){
+  return{scenario:{title:"Sin escenario",description:"Llena la hoja Simulacion_Manual en tu Google Sheet.",environment:"vacio"},hazards:[{id:1,name:"Sin datos",description:"Configura tus escenarios",severity:"baja",x:50,y:50,width:20,height:20,solution:"Abre Simulacion_Manual y agrega filas."}]};
+}
+
+async function startGame(){
+  foundSet.clear();score=0;timeRem=90;gameOver=false;
+  if(timerInt)clearInterval(timerInt);
+  document.getElementById('score').textContent='0';
+  document.getElementById('loadingScreen').classList.remove('hidden');
+
+  const d=await getDataFromAI();scenario=d.scenario;hazards=d.hazards;
+  document.getElementById('found').textContent='0/'+hazards.length;
+  document.getElementById('fc').textContent='0';document.getElementById('tc').textContent=hazards.length;
+  document.getElementById('scTitle').textContent=scenario.title;
+  document.getElementById('scDesc').textContent=scenario.description;
+  document.getElementById('sceneBg').className='scene-bg '+scenario.environment;
+
+  renderScene();renderList();
+  setTimeout(()=>{document.getElementById('loadingScreen').classList.add('hidden');startCountdown()},300);
+}
+
+function renderScene(){
+  const a=document.getElementById('inspArea');
+  a.querySelectorAll('.hazard-zone,.scene-el').forEach(e=>e.remove());
+  drawEnv(scenario.environment);
+  hazards.forEach(h=>{
+    const z=document.createElement('div');z.className='hazard-zone';z.id='hz-'+h.id;
+    z.style.cssText=`left:${h.x}%;top:${h.y}%;width:${h.width}%;height:${h.height}%`;
+    z.onclick=e=>{e.stopPropagation();findHazard(h.id)};
+    const lb=document.createElement('div');lb.className='hz-label';lb.textContent=h.name;z.appendChild(lb);
+    a.appendChild(z);
+  });
+}
+
+function drawEnv(env){
+  const a=document.getElementById('inspArea');
+  const add=(l,t,w,h,c)=>{const e=document.createElement('div');e.className='scene-el';e.style.cssText=`left:${l};top:${t};width:${w};height:${h};background:${c}`;a.appendChild(e)};
+  if(env==='construccion'){add('0%','38%','100%','3px','#8B7355');add('10%','10%','4px','28%','#888');add('45%','10%','4px','28%','#888');add('80%','10%','4px','28%','#888');add('0%','65%','100%','2px','#8B7355');add('88%','0%','4px','40%','#DAA520');add('75%','3%','17%','3px','#DAA520')}
+  else if(env==='taller'){add('5%','55%','35%','3px','#888');add('55%','55%','35%','3px','#888');add('92%','10%','3px','80%','#777')}
+  else{add('5%','20%','3px','65%','#6a8da0');add('35%','20%','3px','65%','#6a8da0');add('65%','20%','3px','65%','#6a8da0');for(let i=0;i<3;i++){add('5%',(30+i*20)+'%','30%','2px','#6a8da0');add('35%',(30+i*20)+'%','30%','2px','#6a8da0')}}
+}
+
+function renderList(){
+  const l=document.getElementById('hzList');l.innerHTML='';
+  hazards.forEach(h=>{
+    const it=document.createElement('div');it.className='hz-item';it.id='hi-'+h.id;
+    it.innerHTML=`<div class="hi-head"><span class="hi-name">❓ Peligro #${h.id}</span><span class="hi-sev ${h.severity}">${h.severity.toUpperCase()}</span></div><div class="hi-desc">${h.description}</div><div class="hi-sol">${h.solution}</div>`;
+    l.appendChild(it);
+  });
+}
+
+function findHazard(id){
+  if(gameOver||foundSet.has(id))return;
+  foundSet.add(id);
+  const h=hazards.find(x=>x.id===id);
+  const pts=h.severity==='alta'?200:150;
+  score+=pts+Math.floor(timeRem/3);
+
+  document.getElementById('score').textContent=score;
+  document.getElementById('found').textContent=foundSet.size+'/'+hazards.length;
+  document.getElementById('fc').textContent=foundSet.size;
+
+  document.getElementById('hz-'+id).classList.add('found');
+  const it=document.getElementById('hi-'+id);it.classList.add('found');
+  it.querySelector('.hi-name').textContent='✅ '+h.name;
+
+  if(foundSet.size>=hazards.length)setTimeout(finish,800);
+}
+
+function areaClick(e){
+  if(gameOver)return;
+  const r=e.currentTarget.getBoundingClientRect();
+  const fx=document.createElement('div');fx.className='click-fx';
+  fx.style.left=(e.clientX-r.left)+'px';fx.style.top=(e.clientY-r.top)+'px';
+  e.currentTarget.appendChild(fx);setTimeout(()=>fx.remove(),500);
+  score=Math.max(0,score-10);document.getElementById('score').textContent=score;
+}
+
+function startCountdown(){
+  const tv=document.getElementById('timeVal');
+  timerInt=setInterval(()=>{
+    timeRem--;const m=Math.floor(timeRem/60),s=timeRem%60;
+    tv.textContent=m+':'+(s<10?'0':'')+s;
+    if(timeRem<=15)tv.classList.add('warning');
+    if(timeRem<=0){clearInterval(timerInt);finish()}
+  },1000);
+}
+
+function finish(){
+  if(gameOver)return;gameOver=true;clearInterval(timerInt);
+  hazards.forEach(h=>{
+    if(!foundSet.has(h.id)){
+      document.getElementById('hz-'+h.id).classList.add('revealed');
+      const it=document.getElementById('hi-'+h.id);it.classList.add('missed');it.querySelector('.hi-name').textContent='❌ '+h.name;
+      it.querySelector('.hi-desc').style.display='block';
+    }
+  });
+
+  const fc=foundSet.size,tc=hazards.length,pct=Math.round((fc/tc)*100);
+  const bonus=fc>=tc?500:0,fs=score+bonus;
+  let trophy,title,clr;
+  if(pct===100){trophy='🏆';title='¡Inspector experto!';clr='var(--green)'}
+  else if(pct>=80){trophy='🥈';title='¡Buena inspección!';clr='var(--blue)'}
+  else if(pct>=50){trophy='🥉';title='Inspección parcial';clr='var(--yellow)'}
+  else{trophy='⚠️';title='Necesitas mejorar';clr='var(--red)'}
+
+  document.getElementById('resTrophy').textContent=trophy;
+  document.getElementById('resTitle').textContent=title;document.getElementById('resTitle').style.color=clr;
+  document.getElementById('resFinal').textContent=fs;
+  document.getElementById('resInfo').innerHTML=`Encontrados: <strong>${fc}/${tc}</strong><br>Efectividad: <strong>${pct}%</strong><br>${bonus?`Bono completo: <strong>+${bonus}</strong><br>`:''}Escenario: <strong>${scenario.title}</strong>`;
+  setTimeout(()=>document.getElementById('resultModal').classList.add('show'),1200);
+
+  if(currentUser)try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Simulación SST',puntaje:fs,tiempo:(90-timeRem)+'s',detalles:'Escenario:'+scenario.title+',Encontrados:'+fc+'/'+tc})}catch(e){}
+}
+
+function goBack(){if(timerInt)clearInterval(timerInt);try{google.script.run.withSuccessHandler(function(u){window.top.location.href=u+'?page=Portal'}).withFailureHandler(function(){window.top.location.href='kahoot.html'}).getWebAppUrl()}catch(e){window.top.location.href='kahoot.html'}}
+</script>
+</body>
+</html>

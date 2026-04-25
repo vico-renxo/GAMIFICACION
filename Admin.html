@@ -1,0 +1,1238 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SST GameHub - Centro de Mando</title>
+<?!= include('css'); ?>
+</head>
+<body class="sst-shell page-admin">
+
+<div class="container">
+  <nav class="topnav">
+    <div class="topnav-left">
+      <div class="brand">⚙️</div>
+      <h2>Centro de Mando</h2>
+    </div>
+    <button class="btn-back" onclick="goBack()">← Volver al Portal</button>
+  </nav>
+
+  <div class="header-card">
+    <h3>Panel de Administración 🎛️</h3>
+    <p>Sube documentos o imágenes sobre SST y la IA de Gemini generará automáticamente el contenido para los juegos.</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('manual', this)">📊 Hojas Manuales</button>
+    <button class="tab" onclick="switchTab('upload', this)">📤 Generar con IA</button>
+    <button class="tab" onclick="switchTab('content', this)">📋 Contenido Guardado</button>
+    <button class="tab" onclick="switchTab('config', this)">🔧 Configuración IA</button>
+  </div>
+
+  <!-- TAB: Manual Sheets -->
+  <div class="tab-content active" id="tab-manual">
+    <div class="upload-area">
+      <h4>📊 Contenido Manual — Sin IA, tú controlas los datos</h4>
+      <p class="copy-note">
+        Crea hojas de cálculo dedicadas para cada juego. Llena las columnas manualmente y los juegos leerán esos datos <strong>antes</strong> que cualquier contenido de IA.
+      </p>
+
+      <button class="btn-generate mb-20" onclick="crearHojasManuales()" id="btnCrearHojas">
+        📊 Crear Hojas en mi Google Sheet
+      </button>
+
+      <div class="result-card mb-20" id="manualResult">
+        <h5 id="manualResultTitle"></h5>
+        <p id="manualResultMsg"></p>
+      </div>
+
+      <div class="manual-manager">
+        <h4>🧩 Editor de Registros Manuales</h4>
+        <p class="copy-note">
+          Administra el contenido de cada juego desde aquí. Puedes agregar, editar y eliminar registros sin abrir Google Sheets.
+        </p>
+
+        <div class="manual-toolbar">
+          <div>
+            <label class="field-label">Juego</label>
+            <select id="manualGameSelect"></select>
+          </div>
+          <div>
+            <label class="field-label">Estado</label>
+            <div class="manual-summary" id="manualSheetSummary">Cargando configuración manual...</div>
+          </div>
+          <button class="manual-mini-btn primary" type="button" onclick="loadManualRecords()">🔄 Recargar</button>
+          <button class="manual-mini-btn secondary" type="button" onclick="resetManualForm()">➕ Nuevo</button>
+        </div>
+
+        <div class="manual-form-card">
+          <div class="manual-summary" id="manualFormTitle">Nuevo registro</div>
+          <input type="hidden" id="manualRow">
+          <div class="manual-form-grid" id="manualFormGrid"></div>
+          <div class="row-actions">
+            <button class="manual-mini-btn primary" type="button" onclick="saveManualRecord()">💾 Guardar registro</button>
+            <button class="manual-mini-btn secondary" type="button" onclick="resetManualForm()">Limpiar formulario</button>
+          </div>
+        </div>
+
+        <div class="quiz-ai-panel" id="quizAiPanel">
+          <h4>🧠 Generar preguntas para Quiz_Manual</h4>
+          <p class="copy-note compact">
+            Sube un documento o pega texto base y la IA generará preguntas que se guardarán directamente en la hoja manual del quiz.
+          </p>
+          <div class="quiz-ai-grid">
+            <div>
+              <label class="field-label">Número de preguntas</label>
+              <input type="number" id="quizAiCount" min="1" max="20" value="5">
+            </div>
+            <div>
+              <label class="field-label">Archivo base</label>
+              <input type="file" id="quizAiFile" accept=".pdf,.jpg,.jpeg,.png,.txt,.doc,.docx" onchange="handleManualQuizFile(this)">
+            </div>
+            <div class="span-full">
+              <label class="field-label">Texto base o indicaciones</label>
+              <textarea id="quizAiText" placeholder="Pega aquí el contenido del tema o escribe instrucciones para que la IA genere preguntas."></textarea>
+            </div>
+          </div>
+          <div class="row-actions centered">
+            <label class="option-check">
+              <input type="checkbox" id="quizAiReplace">
+              Reemplazar preguntas existentes de Quiz_Manual
+            </label>
+            <button class="manual-mini-btn primary" type="button" id="btnQuizAiGenerate" onclick="generateManualQuizAI()">Generar y guardar</button>
+          </div>
+          <div class="quiz-ai-status" id="quizAiStatus">Disponible solo cuando el juego seleccionado es Quiz.</div>
+        </div>
+
+        <div class="result-card result-card-flat" id="manualCrudResult">
+          <h5 id="manualCrudTitle"></h5>
+          <p id="manualCrudMsg"></p>
+        </div>
+
+        <div class="manual-table-wrap">
+          <div id="manualRecordsTable"></div>
+        </div>
+      </div>
+
+      <div class="stack-grid">
+        <!-- Quiz -->
+        <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--purple)">
+          <h4 style="margin-bottom:8px">❓ Quiz_Manual</h4>
+          <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:10px">
+            <tr style="background:#f5f0ff"><th style="padding:6px;text-align:left;border:1px solid #e0d4f5">PREGUNTA</th><th style="padding:6px;border:1px solid #e0d4f5">OPCION_A</th><th style="padding:6px;border:1px solid #e0d4f5">OPCION_B</th><th style="padding:6px;border:1px solid #e0d4f5">OPCION_C</th><th style="padding:6px;border:1px solid #e0d4f5">OPCION_D</th><th style="padding:6px;border:1px solid #e0d4f5">CORRECTA</th><th style="padding:6px;border:1px solid #e0d4f5">EXPLICACION</th></tr>
+            <tr><td style="padding:6px;border:1px solid #eee">¿Altura mínima?</td><td style="padding:6px;border:1px solid #eee">1.00m</td><td style="padding:6px;border:1px solid #eee">1.50m</td><td style="padding:6px;border:1px solid #eee;background:#e8f5e9;font-weight:bold">1.80m</td><td style="padding:6px;border:1px solid #eee">2.50m</td><td style="padding:6px;border:1px solid #eee;text-align:center;font-weight:bold">3</td><td style="padding:6px;border:1px solid #eee;font-size:11px">Desde 1.80m...</td></tr>
+          </table>
+          <div style="font-size:13px;color:var(--text-light)">
+            <strong>CORRECTA:</strong> Pon 1, 2, 3 o 4 (número de la opción correcta).<br>
+            <strong>Mínimo:</strong> 3 preguntas. El juego toma hasta 10 al azar.
+          </div>
+        </div>
+
+        <!-- Mahjong -->
+        <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--red)">
+          <h4 style="margin-bottom:8px">🀄 Mahjong_Manual</h4>
+          <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:10px">
+            <tr style="background:#ffebee"><th style="padding:6px;text-align:left;border:1px solid #f5c6cb">CONCEPTO (con emoji)</th><th style="padding:6px;text-align:left;border:1px solid #f5c6cb">DEFINICION</th></tr>
+            <tr><td style="padding:6px;border:1px solid #eee">🪖 Casco</td><td style="padding:6px;border:1px solid #eee">Protección craneal contra impactos</td></tr>
+          </table>
+          <div style="font-size:13px;color:var(--text-light)">
+            <strong>Mínimo:</strong> 6 pares. El juego toma hasta 12 al azar.<br>
+            <strong>Tip:</strong> Incluye un emoji al inicio del concepto para hacerlo visual.
+          </div>
+        </div>
+
+        <!-- Memoria -->
+        <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--blue)">
+          <h4 style="margin-bottom:8px">🧠 Memoria_Manual</h4>
+          <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:10px">
+            <tr style="background:#e3f2fd"><th style="padding:6px;text-align:left;border:1px solid #b3d4fc">EMOJI</th><th style="padding:6px;text-align:left;border:1px solid #b3d4fc">CONCEPTO</th><th style="padding:6px;text-align:left;border:1px solid #b3d4fc">EXPLICACION</th></tr>
+            <tr><td style="padding:6px;border:1px solid #eee">🪖</td><td style="padding:6px;border:1px solid #eee">CASCO</td><td style="padding:6px;border:1px solid #eee;font-size:11px">El casco protege la cabeza...</td></tr>
+          </table>
+          <div style="font-size:13px;color:var(--text-light)">
+            <strong>Mínimo:</strong> 4 pares. El juego toma hasta 8 al azar.<br>
+            <strong>Tip:</strong> Concepto en MAYÚSCULAS. Un solo emoji por fila.
+          </div>
+        </div>
+
+        <!-- Drag & Drop -->
+        <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--yellow)">
+          <h4 style="margin-bottom:8px">🎯 DragDrop_Manual</h4>
+          <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:10px">
+            <tr style="background:#fff8e1"><th style="padding:6px;text-align:left;border:1px solid #ffe082">CATEGORIA</th><th style="padding:6px;border:1px solid #ffe082">COLOR_HEX</th><th style="padding:6px;text-align:left;border:1px solid #ffe082">ELEMENTO</th><th style="padding:6px;text-align:left;border:1px solid #ffe082">EXPLICACION</th></tr>
+            <tr><td style="padding:6px;border:1px solid #eee">EPP Obligatorio</td><td style="padding:6px;border:1px solid #eee">#e74c3c</td><td style="padding:6px;border:1px solid #eee">Casco de seguridad</td><td style="padding:6px;border:1px solid #eee;font-size:11px">EPP craneal obligatorio</td></tr>
+            <tr><td style="padding:6px;border:1px solid #eee">Señalización</td><td style="padding:6px;border:1px solid #eee">#f39c12</td><td style="padding:6px;border:1px solid #eee">Señal prohibido fumar</td><td style="padding:6px;border:1px solid #eee;font-size:11px">Señal roja que prohíbe</td></tr>
+          </table>
+          <div style="font-size:13px;color:var(--text-light)">
+            <strong>Mínimo:</strong> 2 categorías, 4 elementos total.<br>
+            <strong>Tip:</strong> Repite el mismo nombre de CATEGORIA para agrupar. Usa colores hex diferentes por categoría.
+          </div>
+        </div>
+
+        <!-- Simulacion -->
+        <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--green)">
+          <h4 style="margin-bottom:8px">🏗️ Simulacion_Manual</h4>
+          <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:10px">
+            <tr style="background:#e8f5e9"><th style="padding:6px;border:1px solid #a5d6a7">ESC_ID</th><th style="padding:6px;border:1px solid #a5d6a7">TITULO</th><th style="padding:6px;border:1px solid #a5d6a7">DESCRIPCION</th><th style="padding:6px;border:1px solid #a5d6a7">AMBIENTE</th><th style="padding:6px;border:1px solid #a5d6a7">PELIGRO</th><th style="padding:6px;border:1px solid #a5d6a7">SEVERIDAD</th><th style="padding:6px;border:1px solid #a5d6a7">X</th><th style="padding:6px;border:1px solid #a5d6a7">Y</th><th style="padding:6px;border:1px solid #a5d6a7">SOLUCION</th></tr>
+            <tr><td style="padding:6px;border:1px solid #eee">ESC1</td><td style="padding:6px;border:1px solid #eee;font-size:11px">Obra</td><td style="padding:6px;border:1px solid #eee;font-size:11px">Inspecciona...</td><td style="padding:6px;border:1px solid #eee;font-size:11px">construccion</td><td style="padding:6px;border:1px solid #eee;font-size:11px">Sin casco</td><td style="padding:6px;border:1px solid #eee">alta</td><td style="padding:6px;border:1px solid #eee">15</td><td style="padding:6px;border:1px solid #eee">25</td><td style="padding:6px;border:1px solid #eee;font-size:11px">Casco obligatorio</td></tr>
+          </table>
+          <div style="font-size:13px;color:var(--text-light)">
+            <strong>ESC_ID:</strong> Los peligros del mismo escenario comparten ID (ej: ESC1, ESC2).<br>
+            <strong>X, Y, ANCHO, ALTO:</strong> Son porcentajes (0-100) para posicionar la zona clickeable.<br>
+            <strong>SEVERIDAD:</strong> baja, media, alta o critica.
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;background:#fff8e1;border-radius:var(--radius-sm);padding:16px;border-left:4px solid var(--yellow)">
+        <h4 style="margin-bottom:6px">Prioridad de datos</h4>
+        <ol style="font-size:13px;color:var(--text-light);line-height:1.8;padding-left:20px">
+          <li><strong>Hojas manuales</strong> (Quiz_Manual, Mahjong_Manual, etc.) — Si tienen datos, se usan PRIMERO</li>
+          <li><strong>Contenido IA guardado</strong> (hoja CONTENIDO_IA) — Se usa si no hay datos manuales</li>
+          <li><strong>IA en tiempo real</strong> (Gemini/ChatGPT) — Se usa si no hay datos guardados</li>
+          <li><strong>Datos predeterminados</strong> — Respaldo final si nada funciona</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Upload & Generate -->
+  <div class="tab-content" id="tab-upload">
+    <div class="upload-area">
+      <h4>📤 Subir Archivo para IA</h4>
+      
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="dz-icon">📁</div>
+        <div class="dz-text">Arrastra un archivo aquí o haz clic para seleccionar</div>
+        <div class="dz-sub">PDF, imágenes (JPG, PNG), documentos de texto — Máx 10MB</div>
+        <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt" onchange="handleFile(this)">
+      </div>
+
+      <div class="file-preview" id="filePreview">
+        <div class="fp-icon" id="fpIcon">📄</div>
+        <div class="fp-info">
+          <div class="fp-name" id="fpName">archivo.pdf</div>
+          <div class="fp-size" id="fpSize">1.2 MB</div>
+        </div>
+        <button class="fp-remove" onclick="removeFile()">✕ Quitar</button>
+      </div>
+
+      <h4 style="margin-top:20px">🎮 ¿Para qué juego quieres generar contenido?</h4>
+      <div class="game-selector" id="gameSelector">
+        <div class="game-opt" data-game="mahjong" onclick="selectGame(this,'mahjong')">
+          <span class="go-emoji">🀄</span>Mahjong
+        </div>
+        <div class="game-opt" data-game="memoria" onclick="selectGame(this,'memoria')">
+          <span class="go-emoji">🧠</span>Memoria
+        </div>
+        <div class="game-opt" data-game="dragdrop" onclick="selectGame(this,'dragdrop')">
+          <span class="go-emoji">🎯</span>Drag & Drop
+        </div>
+        <div class="game-opt" data-game="quiz" onclick="selectGame(this,'quiz')">
+          <span class="go-emoji">❓</span>Quiz
+        </div>
+        <div class="game-opt" data-game="simulacion" onclick="selectGame(this,'simulacion')">
+          <span class="go-emoji">🏗️</span>Simulación
+        </div>
+      </div>
+
+      <button class="btn-generate" id="btnGenerate" onclick="generateContent()">
+        🤖 Generar Contenido con IA
+      </button>
+
+      <div class="processing" id="processing">
+        <div class="proc-spinner"></div>
+        <div class="proc-text">Gemini AI procesando tu archivo...</div>
+        <div class="proc-sub">Esto puede tomar unos segundos</div>
+      </div>
+
+      <div class="result-card" id="resultCard">
+        <h5 id="resultTitle">✅ ¡Contenido generado exitosamente!</h5>
+        <p id="resultMsg"></p>
+        <div class="preview-data" id="previewData"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Content List -->
+  <div class="tab-content" id="tab-content">
+    <div class="content-list">
+      <h4>📋 Contenido Generado</h4>
+      <div id="contentList">
+        <div class="empty-state">
+          <div class="es-icon">📭</div>
+          <p>Aún no hay contenido generado.<br>Sube un archivo en la pestaña "Generar Contenido".</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Config -->
+  <div class="tab-content" id="tab-config">
+    <div class="config-card">
+      <h4>🔧 Configuración de IA (Gemini + ChatGPT)</h4>
+
+      <div class="mb-20">
+        <span>Estado: </span>
+        <span class="status-badge disconnected" id="apiStatus">⚪ Modo Simulado</span>
+      </div>
+
+      <div class="config-field">
+        <label>Proveedor de IA</label>
+        <select id="aiProviderSelect">
+          <option value="auto">🔄 Auto (Gemini primero, ChatGPT como respaldo)</option>
+          <option value="gemini">🟦 Solo Gemini</option>
+          <option value="openai">🟩 Solo ChatGPT/OpenAI</option>
+        </select>
+        <div class="hint">En modo <strong>Auto</strong>, si Gemini falla se usa ChatGPT automáticamente</div>
+      </div>
+
+      <div class="config-field">
+        <label>🟦 Gemini API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="AIzaSy... (tu API Key de Google AI Studio)">
+        <div class="hint">Obtén tu clave gratis en <strong>aistudio.google.com</strong> → Get API Key</div>
+      </div>
+
+      <div class="config-field">
+        <label>🟩 OpenAI (ChatGPT) API Key</label>
+        <input type="password" id="openaiKeyInput" placeholder="sk-... (tu API Key de OpenAI)">
+        <div class="hint">Obtén tu clave en <strong>platform.openai.com/api-keys</strong> (tiene costo por uso)</div>
+      </div>
+
+      <div class="config-field">
+        <label>ID de Google Sheet</label>
+        <input type="text" id="sheetIdInput" placeholder="ID de tu hoja de cálculo">
+        <div class="hint">Se encuentra en la URL: docs.google.com/spreadsheets/d/<strong>ESTE_ID</strong>/edit</div>
+      </div>
+
+      <div class="config-actions">
+        <button class="btn-generate flex-1" onclick="saveConfig()">
+          💾 Guardar Configuración
+        </button>
+        <button class="btn-generate btn-success flex-1" onclick="testConnection()" id="btnTest">
+          🧪 Probar Conexión IA
+        </button>
+      </div>
+
+      <div class="result-card" id="configResult">
+        <h5 id="cfgResultTitle">ℹ️ ¿Cómo configurar?</h5>
+        <p id="cfgResultMsg">1. Obtén tu API Key gratis en <strong>aistudio.google.com</strong> → Get API Key<br>
+        2. Copia el ID de tu Google Sheet desde la URL<br>
+        3. Pega ambos valores arriba y haz clic en Guardar<br><br>
+        <strong>Sin API Key:</strong> Los juegos usan contenido predeterminado (no lee tus documentos).<br>
+        <strong>Con API Key:</strong> Gemini analiza tus documentos y genera contenido personalizado.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedFile = null;
+let selectedFileBase64 = null;
+let selectedGame = null;
+let manualSchemas = {};
+let currentManualGame = 'quiz';
+let currentManualColumns = [];
+let currentManualRecords = [];
+let manualQuizFile = null;
+let manualQuizFileBase64 = null;
+
+// Drag & Drop for file upload
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('dragover');
+  if (e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]);
+});
+
+function handleFile(input) {
+  if (input.files.length) processFile(input.files[0]);
+}
+
+function processFile(file) {
+  if (file.size > 10 * 1024 * 1024) {
+    alert('El archivo es muy grande. Máximo 10MB.');
+    return;
+  }
+  selectedFile = file;
+  selectedFileBase64 = null; // Reset until ready
+
+  // Show preview
+  const icons = { 'pdf':'📕', 'jpg':'🖼️', 'jpeg':'🖼️', 'png':'🖼️', 'doc':'📄', 'docx':'📄', 'txt':'📝' };
+  const ext = file.name.split('.').pop().toLowerCase();
+  document.getElementById('fpIcon').textContent = icons[ext] || '📄';
+  document.getElementById('fpName').textContent = file.name;
+  document.getElementById('fpSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+  document.getElementById('filePreview').classList.add('show');
+
+  // Disable generate button while reading file
+  document.getElementById('btnGenerate').disabled = true;
+  document.getElementById('btnGenerate').textContent = '📂 Leyendo archivo...';
+
+  // Convert to base64
+  const reader = new FileReader();
+  reader.onload = () => {
+    selectedFileBase64 = reader.result.split(',')[1];
+    document.getElementById('btnGenerate').disabled = false;
+    document.getElementById('btnGenerate').textContent = '🤖 Generar Contenido con IA';
+  };
+  reader.onerror = () => {
+    alert('Error al leer el archivo. Intenta de nuevo.');
+    selectedFile = null;
+    selectedFileBase64 = null;
+    document.getElementById('btnGenerate').disabled = false;
+    document.getElementById('btnGenerate').textContent = '🤖 Generar Contenido con IA';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeFile() {
+  selectedFile = null;
+  selectedFileBase64 = null;
+  document.getElementById('filePreview').classList.remove('show');
+  document.getElementById('fileInput').value = '';
+}
+
+function selectGame(el, game) {
+  document.querySelectorAll('.game-opt').forEach(g => g.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedGame = game;
+}
+
+function generateContent() {
+  // Validaciones
+  if (!selectedFile || !selectedFileBase64) {
+    alert('⚠️ Primero sube un archivo (documento, imagen o PDF) para que la IA genere contenido basado en él.');
+    return;
+  }
+  if (!selectedGame) {
+    alert('⚠️ Selecciona para qué juego quieres generar contenido.');
+    return;
+  }
+
+  // Check file size - google.script.run limit is ~256KB for parameters
+  var base64Size = selectedFileBase64.length;
+  if (base64Size > 200000) {
+    // Try to compress if it's an image
+    if (selectedFile.type.startsWith('image/')) {
+      compressAndSend();
+      return;
+    }
+    // For PDFs and other non-image files, use chunked upload
+    sendChunked(selectedFileBase64, selectedFile.name, selectedFile.type || 'application/octet-stream');
+    return;
+  }
+
+  sendToServer(selectedFileBase64, selectedFile.name, selectedFile.type || 'application/octet-stream');
+}
+
+function compressAndSend() {
+  var proc = document.getElementById('processing');
+  proc.classList.add('show');
+  document.querySelector('.processing .proc-text').textContent = 'Comprimiendo imagen...';
+
+  var img = new Image();
+  img.onload = function() {
+    var canvas = document.createElement('canvas');
+    var maxDim = 1200; // Max dimension
+    var w = img.width, h = img.height;
+    if (w > maxDim || h > maxDim) {
+      if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+      else { w = Math.round(w * maxDim / h); h = maxDim; }
+    }
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    var compressed = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+
+    if (compressed.length > 200000) {
+      // Still too large, compress more
+      canvas.width = Math.round(w * 0.6);
+      canvas.height = Math.round(h * 0.6);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      compressed = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+    }
+
+    document.querySelector('.processing .proc-text').textContent = 'Gemini AI procesando tu archivo...';
+    sendToServer(compressed, selectedFile.name, 'image/jpeg');
+  };
+  img.onerror = function() {
+    proc.classList.remove('show');
+    alert('No se pudo comprimir la imagen. Intenta con un archivo más pequeño.');
+  };
+  img.src = 'data:' + selectedFile.type + ';base64,' + selectedFileBase64;
+}
+
+function sendChunked(base64Data, fileName, mimeType) {
+  var btn = document.getElementById('btnGenerate');
+  var proc = document.getElementById('processing');
+  var result = document.getElementById('resultCard');
+
+  btn.disabled = true;
+  proc.classList.add('show');
+  result.classList.remove('show');
+  result.classList.remove('error');
+
+  var CHUNK_SIZE = 180000; // ~180KB per chunk (safe under 256KB with JSON overhead)
+  var uploadId = Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
+  var chunks = [];
+  for (var i = 0; i < base64Data.length; i += CHUNK_SIZE) {
+    chunks.push(base64Data.substring(i, i + CHUNK_SIZE));
+  }
+  var totalChunks = chunks.length;
+  var sentChunks = 0;
+
+  document.querySelector('.processing .proc-text').textContent = 'Subiendo archivo en partes...';
+  document.querySelector('.processing .proc-sub').textContent = 'Parte 1 de ' + totalChunks + ' (' + (base64Data.length / 1024).toFixed(0) + ' KB total)';
+
+  function sendNextChunk(index) {
+    if (index >= totalChunks) {
+      // All chunks sent, now process
+      document.querySelector('.processing .proc-text').textContent = 'Gemini AI procesando tu archivo...';
+      document.querySelector('.processing .proc-sub').textContent = 'Archivo completo enviado. Esperando respuesta de IA...';
+
+      google.script.run
+        .withSuccessHandler(function(r) {
+          btn.disabled = false;
+          proc.classList.remove('show');
+          handleServerResponse(r, fileName, result);
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          proc.classList.remove('show');
+          showServerError(err, base64Data.length, result);
+        })
+        .processChunkedFile(uploadId, totalChunks, fileName, mimeType, selectedGame);
+      return;
+    }
+
+    document.querySelector('.processing .proc-sub').textContent = 'Parte ' + (index + 1) + ' de ' + totalChunks;
+
+    google.script.run
+      .withSuccessHandler(function() {
+        sendNextChunk(index + 1);
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        proc.classList.remove('show');
+        result.classList.add('show');
+        result.classList.add('error');
+        document.getElementById('resultTitle').textContent = '❌ Error subiendo archivo';
+        document.getElementById('resultMsg').textContent = 'Falló al enviar parte ' + (index + 1) + ' de ' + totalChunks + ': ' + (err ? err.message || String(err) : 'desconocido');
+        document.getElementById('previewData').textContent = '';
+      })
+      .uploadFileChunk(uploadId, index, chunks[index]);
+  }
+
+  sendNextChunk(0);
+}
+
+function handleServerResponse(r, fileName, result) {
+  result.classList.add('show');
+  if (r && r.success) {
+    if (r.source === 'gemini') {
+      document.getElementById('resultTitle').textContent = '✅ ¡Contenido generado por Gemini AI!';
+      document.getElementById('resultMsg').textContent =
+        'Gemini analizó "' + fileName + '" y generó contenido personalizado. Ya está guardado y disponible en el juego.';
+      document.getElementById('previewData').textContent = JSON.stringify(r.data, null, 2).substring(0, 1200);
+    } else {
+      result.classList.add('error');
+      var errorMsg = r.geminiError || 'Error desconocido';
+      document.getElementById('resultTitle').textContent = '❌ Gemini no pudo procesar el archivo';
+      document.getElementById('resultMsg').textContent = 'Error de Gemini: ' + errorMsg;
+      document.getElementById('previewData').textContent =
+        'Se guardó contenido genérico como respaldo.\n\nPara diagnosticar:\n1. Ve a "Configuración IA" y haz clic en "Probar Conexión"\n2. Verifica que tu API Key esté activa en aistudio.google.com\n3. Intenta con otro archivo (imagen JPG/PNG o PDF pequeño)';
+    }
+  } else {
+    result.classList.add('error');
+    document.getElementById('resultTitle').textContent = '❌ Error';
+    document.getElementById('resultMsg').textContent = (r && r.error) ? r.error : 'Error desconocido';
+    document.getElementById('previewData').textContent = '';
+  }
+}
+
+function showServerError(err, dataSize, result) {
+  result.classList.add('show');
+  result.classList.add('error');
+  var errMsg = err ? (err.message || String(err)) : 'desconocido';
+  document.getElementById('resultTitle').textContent = '❌ Error de conexión';
+  document.getElementById('resultMsg').textContent = 'La llamada al servidor falló: ' + errMsg;
+  document.getElementById('previewData').textContent =
+    'Posibles causas:\n- Error de red\n- Web App no desplegada correctamente\n\nTamaño enviado: ' + (dataSize / 1024).toFixed(0) + ' KB';
+}
+
+function sendToServer(base64Data, fileName, mimeType) {
+  var btn = document.getElementById('btnGenerate');
+  var proc = document.getElementById('processing');
+  var result = document.getElementById('resultCard');
+
+  btn.disabled = true;
+  proc.classList.add('show');
+  document.querySelector('.processing .proc-text').textContent = 'Gemini AI procesando tu archivo...';
+  document.querySelector('.processing .proc-sub').textContent = 'Enviando ' + (base64Data.length / 1024).toFixed(0) + ' KB a Gemini...';
+  result.classList.remove('show');
+  result.classList.remove('error');
+
+  try {
+    google.script.run
+      .withSuccessHandler(function(r) {
+        btn.disabled = false;
+        proc.classList.remove('show');
+        handleServerResponse(r, fileName, result);
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        proc.classList.remove('show');
+        showServerError(err, base64Data.length, result);
+      })
+      .processUploadedFile(base64Data, fileName, mimeType, selectedGame);
+  } catch(e) {
+    btn.disabled = false;
+    proc.classList.remove('show');
+    result.classList.add('show');
+    result.classList.add('error');
+    document.getElementById('resultTitle').textContent = '❌ No conectado a Apps Script';
+    document.getElementById('resultMsg').textContent = 'Despliega el proyecto como Web App primero.';
+    document.getElementById('previewData').textContent = '';
+  }
+}
+
+// Tabs
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  
+  if (tab === 'content') loadContentList();
+  if (tab === 'manual') loadManualRecords();
+  if (tab === 'config') {
+    document.getElementById('configResult').classList.add('show');
+  }
+}
+
+function loadContentList() {
+  try {
+    google.script.run.withSuccessHandler(list => {
+      const container = document.getElementById('contentList');
+      if (!list || list.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="es-icon">📭</div><p>Aún no hay contenido generado.</p></div>';
+        return;
+      }
+      const icons = { mahjong:'🀄', memoria:'🧠', dragdrop:'🎯', quiz:'❓', simulacion:'🏗️' };
+      container.innerHTML = list.map(item => `
+        <div class="content-item">
+          <div class="ci-icon">${icons[item.juego] || '📄'}</div>
+          <div class="ci-info">
+            <div class="ci-game">${item.juego}</div>
+            <div class="ci-meta">📅 ${item.fecha} — 📎 ${item.fuente}</div>
+          </div>
+          <button class="ci-delete" onclick="deleteItem(${item.row})">🗑️ Eliminar</button>
+        </div>
+      `).join('');
+    }).getSavedContentList();
+  } catch(e) {
+    document.getElementById('contentList').innerHTML = '<div class="empty-state"><div class="es-icon">📭</div><p>Modo demo — contenido se muestra al conectar con Apps Script.</p></div>';
+  }
+}
+
+function deleteItem(row) {
+  if (!confirm('¿Eliminar este contenido?')) return;
+  try {
+    google.script.run.withSuccessHandler(() => loadContentList()).deleteContent(row);
+  } catch(e) { alert('Error al eliminar'); }
+}
+
+// Load config status on page load
+document.addEventListener('DOMContentLoaded', function() {
+  setupManualManager();
+  loadManualRecords();
+  try {
+    google.script.run.withSuccessHandler(function(cfg) {
+      var statusParts = [];
+      if (cfg.hasGeminiKey) {
+        statusParts.push('Gemini (' + cfg.apiKeyPreview + ')');
+        document.getElementById('apiKeyInput').placeholder = 'Clave guardada: ' + cfg.apiKeyPreview;
+      }
+      if (cfg.hasOpenAIKey) {
+        statusParts.push('OpenAI (' + cfg.openaiKeyPreview + ')');
+        document.getElementById('openaiKeyInput').placeholder = 'Clave guardada: ' + cfg.openaiKeyPreview;
+      }
+      if (statusParts.length > 0) {
+        document.getElementById('apiStatus').className = 'status-badge connected';
+        document.getElementById('apiStatus').textContent = '🟢 ' + statusParts.join(' + ');
+      }
+      if (cfg.hasSheetId) {
+        document.getElementById('sheetIdInput').placeholder = 'Guardado: ' + cfg.sheetIdPreview;
+      }
+      if (cfg.aiProvider) {
+        document.getElementById('aiProviderSelect').value = cfg.aiProvider;
+      }
+    }).getConfigStatus();
+  } catch(e) {}
+});
+
+function setupManualManager() {
+  const select = document.getElementById('manualGameSelect');
+  const games = [
+    { value: 'quiz', label: '❓ Quiz' },
+    { value: 'mahjong', label: '🀄 Mahjong' },
+    { value: 'memoria', label: '🧠 Memoria' },
+    { value: 'dragdrop', label: '🎯 Drag & Drop' },
+    { value: 'simulacion', label: '🏗️ Simulación' }
+  ];
+  select.innerHTML = games.map(g => `<option value="${g.value}">${g.label}</option>`).join('');
+  select.value = currentManualGame;
+  select.addEventListener('change', function() {
+    currentManualGame = this.value;
+    resetManualForm();
+    updateQuizAIPanel();
+    loadManualRecords();
+  });
+  renderManualForm([]);
+  updateQuizAIPanel();
+}
+
+function getFrontendManualSchema(game) {
+  const map = {
+    quiz: [
+      { key: 'pregunta', label: 'Pregunta', type: 'textarea', required: true },
+      { key: 'opcion_a', label: 'Opción A', required: true },
+      { key: 'opcion_b', label: 'Opción B', required: true },
+      { key: 'opcion_c', label: 'Opción C', required: true },
+      { key: 'opcion_d', label: 'Opción D', required: true },
+      { key: 'correcta', label: 'Correcta (1-4)', required: true },
+      { key: 'explicacion', label: 'Explicación', type: 'textarea' }
+    ],
+    mahjong: [
+      { key: 'concepto', label: 'Concepto', required: true },
+      { key: 'definicion', label: 'Definición', type: 'textarea', required: true }
+    ],
+    memoria: [
+      { key: 'emoji', label: 'Emoji', required: true },
+      { key: 'concepto', label: 'Concepto', required: true },
+      { key: 'explicacion', label: 'Explicación', type: 'textarea' }
+    ],
+    dragdrop: [
+      { key: 'categoria', label: 'Categoría', required: true },
+      { key: 'color_hex', label: 'Color Hex', placeholder: '#e74c3c' },
+      { key: 'elemento', label: 'Elemento', required: true },
+      { key: 'explicacion', label: 'Explicación', type: 'textarea' }
+    ],
+    simulacion: [
+      { key: 'escenario_id', label: 'Escenario ID', required: true },
+      { key: 'titulo', label: 'Título', required: true },
+      { key: 'descripcion_escenario', label: 'Descripción', type: 'textarea' },
+      { key: 'ambiente', label: 'Ambiente' },
+      { key: 'nombre_peligro', label: 'Nombre peligro', required: true },
+      { key: 'desc_peligro', label: 'Descripción peligro', type: 'textarea' },
+      { key: 'severidad', label: 'Severidad' },
+      { key: 'x', label: 'X' },
+      { key: 'y', label: 'Y' },
+      { key: 'ancho', label: 'Ancho' },
+      { key: 'alto', label: 'Alto' },
+      { key: 'solucion', label: 'Solución', type: 'textarea' }
+    ]
+  };
+  return map[game] || [];
+}
+
+function getResolvedManualColumns(game, serverColumns) {
+  const frontend = getFrontendManualSchema(game);
+  if (!serverColumns || !serverColumns.length) return frontend;
+  return serverColumns.map(col => {
+    const local = frontend.find(item => item.key === col.key) || {};
+    return Object.assign({}, local, col);
+  });
+}
+
+function renderManualForm(columns, record) {
+  const grid = document.getElementById('manualFormGrid');
+  const safeColumns = columns && columns.length ? columns : getFrontendManualSchema(currentManualGame);
+  currentManualColumns = safeColumns;
+  grid.innerHTML = safeColumns.map(col => {
+    const value = record && record[col.key] ? String(record[col.key]) : '';
+    const isTextArea = col.type === 'textarea';
+    const fieldClass = isTextArea ? 'full' : '';
+    const inputHtml = isTextArea
+      ? `<textarea id="manual_${col.key}" placeholder="${col.placeholder || ''}">${escapeHtml(value)}</textarea>`
+      : `<input id="manual_${col.key}" value="${escapeHtml(value)}" placeholder="${col.placeholder || ''}">`;
+    return `
+      <div class="${fieldClass}">
+        <label>${col.label}${col.required ? ' *' : ''}</label>
+        ${inputHtml}
+      </div>
+    `;
+  }).join('');
+}
+
+function loadManualRecords() {
+  const summary = document.getElementById('manualSheetSummary');
+  summary.textContent = 'Cargando registros...';
+  hideManualCrudResult();
+  updateQuizAIPanel();
+  try {
+    google.script.run
+      .withSuccessHandler(function(resp) {
+        if (!resp || !resp.success) {
+          summary.textContent = 'No se pudo leer la hoja manual.';
+          renderManualTable([]);
+          return;
+        }
+        manualSchemas[currentManualGame] = resp.columns || [];
+        currentManualColumns = getResolvedManualColumns(currentManualGame, resp.columns || []);
+        currentManualRecords = resp.records || [];
+        summary.innerHTML = `<span class="manual-pill">${resp.sheetName || ''}</span> ${currentManualRecords.length} registro(s) cargados`;
+        renderManualForm(currentManualColumns);
+        renderManualTable(currentManualRecords);
+      })
+      .withFailureHandler(function(err) {
+        summary.textContent = 'Error al cargar registros.';
+        renderManualTable([]);
+        showManualCrudResult(false, 'Error de conexión', err ? (err.message || String(err)) : 'No se pudo leer la hoja manual.');
+      })
+      .getManualSheetRecords(currentManualGame);
+  } catch(e) {
+    summary.textContent = 'Requiere Apps Script desplegado.';
+  }
+}
+
+function renderManualTable(records) {
+  const container = document.getElementById('manualRecordsTable');
+  if (!records || !records.length) {
+    container.innerHTML = '<div class="manual-empty">Todavía no hay registros guardados para este juego.</div>';
+    return;
+  }
+  const headers = currentManualColumns.map(col => `<th>${col.label}</th>`).join('');
+  const rows = records.map(record => {
+    const values = currentManualColumns.map(col => `<td>${escapeHtml(String(record[col.key] || '')).replace(/\n/g, '<br>')}</td>`).join('');
+    return `
+      <tr>
+        ${values}
+        <td class="actions">
+          <button class="manual-mini-btn secondary" type="button" onclick="editManualRecord(${record.row})">Editar</button>
+          <button class="manual-mini-btn danger" type="button" onclick="removeManualRecord(${record.row})">Eliminar</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  container.innerHTML = `
+    <table class="manual-table">
+      <thead>
+        <tr>${headers}<th>Acciones</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function editManualRecord(row) {
+  const record = currentManualRecords.find(item => Number(item.row) === Number(row));
+  if (!record) return;
+  document.getElementById('manualRow').value = record.row;
+  document.getElementById('manualFormTitle').textContent = 'Editando fila ' + record.row;
+  renderManualForm(currentManualColumns, record);
+  window.scrollTo({ top: document.getElementById('manualFormGrid').getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' });
+}
+
+function resetManualForm() {
+  document.getElementById('manualRow').value = '';
+  document.getElementById('manualFormTitle').textContent = 'Nuevo registro';
+  renderManualForm(currentManualColumns.length ? currentManualColumns : getFrontendManualSchema(currentManualGame));
+}
+
+function updateQuizAIPanel() {
+  const panel = document.getElementById('quizAiPanel');
+  if (!panel) return;
+  panel.classList.toggle('show', currentManualGame === 'quiz');
+}
+
+function handleManualQuizFile(input) {
+  const status = document.getElementById('quizAiStatus');
+  manualQuizFile = input.files && input.files[0] ? input.files[0] : null;
+  manualQuizFileBase64 = null;
+  if (!manualQuizFile) {
+    status.textContent = 'Sin archivo cargado. También puedes generar usando solo texto.';
+    return;
+  }
+  status.textContent = 'Leyendo archivo...';
+  const reader = new FileReader();
+  reader.onload = function() {
+    manualQuizFileBase64 = reader.result.split(',')[1];
+    status.textContent = 'Archivo listo: ' + manualQuizFile.name;
+  };
+  reader.onerror = function() {
+    manualQuizFile = null;
+    manualQuizFileBase64 = null;
+    input.value = '';
+    status.textContent = 'No se pudo leer el archivo. Intenta de nuevo.';
+  };
+  reader.readAsDataURL(manualQuizFile);
+}
+
+function setQuizAiBusy(isBusy, message) {
+  const btn = document.getElementById('btnQuizAiGenerate');
+  const status = document.getElementById('quizAiStatus');
+  btn.disabled = isBusy;
+  btn.textContent = isBusy ? 'Generando...' : 'Generar y guardar';
+  if (message) status.textContent = message;
+}
+
+function generateManualQuizAI() {
+  const textBase = document.getElementById('quizAiText').value.trim();
+  const questionCount = parseInt(document.getElementById('quizAiCount').value, 10);
+  const replaceExisting = document.getElementById('quizAiReplace').checked;
+
+  if (!questionCount || questionCount < 1) {
+    showManualCrudResult(false, 'Cantidad inválida', 'Indica cuántas preguntas quieres generar.');
+    return;
+  }
+  if (!textBase && !manualQuizFile) {
+    showManualCrudResult(false, 'Falta contenido base', 'Escribe un texto o sube un archivo antes de generar.');
+    return;
+  }
+
+  setQuizAiBusy(true, 'Generando preguntas con IA...');
+
+  const onSuccess = function(resp) {
+    setQuizAiBusy(false, resp && resp.success ? 'Preguntas generadas y guardadas.' : 'La generación no se completó.');
+    if (resp && resp.success) {
+      showManualCrudResult(true, 'Quiz actualizado', resp.message || 'Las preguntas se guardaron correctamente.');
+      loadManualRecords();
+    } else {
+      showManualCrudResult(false, 'No se pudo generar', resp && resp.error ? resp.error : 'Respuesta inválida del servidor.');
+    }
+  };
+
+  const onFailure = function(err) {
+    setQuizAiBusy(false, 'Ocurrió un error al generar las preguntas.');
+    showManualCrudResult(false, 'Error de conexión', err ? (err.message || String(err)) : 'No se pudo generar el quiz.');
+  };
+
+  try {
+    if (manualQuizFile) {
+      if (!manualQuizFileBase64) {
+        setQuizAiBusy(false, 'El archivo todavía se está leyendo.');
+        showManualCrudResult(false, 'Archivo no listo', 'Espera un momento y vuelve a intentarlo.');
+        return;
+      }
+
+      if (manualQuizFileBase64.length > 200000) {
+        const CHUNK_SIZE = 180000;
+        const uploadId = Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
+        const chunks = [];
+        for (let i = 0; i < manualQuizFileBase64.length; i += CHUNK_SIZE) {
+          chunks.push(manualQuizFileBase64.substring(i, i + CHUNK_SIZE));
+        }
+        sendManualQuizChunks(uploadId, chunks, manualQuizFile, questionCount, textBase, replaceExisting, onSuccess, onFailure);
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(onSuccess)
+        .withFailureHandler(onFailure)
+        .generateManualQuizWithAI(
+          questionCount,
+          textBase || null,
+          manualQuizFileBase64,
+          manualQuizFile.name,
+          manualQuizFile.type || 'application/octet-stream',
+          replaceExisting
+        );
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(onSuccess)
+      .withFailureHandler(onFailure)
+      .generateManualQuizWithAI(questionCount, textBase, null, null, null, replaceExisting);
+  } catch(e) {
+    onFailure(e);
+  }
+}
+
+function sendManualQuizChunks(uploadId, chunks, file, questionCount, textBase, replaceExisting, onSuccess, onFailure) {
+  let index = 0;
+  const totalChunks = chunks.length;
+
+  function next() {
+    if (index >= totalChunks) {
+      google.script.run
+        .withSuccessHandler(onSuccess)
+        .withFailureHandler(onFailure)
+        .generateManualQuizWithAIChunked(
+          uploadId,
+          totalChunks,
+          file.name,
+          file.type || 'application/octet-stream',
+          questionCount,
+          textBase || null,
+          replaceExisting
+        );
+      return;
+    }
+
+    setQuizAiBusy(true, 'Subiendo archivo... ' + (index + 1) + ' / ' + totalChunks);
+    google.script.run
+      .withSuccessHandler(function() {
+        index += 1;
+        next();
+      })
+      .withFailureHandler(onFailure)
+      .uploadFileChunk(uploadId, index, chunks[index]);
+  }
+
+  next();
+}
+
+function saveManualRecord() {
+  const payload = { row: document.getElementById('manualRow').value || '' };
+  let hasContent = false;
+  currentManualColumns.forEach(col => {
+    const el = document.getElementById('manual_' + col.key);
+    const value = el ? el.value.trim() : '';
+    payload[col.key] = value;
+    if (value) hasContent = true;
+  });
+  if (!hasContent) {
+    showManualCrudResult(false, 'Faltan datos', 'Completa al menos un campo antes de guardar.');
+    return;
+  }
+  try {
+    google.script.run
+      .withSuccessHandler(function(resp) {
+        if (resp && resp.success) {
+          showManualCrudResult(true, 'Registro guardado', resp.message || 'Los cambios se guardaron correctamente.');
+          resetManualForm();
+          loadManualRecords();
+        } else {
+          showManualCrudResult(false, 'No se pudo guardar', resp && resp.error ? resp.error : 'Respuesta inválida del servidor.');
+        }
+      })
+      .withFailureHandler(function(err) {
+        showManualCrudResult(false, 'Error de conexión', err ? (err.message || String(err)) : 'No se pudo guardar el registro.');
+      })
+      .saveManualSheetRecord(currentManualGame, payload);
+  } catch(e) {
+    showManualCrudResult(false, 'Apps Script requerido', 'Esta función necesita ejecutarse desde tu Web App de Apps Script.');
+  }
+}
+
+function removeManualRecord(row) {
+  if (!confirm('¿Eliminar este registro manual?')) return;
+  try {
+    google.script.run
+      .withSuccessHandler(function(resp) {
+        if (resp && resp.success) {
+          showManualCrudResult(true, 'Registro eliminado', resp.message || 'El registro fue eliminado.');
+          resetManualForm();
+          loadManualRecords();
+        } else {
+          showManualCrudResult(false, 'No se pudo eliminar', resp && resp.error ? resp.error : 'Respuesta inválida del servidor.');
+        }
+      })
+      .withFailureHandler(function(err) {
+        showManualCrudResult(false, 'Error de conexión', err ? (err.message || String(err)) : 'No se pudo eliminar el registro.');
+      })
+      .deleteManualSheetRecord(currentManualGame, row);
+  } catch(e) {
+    showManualCrudResult(false, 'Apps Script requerido', 'Esta función necesita ejecutarse desde tu Web App de Apps Script.');
+  }
+}
+
+function showManualCrudResult(ok, title, message) {
+  const card = document.getElementById('manualCrudResult');
+  card.className = 'result-card show' + (ok ? '' : ' error');
+  document.getElementById('manualCrudTitle').textContent = ok ? '✅ ' + title : '❌ ' + title;
+  document.getElementById('manualCrudMsg').textContent = message;
+}
+
+function hideManualCrudResult() {
+  const card = document.getElementById('manualCrudResult');
+  card.classList.remove('show', 'error');
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function saveConfig() {
+  var apiKey = document.getElementById('apiKeyInput').value.trim();
+  var sheetId = document.getElementById('sheetIdInput').value.trim();
+  var openaiKey = document.getElementById('openaiKeyInput').value.trim();
+  var aiProvider = document.getElementById('aiProviderSelect').value;
+
+  if (!apiKey && !sheetId && !openaiKey) {
+    alert('Ingresa al menos una API Key o el ID de la hoja de cálculo');
+    return;
+  }
+
+  var btn = document.querySelector('.config-card .btn-generate');
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando y probando conexión...';
+
+  var resultEl = document.getElementById('configResult');
+  resultEl.classList.remove('show', 'error');
+
+  try {
+    google.script.run
+      .withSuccessHandler(function(status) {
+        btn.disabled = false;
+        btn.textContent = '💾 Guardar Configuración';
+        resultEl.classList.add('show');
+
+        if (status && status.success) {
+          var msgs = [];
+          if (status.sheetConnected) msgs.push('✅ Google Sheet conectado correctamente');
+          else if (status.sheetError) msgs.push('❌ Sheet: ' + status.sheetError);
+
+          if (status.geminiConnected) {
+            msgs.push('✅ Gemini AI conectado y funcionando');
+          } else if (status.geminiError) {
+            msgs.push('❌ Gemini: ' + status.geminiError);
+          }
+
+          if (status.openaiConnected) {
+            msgs.push('✅ OpenAI (ChatGPT) conectado y funcionando');
+          } else if (status.openaiError) {
+            msgs.push('❌ OpenAI: ' + status.openaiError);
+          }
+
+          var anyAI = status.geminiConnected || status.openaiConnected;
+          if (anyAI) {
+            var providerNames = [];
+            if (status.geminiConnected) providerNames.push('Gemini');
+            if (status.openaiConnected) providerNames.push('OpenAI');
+            document.getElementById('apiStatus').className = 'status-badge connected';
+            document.getElementById('apiStatus').textContent = '🟢 ' + providerNames.join(' + ');
+          }
+
+          if (!anyAI && !apiKey && !openaiKey) {
+            msgs.push('⚪ IA: sin cambios');
+          }
+
+          var allOk = status.sheetConnected && anyAI;
+          resultEl.className = 'result-card show' + (allOk ? '' : ' error');
+          document.getElementById('cfgResultTitle').textContent = allOk ? '✅ ¡Todo conectado!' : '⚠️ Resultado de la configuración';
+          document.getElementById('cfgResultMsg').innerHTML = msgs.join('<br>');
+          if (allOk) {
+            document.getElementById('cfgResultMsg').innerHTML += '<br><br><strong>¡Ahora sube un documento y genera contenido personalizado!</strong>';
+          }
+        } else {
+          resultEl.className = 'result-card show error';
+          document.getElementById('cfgResultTitle').textContent = '❌ Error';
+          document.getElementById('cfgResultMsg').textContent = (status && status.error) ? status.error : 'Respuesta inválida del servidor al guardar';
+        }
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.textContent = '💾 Guardar Configuración';
+        resultEl.classList.add('show', 'error');
+        document.getElementById('cfgResultTitle').textContent = '❌ Error de conexión';
+        document.getElementById('cfgResultMsg').textContent = 'No se pudo guardar. Asegúrate de estar ejecutando desde Apps Script.';
+      })
+      .saveConfigFromAdmin(apiKey || null, sheetId || null, openaiKey || null, aiProvider);
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '💾 Guardar Configuración';
+    alert('Esta función requiere estar desplegada en Google Apps Script.');
+  }
+}
+
+function testConnection() {
+  var btn = document.getElementById('btnTest');
+  var resultEl = document.getElementById('configResult');
+  btn.disabled = true;
+  btn.textContent = '⏳ Probando...';
+  resultEl.classList.remove('show', 'error');
+
+  try {
+    google.script.run
+      .withSuccessHandler(function(r) {
+        btn.disabled = false;
+        btn.textContent = '🧪 Probar Conexión Gemini';
+        resultEl.classList.add('show');
+        if (r && r.success) {
+          resultEl.className = 'result-card show';
+          document.getElementById('cfgResultTitle').textContent = '✅ ¡Gemini AI funciona!';
+          document.getElementById('cfgResultMsg').textContent = r.message + '\n\nTu API Key es válida. Ahora sube un archivo en "Generar Contenido" para crear preguntas personalizadas.';
+          document.getElementById('apiStatus').className = 'status-badge connected';
+          document.getElementById('apiStatus').textContent = '🟢 Gemini Conectado';
+        } else {
+          resultEl.className = 'result-card show error';
+          document.getElementById('cfgResultTitle').textContent = '❌ Gemini no responde';
+          document.getElementById('cfgResultMsg').textContent = (r && r.message) ? r.message : 'Respuesta inválida del servidor';
+        }
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.textContent = '🧪 Probar Conexión Gemini';
+        resultEl.classList.add('show', 'error');
+        document.getElementById('cfgResultTitle').textContent = '❌ Error';
+        document.getElementById('cfgResultMsg').textContent = 'No se pudo conectar: ' + (err ? err.message || err : 'desconocido');
+      })
+      .testGeminiConnection();
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '🧪 Probar Conexión Gemini';
+    alert('Requiere estar desplegada en Google Apps Script.');
+  }
+}
+
+function crearHojasManuales() {
+  var btn = document.getElementById('btnCrearHojas');
+  var result = document.getElementById('manualResult');
+  btn.disabled = true;
+  btn.textContent = '⏳ Creando hojas...';
+  result.classList.remove('show', 'error');
+
+  try {
+    google.script.run
+      .withSuccessHandler(function(r) {
+        btn.disabled = false;
+        btn.textContent = '📊 Crear Hojas en mi Google Sheet';
+        result.classList.add('show');
+        if (r && r.success) {
+          document.getElementById('manualResultTitle').textContent = '✅ ¡Listo!';
+          document.getElementById('manualResultMsg').innerHTML = r.message + '<br><br>Abre tu Google Sheet y verás las nuevas hojas con ejemplos. Solo llena las filas y los juegos usarán tus datos.';
+          loadManualRecords();
+        } else {
+          result.classList.add('error');
+          document.getElementById('manualResultTitle').textContent = '❌ Error';
+          document.getElementById('manualResultMsg').textContent = r ? r.error : 'Error desconocido';
+        }
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.textContent = '📊 Crear Hojas en mi Google Sheet';
+        result.classList.add('show', 'error');
+        document.getElementById('manualResultTitle').textContent = '❌ Error de conexión';
+        document.getElementById('manualResultMsg').textContent = err ? (err.message || String(err)) : 'No se pudo conectar.';
+      })
+      .crearHojasManuales();
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '📊 Crear Hojas en mi Google Sheet';
+    alert('Requiere estar desplegada en Google Apps Script.');
+  }
+}
+
+function goBack() {
+  try {
+    google.script.run.withSuccessHandler(function(url) {
+      window.top.location.href = url + '?page=Portal';
+    }).withFailureHandler(function() {
+      window.top.location.href = 'kahoot.html';
+    }).getWebAppUrl();
+  } catch(e) { window.top.location.href = 'kahoot.html'; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🚀 KAHOOT ARENA - Portal Épico V3</title>
+    <?!= include('css'); ?>
+</head>
+<body class="sst-shell page-kahoot">
+
+<!-- BG -->
+<div class="animated-bg"><div class="floating-shapes"><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div></div></div>
+<div class="particles" id="particles"></div>
+<canvas id="confettiCanvas"></canvas>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- TRANSITION OVERLAY -->
+<div id="overlayTransition" class="overlay hidden">
+  <div class="transition-layer"></div>
+  <div class="transition-icon"></div>
+</div>
+
+<!-- SPLASH -->
+<div id="splashScreen">
+  <div class="splash-logo">🚀 KAHOOT ARENA</div>
+  <div class="splash-progress"><div class="splash-progress-bar" id="splashProgressBar"></div></div>
+  <div class="splash-text" id="splashText">Cargando sistema épico...</div>
+</div>
+
+<!-- LOGIN -->
+<div id="viewLogin" class="view view-center hidden">
+  <div class="login-card glass">
+    <div class="login-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <h1>🚀 KAHOOT ARENA</h1>
+    <p>Sistema de validación por DNI. Ingresa tu documento para acceder a las batallas épicas.</p>
+    <input class="input-field" type="text" id="dniInput" placeholder="🆔 Ingresa tu DNI" maxlength="8" inputmode="numeric">
+    <button class="btn btn-primary btn-full" onclick="window.app.loginDNI()">🔐 VALIDAR ACCESO</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="viewDashboard" class="view hidden">
+  <nav class="dashboard-nav glass">
+    <div class="nav-left">
+      <div class="nav-avatar" id="navAvatar">J</div>
+      <div>
+        <div class="nav-greeting">🎯 Guerrero Activo</div>
+        <div class="nav-name" id="displayUser">Juan</div>
+      </div>
+    </div>
+    <div class="nav-right">
+      <button class="btn-icon" onclick="window.app.openAdmin()" title="⚙️ Admin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
+      <button class="btn-icon" onclick="window.app.logout()" title="🚪 Salir">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="dashboard-body">
+    <div class="section-label">🎯 ARENAS DE COMBATE DISPONIBLES</div>
+    <div id="dashboardLoader" class="epic-loader hidden"></div>
+    <div id="cardsContainer" class="gallery"></div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="viewGame" class="view hidden">
+  <div class="game-topbar">
+    <div class="game-stat">
+      <div class="game-stat__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div><div class="game-stat__val" id="gameTimer">0s</div><div class="game-stat__lbl">⏱️ Tiempo</div></div>
+    </div>
+    <div class="game-stat">
+      <div class="game-stat__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>
+      <div><div class="game-stat__val" id="gameScore">0 pts</div><div class="game-stat__lbl">🏆 Puntos</div></div>
+    </div>
+    <div class="game-stat">
+      <div class="game-stat__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+      <div><div class="game-stat__val" id="gameProgress">1 / 10</div><div class="game-stat__lbl">🎯 Progreso</div></div>
+    </div>
+  </div>
+  <div class="game-body">
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
+    <div class="question-card glass">
+      <div class="question-number" id="questionNumber">⚡ Pregunta 1</div>
+      <div class="question-text" id="questionText">...</div>
+      <div id="optionsContainer" class="options-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="viewResults" class="view hidden view-center">
+  <div class="results-card glass">
+    <div class="results-trophy">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 010-5C5 4 5 2 6 2h12c1 0 1 2 2.5 2a2.5 2.5 0 010 5H18"/><path d="M6 20.5V16"/><path d="M18 20.5V16"/><path d="M6 16a6 6 0 0012 0"/><path d="M6 20.5h12"/></svg>
+    </div>
+    <div class="results-score" id="finalScore">. . . .</div>
+    <div class="results-label">🎉 PUNTOS ÉPICOS OBTENIDOS</div>
+    <div class="results-stats">
+      <div><div class="results-stat__val" id="statAciertos">. . . .</div><div class="results-stat__lbl">🎯 Aciertos</div></div>
+      <div><div class="results-stat__val" id="statTiempo">. . . .</div><div class="results-stat__lbl">⚡ Tiempo</div></div>
+    </div>
+    <div class="ranking-title">🏆 HALL DE LA FAMA - TOP GUERREROS</div>
+    <div id="rankingBody"></div>
+    <button class="btn btn-primary btn-full btn-spaced" onclick="window.app.loadDashboard()">🚀 ¡NUEVA BATALLA!</button>
+  </div>
+</div>
+
+<!-- COUNTDOWN -->
+<div id="overlayCountdown" class="overlay hidden">
+  <div class="countdown-wrap">
+    <div class="countdown-ring"></div>
+    <div class="countdown-num" id="countdownNumber">3</div>
+    <div class="countdown-msg" id="countdownMsg">🔥 PREPÁRATE</div>
+  </div>
+</div>
+
+<!-- FEEDBACK -->
+<div id="overlayFeedback" class="overlay hidden">
+  <div class="feedback-wrap">
+    <div class="feedback-gif-frame"><img id="feedbackGif" src="" alt=""></div>
+    <div class="feedback-label" id="feedbackText">¡ÉPICO!</div>
+    <div class="feedback-points hidden" id="feedbackPoints">+100 pts</div>
+  </div>
+</div>
+
+<!-- MINI RANKING -->
+<div id="overlayMiniRanking" class="overlay hidden">
+  <div class="mini-ranking-card">
+    <div class="mini-ranking-header">
+      <h3>📊 ¿QUIÉN VA GANANDO?</h3>
+      <p id="miniRankingSubtitle">Después de 5 preguntas</p>
+    </div>
+    <div id="miniRankingBody"></div>
+    <div class="mini-ranking-timer">Continuando en <span id="miniRankingTimer">3</span>s...</div>
+  </div>
+</div>
+
+<!-- RANKING MODAL -->
+<div id="modalRankingPrevio" class="overlay hidden">
+  <div class="ranking-modal-card glass">
+    <div class="ranking-modal-header">
+      <div class="ranking-modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 010-5C5 4 5 2 6 2h12c1 0 1 2 2.5 2a2.5 2.5 0 010 5H18"/><path d="M6 20.5V16"/><path d="M18 20.5V16"/><path d="M6 16a6 6 0 0012 0"/><path d="M6 20.5h12"/></svg>
+      </div>
+      <h2 class="ranking-modal-title" id="rankingModalTitle">🏆 HALL DE LA FAMA</h2>
+      <p class="ranking-modal-subtitle" id="rankingModalSubtitle">TOP GUERREROS</p>
+    </div>
+    <div class="ranking-modal-body" id="rankingModalBody"><div class="epic-loader"></div></div>
+    <button class="ranking-modal-close" onclick="window.app.closeRankingModal()">✕ CERRAR</button>
+  </div>
+</div>
+
+<!-- ADMIN MODAL -->
+<div id="modalAdmin" class="overlay hidden">
+  <div class="modal-card">
+    <h2>⚙️ CENTRO DE COMANDO</h2>
+    <input class="input-field" id="adminU" placeholder="🔑 Usuario Administrador" type="text">
+    <input class="input-field" id="adminP" placeholder="🛡️ Contraseña Secreta" type="password">
+    <button class="btn btn-primary btn-full" onclick="window.app.submitAdmin()">🚀 ACCEDER</button>
+    <button class="btn btn-ghost btn-full" onclick="document.getElementById('modalAdmin').classList.add('hidden')">❌ Cancelar</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="panelAdmin" class="overlay hidden">
+  <div class="admin-panel-inner">
+    <div class="admin-header">
+      <h2>🎛️ CONTROL DE ARENAS</h2>
+      <button class="btn btn-ghost btn-compact" onclick="window.app.closeAdmin()">✕ Cerrar</button>
+    </div>
+    <div id="adminList"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     🧠 JAVASCRIPT V3 - MEGA UPGRADE
+════════════════════════════════════════════ -->
+<script>
+window.app = {};
+
+/* ═══════════════════════════════════════════════
+   🔊 RETRO SOUND ENGINE (Web Audio API)
+═══════════════════════════════════════════════ */
+const SFX = (() => {
+  let ctx = null;
+  function getCtx() {
+    if (!ctx) {
+      try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    }
+    return ctx;
+  }
+
+  function play(type) {
+    const c = getCtx();
+    if (!c) { if (navigator.vibrate) navigator.vibrate(50); return; }
+    const now = c.currentTime;
+    const g = c.createGain();
+    g.connect(c.destination);
+    g.gain.value = 0.15;
+
+    switch(type) {
+      case 'powerup': {
+        const o = c.createOscillator(); o.type='square'; o.connect(g);
+        o.frequency.setValueAtTime(300,now); o.frequency.exponentialRampToValueAtTime(900,now+.3);
+        g.gain.exponentialRampToValueAtTime(.001,now+.35); o.start(now); o.stop(now+.35);
+        break;
+      }
+      case 'coin': {
+        const o=c.createOscillator(); o.type='square'; o.connect(g);
+        o.frequency.setValueAtTime(988,now); o.frequency.setValueAtTime(1319,now+.07);
+        g.gain.exponentialRampToValueAtTime(.001,now+.15); o.start(now); o.stop(now+.15);
+        break;
+      }
+      case 'correct': {
+        const o=c.createOscillator(); o.type='square'; o.connect(g);
+        o.frequency.setValueAtTime(523,now); o.frequency.setValueAtTime(659,now+.1); o.frequency.setValueAtTime(784,now+.2);
+        g.gain.exponentialRampToValueAtTime(.001,now+.35); o.start(now); o.stop(now+.35);
+        break;
+      }
+      case 'wrong': {
+        const o=c.createOscillator(); o.type='sawtooth'; o.connect(g);
+        o.frequency.setValueAtTime(300,now); o.frequency.exponentialRampToValueAtTime(100,now+.3);
+        g.gain.exponentialRampToValueAtTime(.001,now+.35); o.start(now); o.stop(now+.35);
+        break;
+      }
+      case 'countdown': {
+        const o=c.createOscillator(); o.type='square'; o.connect(g);
+        o.frequency.setValueAtTime(440,now); g.gain.exponentialRampToValueAtTime(.001,now+.15); o.start(now); o.stop(now+.15);
+        break;
+      }
+      case 'go': {
+        const o=c.createOscillator(); o.type='square'; o.connect(g); g.gain.value=.2;
+        o.frequency.setValueAtTime(523,now); o.frequency.setValueAtTime(659,now+.08);
+        o.frequency.setValueAtTime(784,now+.16); o.frequency.setValueAtTime(1047,now+.24);
+        g.gain.exponentialRampToValueAtTime(.001,now+.4); o.start(now); o.stop(now+.4);
+        break;
+      }
+      case 'victory': {
+        const o=c.createOscillator(); o.type='square'; o.connect(g); g.gain.value=.12;
+        const notes=[523,659,784,1047,784,1047]; let t=now;
+        notes.forEach((n,i)=>{o.frequency.setValueAtTime(n,t);t+=.12;});
+        g.gain.exponentialRampToValueAtTime(.001,now+.8); o.start(now); o.stop(now+.8);
+        break;
+      }
+      case 'whoosh': {
+        const buf=c.createBufferSource(); const b=c.createBuffer(1,c.sampleRate*.15,c.sampleRate);
+        const d=b.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
+        buf.buffer=b; const f=c.createBiquadFilter(); f.type='bandpass'; f.frequency.value=2000; f.Q.value=.5;
+        buf.connect(f); f.connect(g); g.gain.value=.08; buf.start(now);
+        break;
+      }
+      case 'click': {
+        const o=c.createOscillator(); o.type='sine'; o.connect(g); g.gain.value=.06;
+        o.frequency.setValueAtTime(800,now); g.gain.exponentialRampToValueAtTime(.001,now+.05); o.start(now); o.stop(now+.05);
+        break;
+      }
+      case 'streak': {
+        const o=c.createOscillator(); o.type='square'; o.connect(g); g.gain.value=.15;
+        o.frequency.setValueAtTime(784,now); o.frequency.setValueAtTime(988,now+.08); o.frequency.setValueAtTime(1175,now+.16);
+        g.gain.exponentialRampToValueAtTime(.001,now+.3); o.start(now); o.stop(now+.3);
+        break;
+      }
+    }
+    if (navigator.vibrate) { navigator.vibrate(type==='wrong'?[100,50,100]:type==='correct'?[80,40,80]:30); }
+  }
+  return { play };
+})();
+
+/* ═══════════════════════════════════════════════
+   🎆 TRANSITION ENGINE
+═══════════════════════════════════════════════ */
+const TransitionEngine = (() => {
+  const TYPES = ['circle','wipe','pixel','glitch','scanlines','slide'];
+  const ICONS = ['🚀','⚡','🎮','🏆','💥','🔥','⭐','💎','🎯','🌟'];
+  const SOUNDS = ['powerup','whoosh','coin'];
+  let lastType = -1;
+
+  function run(callback) {
+    const ov = document.getElementById('overlayTransition');
+    const layer = ov.querySelector('.transition-layer');
+    const icon = ov.querySelector('.transition-icon');
+
+    // Pick random but never same as last
+    let ti;
+    do { ti = Math.floor(Math.random() * TYPES.length); } while(ti === lastType && TYPES.length > 1);
+    lastType = ti;
+
+    const type = TYPES[ti];
+    const emoji = ICONS[Math.floor(Math.random() * ICONS.length)];
+    const sound = SOUNDS[Math.floor(Math.random() * SOUNDS.length)];
+
+    ov.className = 'overlay trans-' + type;
+    icon.textContent = emoji;
+    icon.style.animation = 'none'; void icon.offsetWidth;
+    icon.style.animation = '';
+
+    // ENTER
+    ov.classList.add('entering');
+    SFX.play(sound);
+
+    setTimeout(() => {
+      // Switch content while covered
+      callback();
+
+      // EXIT
+      ov.classList.remove('entering');
+      ov.classList.add('exiting');
+
+      setTimeout(() => {
+        ov.className = 'overlay hidden';
+      }, 550);
+    }, 550);
+  }
+  return { run };
+})();
+
+/* ═══════════════════════════════════════════════
+   💬 TOASTS
+═══════════════════════════════════════════════ */
+function showToast(title, message, type) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type||'info');
+  const icons = {success:'✅',error:'❌',info:'ℹ️'};
+  t.innerHTML = '<div class="toast-icon">'+(icons[type]||icons.info)+'</div><div class="toast-content"><div class="toast-title">'+title+'</div><div class="toast-message">'+message+'</div></div>';
+  c.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all .3s';setTimeout(()=>t.remove(),300);},3500);
+}
+
+/* ═══════════════════════════════════════════════
+   🎆 CONFETTI
+═══════════════════════════════════════════════ */
+function launchConfetti() {
+  const canvas=document.getElementById('confettiCanvas'); const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  const pieces=[]; const colors=['#00f5ff','#ff006e','#39ff14','#ff9500','#bf00ff','#FFD700'];
+  for(let i=0;i<120;i++) pieces.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height-canvas.height,w:Math.random()*10+5,h:Math.random()*10+5,color:colors[Math.floor(Math.random()*colors.length)],speed:Math.random()*3+2,wobble:Math.random()*2-1,rot:Math.random()*360});
+  let frame=0;
+  function animate(){ctx.clearRect(0,0,canvas.width,canvas.height);pieces.forEach(p=>{ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();p.y+=p.speed;p.x+=p.wobble;p.rot+=2;if(p.y>canvas.height)p.y=-10;});frame++;if(frame<300)requestAnimationFrame(animate);else ctx.clearRect(0,0,canvas.width,canvas.height);}
+  animate();
+}
+
+/* ═══════════════════════════════════════════════
+   🔄 CACHE
+═══════════════════════════════════════════════ */
+const Cache = {
+  _store: {},
+  set(k,d,ttl=300000) { this._store[k]={data:d,exp:Date.now()+ttl}; },
+  get(k) { const i=this._store[k]; if(!i||Date.now()>i.exp){delete this._store[k];return null;} return i.data; },
+  clear() { this._store={}; }
+};
+
+/* ═══════════════════════════════════════════════
+   🎆 PARTICLES
+═══════════════════════════════════════════════ */
+function createParticles(){const c=document.getElementById('particles');const cols=['var(--neon-blue)','var(--neon-pink)','var(--neon-green)','var(--neon-orange)','var(--neon-purple)'];for(let i=0;i<15;i++){const p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.animationDelay=Math.random()*8+'s';p.style.background=cols[Math.floor(Math.random()*cols.length)];c.appendChild(p);}}
+
+/* ═══════════════════════════════════════════════
+   🔄 SPLASH & INIT
+═══════════════════════════════════════════════ */
+function updateSplash(pct,txt){document.getElementById('splashProgressBar').style.width=pct+'%';document.getElementById('splashText').textContent=txt;}
+
+document.addEventListener('DOMContentLoaded',function(){
+  createParticles();
+  updateSplash(30,'🔥 Inicializando sistema...');
+  setTimeout(()=>updateSplash(60,'⚡ Cargando recursos...'),400);
+  setTimeout(()=>updateSplash(90,'🚀 Preparando interfaz...'),800);
+  setTimeout(()=>{
+    updateSplash(100,'✅ ¡Sistema listo!');
+    setTimeout(()=>{
+      document.getElementById('splashScreen').style.opacity='0';
+      setTimeout(()=>{document.getElementById('splashScreen').remove();document.getElementById('viewLogin').classList.remove('hidden');showToast('Sistema Listo','¡Bienvenido GUERRERO!','success');},500);
+    },200);
+  },1200);
+});
+
+/* ═══════════════════════════════════════════════
+   🧠 MAIN APP
+═══════════════════════════════════════════════ */
+(function(){
+  let currentUser="", currentUserAlias="";
+  let currentQuestions=[], curIdx=0, score=0, accTime=0, startTime=0, timerInt=null, curTitle="";
+  let streak=0; // consecutive correct
+  let questionTimes=[]; // time per question for scoring
+  let liveRanking=[]; // mini ranking data
+
+  const EMOJIS=['🔥','⚡','💥','🚀'];
+  const MINI_RANKING_EVERY = 5; // show mini ranking every N questions
+
+  /* ─── VIEW SWITCH ─── */
+  function showView(id){
+    ['viewLogin','viewDashboard','viewGame','viewResults'].forEach(v=>document.getElementById(v).classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+  }
+
+  function transitionTo(id, skipTransition){
+    if(skipTransition) { showView(id); return; }
+    TransitionEngine.run(()=>showView(id));
+  }
+
+  /* ─── 🔐 LOGIN ─── */
+  window.app.loginDNI = function(){
+    const inp=document.getElementById('dniInput');
+    const dni=inp.value.trim();
+    if(!dni||dni.length<8||!/^\d+$/.test(dni)){
+      inp.style.animation='none';setTimeout(()=>inp.style.animation='shake .5s ease-in-out',10);
+      showToast('DNI Inválido','Debes ingresar un DNI de 8 dígitos','error'); SFX.play('wrong'); return;
+    }
+    inp.classList.add('validating-pulse'); inp.disabled=true;
+    showToast('Validando...','Verificando tu DNI','info');
+
+    google.script.run
+      .withFailureHandler(function(err){inp.classList.remove('validating-pulse');inp.disabled=false;showToast('Error','No se pudo conectar','error');SFX.play('wrong');})
+      .withSuccessHandler(function(result){
+        inp.classList.remove('validating-pulse'); inp.disabled=false;
+        if(result.exito){
+          currentUser=result.nombreReal; currentUserAlias=result.alias;
+          document.getElementById('displayUser').textContent=result.alias;
+          document.getElementById('navAvatar').textContent=result.alias.charAt(0).toUpperCase();
+          SFX.play('correct');
+          showToast('¡Bienvenido!','Hola '+result.alias+', acceso concedido','success');
+
+          // PRELOAD: start loading dashboard data immediately
+          preloadDashboardData();
+          transitionTo('viewDashboard');
+        } else {
+          inp.style.animation='none';setTimeout(()=>inp.style.animation='shake .5s ease-in-out',10);
+          showToast('DNI No Encontrado',result.error||'Tu DNI no está registrado','error'); SFX.play('wrong');
+        }
+      }).validarUsuarioPorDNI(dni);
+  };
+
+  window.app.logout = function(){
+    currentUser=""; currentUserAlias=""; document.getElementById('dniInput').value=""; Cache.clear();
+    showToast('Sesión Cerrada','Hasta pronto, guerrero','info'); SFX.play('click'); transitionTo('viewLogin');
+  };
+
+  /* ─── PRELOAD ─── */
+  let _preloadedTemas = null;
+  let _preloadPending = false;
+
+  function preloadDashboardData(){
+    _preloadPending = true;
+    google.script.run
+      .withSuccessHandler(function(temas){
+        _preloadedTemas = temas;
+        Cache.set('temas_'+currentUser, temas);
+        _preloadPending = false;
+        // If dashboard is visible, render
+        if(!document.getElementById('viewDashboard').classList.contains('hidden')){
+          renderTemas(temas);
+          document.getElementById('dashboardLoader').classList.add('hidden');
+        }
+      })
+      .withFailureHandler(function(){ _preloadPending=false; })
+      .obtenerDatosUsuario(currentUser);
+  }
+
+  /* ─── DASHBOARD ─── */
+  window.app.loadDashboard = function(){
+    transitionTo('viewDashboard');
+    const c=document.getElementById('cardsContainer');
+    const l=document.getElementById('dashboardLoader');
+
+    // Try preloaded
+    if(_preloadedTemas){
+      renderTemas(_preloadedTemas);
+      // Refresh in background
+      preloadDashboardData();
+      return;
+    }
+
+    const cached=Cache.get('temas_'+currentUser);
+    if(cached){ renderTemas(cached); preloadDashboardData(); return; }
+
+    c.innerHTML=''; l.classList.remove('hidden');
+    if(!_preloadPending) preloadDashboardData();
+  };
+
+  function renderTemas(temas){
+    const c=document.getElementById('cardsContainer');
+    if(!temas||temas.length===0){c.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted);"><h3>🎯 No hay arenas disponibles</h3><p>Las batallas están siendo preparadas...</p></div>';return;}
+    let html='';
+    temas.forEach(function(t,idx){
+      const isDis=t.estado!=='DISPONIBLE';
+      let badgeClass='badge-available',badgeLabel='🟢 Disponible',buttonText='⚔️ ¡INICIAR BATALLA!';
+      if(t.estado==='COMPLETADO_HOY'){badgeClass='badge-completed';badgeLabel='✅ Completado';buttonText='🏆 Ya Conquistado';}
+      else if(t.estado==='CERRADO'){badgeClass='badge-closed';badgeLabel='🔒 Cerrado';buttonText='🚫 No Disponible';}
+      let metaLabel='';
+      if(t.mejorPuntaje&&t.mejorPuntaje!=='-') metaLabel='🏆 Mejor puntaje: '+t.mejorPuntaje+' pts';
+
+      html+='<div class="gallery-card glass'+(isDis?' disabled':'')+'" style="animation-delay:'+(idx*.1)+'s;">';
+      html+='<div class="gallery-card__img-wrap">';
+      html+='<img src="'+t.img+'" alt="'+t.titulo+'" onerror="this.src=\'https://picsum.photos/seed/'+idx+'/400/225\'">';
+      html+='<button class="btn-ranking" onclick="window.app.verRanking(\''+t.titulo.replace(/'/g,"\\'")+'\');event.stopPropagation();">🏆<span class="player-count" id="count-'+idx+'">?</span></button>';
+      html+='<span class="gallery-card__badge '+badgeClass+'">'+badgeLabel+'</span>';
+      html+='</div><div class="gallery-card__body">';
+      html+='<div class="gallery-card__title">🎯 '+t.titulo+'</div>';
+      if(metaLabel) html+='<div class="gallery-card__meta">'+metaLabel+'</div>';
+      html+='<button class="gallery-card__btn" onclick="window.app.initGame(\''+t.titulo.replace(/'/g,"\\'")+'\')" '+(isDis?'disabled':'')+'>'+buttonText+'</button>';
+      html+='</div></div>';
+
+      // Load player counts staggered
+      setTimeout(function(){
+        google.script.run.withSuccessHandler(function(ranking){
+          const el=document.getElementById('count-'+idx);
+          if(el) el.textContent=ranking&&ranking.length>0?ranking.length:'0';
+        }).obtenerRanking(t.titulo);
+      },idx*80);
+    });
+    c.innerHTML=html;
+    document.getElementById('dashboardLoader').classList.add('hidden');
+  }
+
+  /* ─── GAME INIT ─── */
+  window.app.initGame = function(title){
+    curTitle=title; SFX.play('click');
+    showToast('Cargando Arena','Preparando desafíos...','info');
+    document.getElementById('cardsContainer').innerHTML='<div class="epic-loader"></div>';
+
+    // Also preload live ranking for this topic
+    google.script.run.withSuccessHandler(function(r){ liveRanking=r||[]; }).obtenerRanking(title);
+
+    google.script.run
+      .withFailureHandler(function(){showToast('Error','No se pudieron cargar las preguntas','error');window.app.loadDashboard();})
+      .withSuccessHandler(function(qs){
+        if(!qs||!qs.length){showToast('Sin Preguntas','Esta arena no tiene desafíos','error');window.app.loadDashboard();return;}
+        currentQuestions=qs; curIdx=0; score=0; accTime=0; streak=0; questionTimes=[];
+        document.getElementById('gameScore').textContent='0 pts';
+        transitionTo('viewGame');
+        setTimeout(()=>runCountdown(nextQuestion),600);
+      }).obtenerPreguntasJuego(title);
+  };
+
+  /* ─── COUNTDOWN V3 - UNIQUE ANIMATIONS ─── */
+  function runCountdown(cb){
+    const ov=document.getElementById('overlayCountdown');
+    const wrap=ov.querySelector('.countdown-wrap');
+    const num=document.getElementById('countdownNumber');
+    const msg=document.getElementById('countdownMsg');
+    let count=3;
+    const messages={3:'🔥 PREPÁRATE PARA LA BATALLA',2:'⚡ CARGA TU ENERGÍA',1:'💥 ¡AQUÍ VAMOS!',go:'🚀 ¡¡¡VAMOS!!!'};
+    const anims={3:'countdown-anim-3',2:'countdown-anim-2',1:'countdown-anim-1',go:'countdown-anim-go'};
+
+    function setCount(val){
+      const key=val===0?'go':val;
+      num.textContent=val===0?'GO!':val;
+      msg.textContent=messages[key];
+      wrap.className='countdown-wrap '+anims[key];
+      SFX.play(val===0?'go':'countdown');
+    }
+
+    setCount(3);
+    ov.classList.remove('hidden');
+
+    const int=setInterval(()=>{
+      count--;
+      if(count>0){
+        setCount(count);
+      } else if(count===0){
+        setCount(0);
+      } else {
+        clearInterval(int);
+        ov.classList.add('hidden');
+        wrap.className='countdown-wrap';
+        cb();
+      }
+    },900);
+  }
+
+  /* ─── QUESTION ─── */
+  function nextQuestion(){
+    const q=currentQuestions[curIdx]; const total=currentQuestions.length;
+    document.getElementById('gameProgress').textContent=(curIdx+1)+' / '+total;
+    document.getElementById('questionNumber').textContent='⚡ Desafío '+(curIdx+1)+' de '+total;
+    document.getElementById('questionText').textContent=q.pregunta;
+    document.getElementById('progressFill').style.width=((curIdx/total)*100)+'%';
+
+    // Animate question card
+    const qCard=document.querySelector('.question-card');
+    qCard.style.animation='none'; void qCard.offsetWidth;
+    qCard.style.animation='fadeInUp .5s cubic-bezier(.68,-.55,.265,1.55)';
+
+    const c=document.getElementById('optionsContainer');
+    let html='';
+    q.opciones.forEach(function(o,i){
+      html+='<button class="option-btn" id="opt'+i+'" onclick="window.app.answer('+i+')">';
+      html+='<span class="option-letter">'+EMOJIS[i]+'</span>';
+      html+='<span>'+o+'</span></button>';
+    });
+    c.innerHTML=html;
+
+    startTime=Date.now();
+    if(timerInt) clearInterval(timerInt);
+    timerInt=setInterval(()=>{
+      const diff=Math.floor((Date.now()-startTime)/1000)+accTime;
+      document.getElementById('gameTimer').textContent=diff+'s';
+    },500);
+  }
+
+  /* ─── ANSWER ─── */
+  window.app.answer = function(idx){
+    // Prevent double tap
+    const opts=document.querySelectorAll('.option-btn');
+    opts.forEach(o=>o.classList.add('disabled-option'));
+
+    clearInterval(timerInt);
+    const qTime=Math.floor((Date.now()-startTime)/1000);
+    accTime+=qTime;
+    questionTimes.push(qTime);
+
+    const q=currentQuestions[curIdx];
+    const correct=(idx===q.respuesta);
+
+    // Visual feedback on options
+    const selected=document.getElementById('opt'+idx);
+    if(correct){
+      selected.classList.add('selected-correct');
+      streak++;
+      // Bonus points for speed: max 100, min 50, faster = more
+      const timeBonus=Math.max(50, 100 - qTime*5);
+      score+=timeBonus;
+      document.getElementById('gameScore').textContent=score+' pts';
+    } else {
+      selected.classList.add('selected-wrong');
+      // Reveal correct
+      document.getElementById('opt'+q.respuesta).classList.add('reveal-correct');
+      streak=0;
+    }
+
+    // Show streak badge
+    if(streak>=3){
+      showStreakBadge(streak);
+    }
+
+    // Short delay to show option colors
+    setTimeout(()=>{
+      showFeedback(correct, q, ()=>{
+        curIdx++;
+        // Check mini-ranking
+        if(curIdx < currentQuestions.length && curIdx % MINI_RANKING_EVERY === 0){
+          showMiniRanking(()=>{ runCountdown(nextQuestion); });
+        } else if(curIdx < currentQuestions.length){
+          runCountdown(nextQuestion);
+        } else {
+          finish();
+        }
+      });
+    },800);
+  };
+
+  function showStreakBadge(n){
+    const existing=document.querySelector('.streak-badge');
+    if(existing) existing.remove();
+    const badge=document.createElement('div');
+    badge.className='streak-badge';
+    badge.textContent='🔥 RACHA x'+n+'!';
+    document.body.appendChild(badge);
+    SFX.play('streak');
+    setTimeout(()=>badge.remove(),2000);
+  }
+
+  /* ─── FEEDBACK ─── */
+  function showFeedback(correct, q, cb){
+    const ov=document.getElementById('overlayFeedback');
+    const txt=document.getElementById('feedbackText');
+    const img=document.getElementById('feedbackGif');
+    const pts=document.getElementById('feedbackPoints');
+
+    const correctMsgs=['🔥 ¡ÉPICO!','⚡ ¡INCREÍBLE!','💥 ¡BRUTAL!','🚀 ¡GENIAL!','🎯 ¡PERFECTO!','✨ ¡MAGNÍFICO!'];
+    const wrongMsgs=['💀 ¡FALLASTE!','😵 ¡UPS!','🤯 ¡NO ERA ESA!','😱 ¡CASI!','🫠 ¡NOOOO!'];
+
+    if(correct){
+      txt.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+      txt.className='feedback-label correct';
+      const timeBonus=questionTimes[questionTimes.length-1];
+      const pointsEarned=Math.max(50,100-timeBonus*5);
+      pts.textContent='+'+pointsEarned+' pts';
+      pts.classList.remove('hidden');
+      SFX.play('correct');
+    } else {
+      txt.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+      txt.className='feedback-label wrong';
+      pts.classList.add('hidden');
+      SFX.play('wrong');
+    }
+
+    img.src=correct
+      ?(q.gifCorrecto||'https://media.giphy.com/media/26u4cqiYI30juCOGY/giphy.gif')
+      :(q.gifIncorrecto||'https://media.giphy.com/media/l2JehQ2GitHGdVG9y/giphy.gif');
+
+    ov.classList.remove('hidden');
+    setTimeout(()=>{ov.classList.add('hidden');cb();},2500);
+  }
+
+  /* ─── MINI RANKING ─── */
+  function showMiniRanking(cb){
+    const ov=document.getElementById('overlayMiniRanking');
+    const body=document.getElementById('miniRankingBody');
+    const subtitle=document.getElementById('miniRankingSubtitle');
+    const timerEl=document.getElementById('miniRankingTimer');
+
+    subtitle.textContent='Después de '+curIdx+' preguntas';
+
+    // Build a temporary ranking including current user
+    let tempRanking=[...liveRanking];
+    // Add or update current user
+    const meIdx=tempRanking.findIndex(r=>r.nombre===currentUserAlias);
+    if(meIdx>=0){
+      tempRanking[meIdx]={...tempRanking[meIdx],puntos:Math.max(tempRanking[meIdx].puntos,score)};
+    } else {
+      tempRanking.push({nombre:currentUserAlias,puntos:score});
+    }
+    tempRanking.sort((a,b)=>b.puntos-a.puntos);
+    tempRanking=tempRanking.slice(0,5);
+
+    let html='';
+    tempRanking.forEach((r,i)=>{
+      let posClass='';
+      if(i===0)posClass=' m-top1'; else if(i===1)posClass=' m-top2'; else if(i===2)posClass=' m-top3';
+      const isMe=r.nombre===currentUserAlias;
+      html+='<div class="mini-ranking-row">';
+      html+='<div class="mini-pos'+posClass+'">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1))+'</div>';
+      html+='<div class="mini-name'+(isMe?' is-me':'')+'">'+r.nombre+(isMe?' 🎮':'')+'</div>';
+      html+='<div class="mini-pts">'+r.puntos+' pts</div>';
+      html+='</div>';
+    });
+    body.innerHTML=html;
+
+    ov.classList.remove('hidden');
+    SFX.play('victory');
+
+    let countdown=4;
+    timerEl.textContent=countdown;
+    const int=setInterval(()=>{
+      countdown--;
+      timerEl.textContent=countdown;
+      if(countdown<=0){clearInterval(int);ov.classList.add('hidden');cb();}
+    },1000);
+  }
+
+  /* ─── FINISH ─── */
+  function finish(){
+    transitionTo('viewResults');
+    SFX.play('victory');
+    launchConfetti();
+    document.getElementById('rankingBody').innerHTML='<div class="epic-loader" style="margin:30px auto;"></div>';
+
+    google.script.run.withSuccessHandler(function(res){
+      document.getElementById('finalScore').textContent=res.puntaje;
+      document.getElementById('statAciertos').textContent=score+' / '+currentQuestions.length;
+      document.getElementById('statTiempo').textContent=accTime+'s';
+      showToast('¡Batalla Completada!',res.puntaje+' puntos obtenidos','success');
+
+      let h='<div class="ranking-header"><div>#</div><div>JUGADOR</div><div>🏆 PUNTOS</div><div>⚡ TIEMPO</div><div>🔄 INT</div></div>';
+      res.ranking.forEach(function(r,i){
+        let posClass='',posEmoji=(i+1).toString();
+        if(i===0){posClass=' top1';posEmoji='🥇';}else if(i===1){posClass=' top2';posEmoji='🥈';}else if(i===2){posClass=' top3';posEmoji='🥉';}
+        const isMe=(r.nombre===currentUserAlias);
+        const tf=r.tiempo>=60?Math.floor(r.tiempo/60)+'m '+(r.tiempo%60)+'s':r.tiempo+'s';
+        h+='<div class="ranking-row'+(isMe?' highlight':'')+'">';
+        h+='<div class="ranking-col-pos'+posClass+'">'+posEmoji+'</div>';
+        h+='<div class="ranking-col-name">'+r.nombre+(isMe?' <span style="font-size:.8rem;color:var(--neon-blue);">🎮 (Tú)</span>':'')+'</div>';
+        h+='<div class="ranking-col-stat ranking-col-puntos"><div class="ranking-stat-value">'+r.puntos+'</div><div class="ranking-stat-label">PUNTOS</div></div>';
+        h+='<div class="ranking-col-stat ranking-col-tiempo"><div class="ranking-stat-value">'+tf+'</div><div class="ranking-stat-label">TIEMPO</div></div>';
+        h+='<div class="ranking-col-stat ranking-col-intentos"><div class="ranking-stat-value">'+r.intentos+'x</div><div class="ranking-stat-label">INT</div></div>';
+        h+='</div>';
+      });
+      document.getElementById('rankingBody').innerHTML=h;
+      Cache.clear();
+      _preloadedTemas=null;
+    }).guardarIntento(currentUser, currentUserAlias, curTitle, score, currentQuestions.length, accTime);
+  }
+
+  /* ─── RANKING MODAL ─── */
+  window.app.verRanking = function(titulo){
+    const modal=document.getElementById('modalRankingPrevio');
+    document.getElementById('rankingModalTitle').textContent='🏆 '+titulo;
+    document.getElementById('rankingModalSubtitle').textContent='Cargando...';
+    document.getElementById('rankingModalBody').innerHTML='<div class="epic-loader" style="margin:30px auto;"></div>';
+    modal.classList.remove('hidden'); SFX.play('click');
+
+    google.script.run
+      .withFailureHandler(function(){document.getElementById('rankingModalBody').innerHTML='<div style="text-align:center;padding:20px;color:var(--neon-orange);">Error al cargar</div>';})
+      .withSuccessHandler(function(ranking){
+        document.getElementById('rankingModalSubtitle').textContent='TOP 10 GUERREROS';
+        if(!ranking||ranking.length===0){
+          document.getElementById('rankingModalBody').innerHTML='<div style="text-align:center;padding:40px;"><p style="font-size:1rem;font-weight:600;">Nadie ha jugado aún</p></div>';return;
+        }
+        let html='<div class="ranking-header"><div>#</div><div>JUGADOR</div><div>🏆 PTS</div><div>⚡ TIEMPO</div><div>🔄 INT</div></div>';
+        ranking.forEach(function(r,i){
+          let posClass='',posEmoji=(i+1).toString();
+          if(i===0){posClass=' top1';posEmoji='🥇';}else if(i===1){posClass=' top2';posEmoji='🥈';}else if(i===2){posClass=' top3';posEmoji='🥉';}
+          const isMe=(r.nombre===currentUserAlias);
+          const tf=r.tiempo>=60?Math.floor(r.tiempo/60)+'m '+(r.tiempo%60)+'s':r.tiempo+'s';
+          html+='<div class="ranking-row'+(isMe?' highlight':'')+'">';
+          html+='<div class="ranking-col-pos'+posClass+'">'+posEmoji+'</div>';
+          html+='<div class="ranking-col-name">'+r.nombre+(isMe?' <span style="font-size:.8rem;color:var(--neon-blue);">🎮</span>':'')+'</div>';
+          html+='<div class="ranking-col-stat ranking-col-puntos"><div class="ranking-stat-value">'+r.puntos+'</div><div class="ranking-stat-label">PUNTOS</div></div>';
+          html+='<div class="ranking-col-stat ranking-col-tiempo"><div class="ranking-stat-value">'+tf+'</div><div class="ranking-stat-label">TIEMPO</div></div>';
+          html+='<div class="ranking-col-stat ranking-col-intentos"><div class="ranking-stat-value">'+r.intentos+'x</div><div class="ranking-stat-label">INT</div></div>';
+          html+='</div>';
+        });
+        document.getElementById('rankingModalBody').innerHTML=html;
+        showToast('Ranking Cargado',ranking.length+' guerreros','success');
+      }).obtenerRanking(titulo);
+  };
+  window.app.closeRankingModal = function(){document.getElementById('modalRankingPrevio').classList.add('hidden');SFX.play('click');};
+
+  /* ─── ADMIN (FIXED: refreshes dashboard on close) ─── */
+  window.app.openAdmin = function(){document.getElementById('modalAdmin').classList.remove('hidden');SFX.play('click');};
+
+  window.app.submitAdmin = function(){
+    const u=document.getElementById('adminU').value, p=document.getElementById('adminP').value;
+    if(!u||!p){showToast('Campos Vacíos','Completa todos los campos','error');return;}
+    showToast('Verificando...','Validando credenciales','info');
+    google.script.run.withSuccessHandler(function(ok){
+      if(ok){
+        document.getElementById('modalAdmin').classList.add('hidden');
+        document.getElementById('panelAdmin').classList.remove('hidden');
+        showToast('Acceso Concedido','Bienvenido, administrador','success');SFX.play('correct');loadAdmin();
+      } else { showToast('Acceso Denegado','Credenciales incorrectas','error');SFX.play('wrong'); }
+    }).verificarCredencialesAdmin(u,p);
+  };
+
+  function loadAdmin(){
+    document.getElementById('adminList').innerHTML='<div class="epic-loader" style="margin:20px auto;"></div>';
+    google.script.run.withSuccessHandler(function(ts){
+      const d=document.getElementById('adminList'); let h='';
+      ts.forEach(function(t,idx){
+        const isActive=(t.estado==='ACTIVO');
+        h+='<div class="admin-item" style="animation-delay:'+(idx*.1)+'s;">';
+        h+='<div class="admin-item__left"><span class="admin-item__title">🎯 '+t.titulo+'</span>';
+        h+='<span class="admin-item__status '+(isActive?'active':'inactive')+'">'+(isActive?'🟢 ACTIVO':'🔴 INACTIVO')+'</span></div>';
+        h+='<button class="btn-toggle" onclick="window.app.changeSt('+t.fila+',\''+(isActive?'INACTIVO':'ACTIVO')+'\')">'+(isActive?'🚫 Desactivar':'✅ Activar')+'</button></div>';
+      });
+      d.innerHTML=h;
+    }).adminObtenerTemas();
+  }
+
+  window.app.changeSt = function(f,s){
+    SFX.play('click'); showToast('Actualizando...','Cambiando estado','info');
+    google.script.run.withSuccessHandler(function(){
+      showToast('Estado Actualizado','Arena modificada','success'); loadAdmin();
+    }).adminCambiarEstado(f,s);
+  };
+
+  // ★★★ FIX: Refresh dashboard when closing admin panel ★★★
+  window.app.closeAdmin = function(){
+    document.getElementById('panelAdmin').classList.add('hidden');
+    SFX.play('click');
+    // Clear cache and reload dashboard data
+    Cache.clear();
+    _preloadedTemas = null;
+    preloadDashboardData();
+    showToast('Panel Cerrado','Dashboard actualizado','info');
+  };
+
+  // Enter key on DNI
+  document.getElementById('dniInput').addEventListener('keypress',function(e){if(e.key==='Enter')window.app.loginDNI();});
+
+})();
+
+// Scroll parallax on shapes
+window.addEventListener('scroll',function(){
+  const s=window.pageYOffset;
+  document.querySelectorAll('.shape').forEach((sh,i)=>{sh.style.transform='translateY('+(s*(1+i*.1)*.1)+'px)';});
+});
+
+console.log('%c🚀 KAHOOT ARENA V3 - Ultra System Loaded!','color:#00f5ff;font-size:20px;font-weight:bold;');
+</script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SST GameHub - Drag & Drop</title>
+<?!= include('css'); ?>
+</head>
+<body class="sst-shell page-dragdrop">
+<div class="loading" id="loadingScreen"><div class="ld-spinner"></div><div class="ld-text">Generando elementos con IA... 🤖</div></div>
+
+<div class="topbar">
+  <div class="topbar-left"><button class="btn-back" onclick="goBack()">← Volver</button><h1>🎯 Arrastra y Clasifica</h1></div>
+  <div class="stats">
+    <div class="stat"><div class="v tone-success" id="score">0</div><div class="l">Puntaje</div></div>
+    <div class="stat"><div class="v tone-primary" id="progress">0/0</div><div class="l">Progreso</div></div>
+    <div class="stat"><div class="v tone-warning" id="accuracy">100%</div><div class="l">Precisión</div></div>
+  </div>
+  <button class="btn-new" onclick="startGame()">🔄 Nuevo</button>
+</div>
+<div class="progress-bar"><div class="progress-track"><div class="progress-fill" id="progressBar"></div></div></div>
+
+<div class="game-area">
+  <div class="items-pool"><div class="pool-title">Elementos por clasificar</div><div id="itemsContainer"></div></div>
+  <div class="drop-zones" id="dropZones"></div>
+</div>
+
+<div class="toast" id="toast"><h4 id="toastTitle"></h4><p id="toastText"></p></div>
+
+<div class="modal-bg" id="winModal"><div class="modal"><div class="trophy">🎯</div><h2>¡Clasificación completa!</h2><div class="info" id="winInfo"></div><div class="modal-btns"><button class="btn-secondary" onclick="goBack()">← Menú</button><button class="btn-primary" onclick="startGame();document.getElementById('winModal').classList.remove('show')">Jugar de nuevo ▶</button></div></div></div>
+
+<script>
+let gameData,items,categories,placed=0,correct=0,totalItems=0,score=0,currentUser=null,startTime=0,draggedItem=null;
+
+document.addEventListener('DOMContentLoaded',()=>{const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);startGame()});
+
+async function getDataFromAI(){return new Promise(r=>{try{google.script.run.withSuccessHandler(function(d){if(d&&d.categories&&d.items)r(d);else r(simAI())}).withFailureHandler(function(){r(simAI())}).getAIContent('dragdrop',{items:9})}catch(e){r(simAI())}})}
+function simAI(){
+  return{categories:[{name:"Sin datos",color:"#999"}],items:[{id:1,text:"Llena DragDrop_Manual",category:"Sin datos",explanation:"Abre tu Google Sheet y completa la hoja DragDrop_Manual."}]};
+}
+
+async function startGame(){
+  placed=0;correct=0;score=0;startTime=Date.now();
+  document.getElementById('score').textContent='0';document.getElementById('accuracy').textContent='100%';document.getElementById('progressBar').style.width='0%';
+  document.getElementById('loadingScreen').classList.remove('hidden');
+
+  gameData=await getDataFromAI();categories=gameData.categories;items=[...gameData.items];totalItems=items.length;
+  document.getElementById('progress').textContent='0/'+totalItems;
+
+  renderDropZones();renderItems();
+  setTimeout(()=>document.getElementById('loadingScreen').classList.add('hidden'),300);
+}
+
+function renderDropZones(){
+  const c=document.getElementById('dropZones');c.innerHTML='';
+  categories.forEach(cat=>{
+    const z=document.createElement('div');z.className='drop-zone';z.dataset.category=cat.name;
+    z.innerHTML=`<div class="dz-head"><div class="dot" style="background:${cat.color};box-shadow:0 0 8px ${cat.color}40"></div><h3>${cat.name}</h3><span class="count" id="cnt-${cat.name.replace(/\s/g,'-')}">0</span></div><div class="dz-items" id="dz-${cat.name.replace(/\s/g,'-')}"></div>`;
+    z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('dragover')});
+    z.addEventListener('dragleave',()=>z.classList.remove('dragover'));
+    z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('dragover');handleDrop(cat.name)});
+    c.appendChild(z);
+  });
+}
+
+function renderItems(){
+  const c=document.getElementById('itemsContainer');c.innerHTML='';
+  items.forEach((item,i)=>{
+    if(item.placed)return;
+    const el=document.createElement('div');el.className='drag-item';el.draggable=true;el.dataset.id=item.id;
+    el.innerHTML=`<span class="handle">⠿</span>${item.text}`;
+    el.addEventListener('dragstart',()=>{draggedItem=item;el.classList.add('dragging')});
+    el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+    // Touch
+    el.addEventListener('touchstart',()=>{draggedItem=item;el.classList.add('dragging')});
+    el.addEventListener('touchend',e=>{el.classList.remove('dragging');const t=e.changedTouches[0];const target=document.elementFromPoint(t.clientX,t.clientY);const zone=target?.closest('.drop-zone');if(zone)handleDrop(zone.dataset.category)});
+    el.style.opacity='0';el.style.transform='translateX(-16px)';
+    setTimeout(()=>{el.style.transition='all .3s';el.style.opacity='1';el.style.transform=''},i*60);
+    c.appendChild(el);
+  });
+}
+
+function handleDrop(targetCat){
+  if(!draggedItem)return;
+  const item=draggedItem;draggedItem=null;item.placed=true;placed++;
+  const ok=item.category===targetCat;
+  if(ok){correct++;score+=100}else{score=Math.max(0,score-30)}
+
+  const zId='dz-'+targetCat.replace(/\s/g,'-');const zone=document.getElementById(zId);
+  const chip=document.createElement('div');chip.className='dropped-chip';
+  chip.innerHTML=`<span>${ok?'✅':'❌'}</span>${item.text}`;chip.style.borderColor=ok?'var(--green)':'var(--red)';
+  zone.appendChild(chip);
+
+  document.getElementById('cnt-'+targetCat.replace(/\s/g,'-')).textContent=zone.children.length;
+
+  if(ok)showToast('success','✅ ¡Correcto!',item.explanation);
+  else showToast('error',`❌ Pertenece a "${item.category}"`,item.explanation);
+
+  const poolItem=document.querySelector(`.drag-item[data-id="${item.id}"]`);
+  if(poolItem){poolItem.classList.add(ok?'correct':'wrong');setTimeout(()=>{poolItem.style.transition='all .3s';poolItem.style.opacity='0';poolItem.style.height='0';poolItem.style.padding='0';poolItem.style.margin='0';poolItem.style.overflow='hidden';setTimeout(()=>poolItem.remove(),300)},500)}
+
+  document.getElementById('score').textContent=score;
+  document.getElementById('progress').textContent=placed+'/'+totalItems;
+  document.getElementById('accuracy').textContent=Math.round((correct/placed)*100)+'%';
+  document.getElementById('progressBar').style.width=(placed/totalItems*100)+'%';
+  if(placed>=totalItems)setTimeout(endGame,1200);
+}
+
+function showToast(type,title,text){
+  const t=document.getElementById('toast');t.className='toast show '+type;
+  document.getElementById('toastTitle').textContent=title;document.getElementById('toastText').textContent=text;
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function endGame(){
+  const el=Math.floor((Date.now()-startTime)/1000),m=Math.floor(el/60),s=el%60;
+  const acc=Math.round((correct/totalItems)*100),tb=Math.max(300-el,0),fs=score+tb;
+  document.getElementById('winInfo').innerHTML=`Correctos: <strong>${correct}/${totalItems}</strong><br>Precisión: <strong>${acc}%</strong><br>Tiempo: <strong>${m}:${s<10?'0':''}${s}</strong><br>Bono: <strong>+${tb}</strong><br><br>Total: <strong class="score-total">${fs}</strong>`;
+  document.getElementById('winModal').classList.add('show');
+  if(currentUser)try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Drag & Drop SST',puntaje:fs,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Correctos:'+correct+'/'+totalItems+',Precisión:'+acc+'%'})}catch(e){}
+}
+
+function goBack(){try{google.script.run.withSuccessHandler(function(u){window.top.location.href=u+'?page=Portal'}).withFailureHandler(function(){window.top.location.href='kahoot.html'}).getWebAppUrl()}catch(e){window.top.location.href='kahoot.html'}}
+</script>
+</body>
+</html>

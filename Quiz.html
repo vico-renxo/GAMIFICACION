@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SST GameHub - Quiz</title>
+<?!= include('css'); ?>
+</head>
+<body class="sst-shell page-quiz">
+<div class="loading" id="loadingScreen"><div class="ld-spinner"></div><div class="ld-text">Generando preguntas con IA... 🤖</div></div>
+
+<div class="topbar">
+  <div class="topbar-left"><button class="btn-back" onclick="goBack()">← Volver</button><h1>❓ Quiz SST</h1></div>
+  <div class="stats">
+<div class="stat"><div class="v tone-success" id="score">0</div><div class="l">Puntaje</div></div>
+<div class="stat"><div class="v tone-primary" id="qNum">1/10</div><div class="l">Pregunta</div></div>
+<div class="stat"><div class="v tone-warning" id="streak">0🔥</div><div class="l">Racha</div></div>
+  </div>
+</div>
+
+<div class="progress-dots" id="progressDots"></div>
+
+<div class="quiz-area">
+  <div class="q-card" id="qCard">
+    <div class="q-num" id="qLabel">PREGUNTA 1 DE 10</div>
+    <div class="q-text" id="qText"></div>
+    <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+    <div class="options" id="options"></div>
+  </div>
+  <div class="exp-card" id="expCard"><div class="eb" id="expBadge"></div><div class="et" id="expText"></div><div class="ai">🤖 Explicación generada por IA</div></div>
+  <button class="btn-next" id="btnNext" onclick="nextQ()">Siguiente →</button>
+</div>
+
+<div class="results-bg" id="resultsBg">
+  <div class="results">
+    <div class="trophy" id="resTrophy">🏆</div>
+    <h2 id="resTitle">¡Quiz completado!</h2>
+    <div class="score-big" id="resFinal">0</div>
+    <div class="score-lbl">PUNTAJE FINAL</div>
+    <div class="res-stats">
+<div class="rs"><div class="rv tone-success" id="resOk">0</div><div class="rl">Correctas</div></div>
+<div class="rs"><div class="rv tone-danger" id="resFail">0</div><div class="rl">Incorrectas</div></div>
+<div class="rs"><div class="rv tone-warning" id="resStreak">0</div><div class="rl">Mejor racha</div></div>
+    </div>
+    <div class="res-btns">
+      <button class="btn-secondary" onclick="goBack()">← Menú</button>
+      <button class="btn-primary" onclick="startGame();document.getElementById('resultsBg').classList.remove('show')">Jugar de nuevo ▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let questions=[],curQ=0,score=0,ok=0,fail=0,streak=0,bestStreak=0,timerInt=null,timeLeft=100,answered=false,currentUser=null,startTime=0;
+
+document.addEventListener('DOMContentLoaded',()=>{const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);startGame()});
+
+async function getDataFromAI(){return new Promise(r=>{try{google.script.run.withSuccessHandler(function(d){if(d&&d.questions)r(d);else r(simAI())}).withFailureHandler(function(){r(simAI())}).getAIContent('quiz',{count:10})}catch(e){r(simAI())}})}
+function simAI(){
+  return{questions:[{id:1,question:"Sin datos. Llena la hoja Quiz_Manual en tu Google Sheet.",options:["Ir al Admin","Abrir Sheet","Agregar preguntas","Todas"],correct:3,explanation:"Abre tu Google Sheet y llena la hoja Quiz_Manual."}]};
+}
+
+async function startGame(){
+  curQ=0;score=0;ok=0;fail=0;streak=0;bestStreak=0;startTime=Date.now();
+  document.getElementById('score').textContent='0';document.getElementById('streak').textContent='0🔥';
+  document.getElementById('loadingScreen').classList.remove('hidden');
+  const d=await getDataFromAI();questions=d.questions;
+  const dots=document.getElementById('progressDots');dots.innerHTML='';
+  questions.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.id='dot-'+i;dots.appendChild(d)});
+  setTimeout(()=>{document.getElementById('loadingScreen').classList.add('hidden');showQ()},300);
+}
+
+function showQ(){
+  const q=questions[curQ];answered=false;
+  document.getElementById('qLabel').textContent=`PREGUNTA ${curQ+1} DE ${questions.length}`;
+  document.getElementById('qNum').textContent=`${curQ+1}/${questions.length}`;
+  document.getElementById('qText').textContent=q.question;
+  document.getElementById('dot-'+curQ).classList.add('current');
+
+  const o=document.getElementById('options');o.innerHTML='';
+  ['A','B','C','D'].forEach((l,i)=>{
+    if(!q.options[i])return;
+    const b=document.createElement('button');b.className='opt-btn';
+    b.innerHTML=`<span class="letter">${l}</span><span>${q.options[i]}</span>`;
+    b.onclick=()=>answer(i);o.appendChild(b);
+  });
+
+  document.getElementById('expCard').className='exp-card';
+  document.getElementById('btnNext').classList.remove('show');
+  const c=document.getElementById('qCard');c.style.animation='none';c.offsetHeight;c.style.animation='cardIn .4s ease';
+  startTimer();
+}
+
+function startTimer(){
+  timeLeft=100;const f=document.getElementById('timerFill');f.style.width='100%';
+  if(timerInt)clearInterval(timerInt);
+  timerInt=setInterval(()=>{timeLeft-=.5;f.style.width=timeLeft+'%';if(timeLeft<=0){clearInterval(timerInt);if(!answered)timeout()}},75);
+}
+
+function answer(idx){
+  if(answered)return;answered=true;clearInterval(timerInt);
+  const q=questions[curQ],opts=document.querySelectorAll('.opt-btn'),isOk=idx===q.correct;
+  opts.forEach(o=>o.classList.add('disabled'));
+  opts[q.correct].classList.add('correct');
+  if(!isOk)opts[idx].classList.add('wrong');
+
+  if(isOk){const tb=Math.floor(timeLeft/5),sb=streak*10;score+=100+tb+sb;ok++;streak++;if(streak>bestStreak)bestStreak=streak}
+  else{score=Math.max(0,score-25);fail++;streak=0}
+
+  document.getElementById('score').textContent=score;document.getElementById('streak').textContent=streak+'🔥';
+  const dot=document.getElementById('dot-'+curQ);dot.classList.remove('current');dot.classList.add(isOk?'correct':'wrong');
+
+  const ec=document.getElementById('expCard');ec.className='exp-card show '+(isOk?'success':'error');
+  document.getElementById('expBadge').textContent=isOk?'✅ ¡Correcto!':'❌ Incorrecto';
+  document.getElementById('expText').textContent=q.explanation;
+
+  const nb=document.getElementById('btnNext');nb.classList.add('show');
+  nb.textContent=curQ<questions.length-1?'Siguiente →':'Ver resultados →';
+}
+
+function timeout(){
+  answered=true;fail++;streak=0;document.getElementById('streak').textContent='0🔥';
+  const q=questions[curQ],opts=document.querySelectorAll('.opt-btn');
+  opts.forEach(o=>o.classList.add('disabled'));opts[q.correct].classList.add('correct');
+  const dot=document.getElementById('dot-'+curQ);dot.classList.remove('current');dot.classList.add('wrong');
+  const ec=document.getElementById('expCard');ec.className='exp-card show error';
+  document.getElementById('expBadge').textContent='⏰ Tiempo agotado';
+  document.getElementById('expText').textContent=q.explanation;
+  document.getElementById('btnNext').classList.add('show');
+}
+
+function nextQ(){curQ++;curQ>=questions.length?showResults():showQ()}
+
+function showResults(){
+  const el=Math.floor((Date.now()-startTime)/1000),pct=Math.round((ok/questions.length)*100);
+  let trophy,title;
+  if(pct>=90){trophy='🏆';title='¡Excelente!'}else if(pct>=70){trophy='🥈';title='¡Muy bien!'}else if(pct>=50){trophy='🥉';title='¡Buen intento!'}else{trophy='📚';title='Sigue practicando'}
+  document.getElementById('resTrophy').textContent=trophy;
+  document.getElementById('resTitle').textContent=title;document.getElementById('resTitle').style.color=pct>=70?'var(--green)':'var(--yellow)';
+  document.getElementById('resFinal').textContent=score;document.getElementById('resOk').textContent=ok;
+  document.getElementById('resFail').textContent=fail;document.getElementById('resStreak').textContent=bestStreak;
+  document.getElementById('resultsBg').classList.add('show');
+  if(currentUser){const m=Math.floor(el/60),s=el%60;try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Quiz SST',puntaje:score,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Correctas:'+ok+'/'+questions.length+',Racha:'+bestStreak+',Precisión:'+pct+'%'})}catch(e){}}
+}
+
+function goBack(){if(timerInt)clearInterval(timerInt);try{google.script.run.withSuccessHandler(function(u){window.top.location.href=u+'?page=Portal'}).withFailureHandler(function(){window.top.location.href='kahoot.html'}).getWebAppUrl()}catch(e){window.top.location.href='kahoot.html'}}
+</script>
+</body>
+</html>

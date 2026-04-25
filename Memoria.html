@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SST GameHub - Memoria</title>
+<?!= include('css'); ?>
+</head>
+<body class="sst-shell page-memoria">
+<div class="loading" id="loadingScreen"><div class="ld-spinner"></div><div class="ld-text">Generando tarjetas con IA... 🤖</div></div>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="btn-back" onclick="goBack()">← Volver</button>
+    <h1>🧠 Memoria SST</h1>
+  </div>
+  <div class="stats">
+<div class="stat"><div class="v tone-success" id="score">0</div><div class="l">Puntaje</div></div>
+<div class="stat"><div class="v tone-primary" id="pairs">0/0</div><div class="l">Parejas</div></div>
+<div class="stat"><div class="v tone-warning" id="moves">0</div><div class="l">Movimientos</div></div>
+<div class="stat"><div class="v tone-danger" id="errors">0</div><div class="l">Errores</div></div>
+  </div>
+  <button class="btn-new" onclick="startGame()">🔄 Nuevo juego</button>
+</div>
+
+<div class="game-area"><div class="board" id="board"></div></div>
+
+<div class="exp-panel" id="expPanel">
+  <div class="eh"><span class="badge" id="expBadge">CORRECTO</span></div>
+  <div class="et" id="expText"></div>
+  <div class="ai">🤖 Explicación generada por IA</div>
+</div>
+
+<div class="modal-bg" id="winModal">
+  <div class="modal">
+    <div class="trophy">🧠</div>
+    <h2>¡Memoria perfecta!</h2>
+    <div class="info" id="winInfo"></div>
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="goBack()">← Menú</button>
+      <button class="btn-primary" onclick="startGame();document.getElementById('winModal').classList.remove('show')">Jugar de nuevo ▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let gameData=null,cards=[],flipped=[],matchedPairs=0,totalPairs=0,moves=0,errors=0,score=0,processing=false,currentUser=null,startTime=0;
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);
+  startGame();
+});
+
+async function getDataFromAI(){
+  return new Promise(r=>{try{google.script.run.withSuccessHandler(function(d){if(d&&d.pairs)r(d);else r(simAI())}).withFailureHandler(function(){r(simAI())}).getAIContent('memoria',{pairs:8})}catch(e){r(simAI())}});
+}
+function simAI(){
+  return{pairs:[{id:1,front:"📊",back:"SIN DATOS",explanation:"Llena la hoja Memoria_Manual en tu Google Sheet."}]};
+}
+
+async function startGame(){
+  flipped=[];matchedPairs=0;moves=0;errors=0;score=0;processing=false;startTime=Date.now();
+  updateStats();
+  document.getElementById('loadingScreen').classList.remove('hidden');
+  document.getElementById('expPanel').className='exp-panel';
+
+  gameData=await getDataFromAI();
+  totalPairs=gameData.pairs.length;
+  document.getElementById('pairs').textContent='0/'+totalPairs;
+
+  cards=[];
+  gameData.pairs.forEach(p=>{
+    cards.push({pairId:p.id,side:'front',display:p.front,pair:p});
+    cards.push({pairId:p.id,side:'back',display:p.back,pair:p});
+  });
+  for(let i=cards.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cards[i],cards[j]]=[cards[j],cards[i]]}
+  renderBoard();
+  setTimeout(()=>document.getElementById('loadingScreen').classList.add('hidden'),300);
+}
+
+function renderBoard(){
+  const b=document.getElementById('board');b.innerHTML='';
+  cards.forEach((c,i)=>{
+    const el=document.createElement('div');el.className='card';el.dataset.idx=i;
+    el.innerHTML=`<div class="card-inner"><div class="card-face card-front"><div class="icon">🛡️</div><div class="label">SST</div></div><div class="card-face card-back"><div class="emoji">${c.display}</div><div class="text">${c.side==='back'?c.display:''}</div></div></div>`;
+    el.onclick=()=>flipCard(i,el);b.appendChild(el);
+    el.style.opacity='0';el.style.transform='translateY(16px)';
+    setTimeout(()=>{el.style.transition='all .4s ease';el.style.opacity='1';el.style.transform=''},i*40+150);
+  });
+}
+
+function flipCard(idx,el){
+  if(processing||el.classList.contains('flipped')||el.classList.contains('matched')||flipped.length>=2)return;
+  el.classList.add('flipped');flipped.push({idx,el,card:cards[idx]});
+  if(flipped.length===2){moves++;document.getElementById('moves').textContent=moves;processing=true;
+    const[a,b]=flipped;
+    if(a.card.pairId===b.card.pairId&&a.card.side!==b.card.side)setTimeout(()=>handleMatch(a,b),600);
+    else setTimeout(()=>handleMiss(a,b),800);
+  }
+}
+
+function handleMatch(a,b){
+  a.el.classList.add('matched');b.el.classList.add('matched');matchedPairs++;score+=100;updateStats();
+  showExp('success','✅ ¡Par encontrado!',a.card.pair.explanation);
+  flipped=[];processing=false;
+  if(matchedPairs>=totalPairs)setTimeout(endGame,1200);
+}
+
+function handleMiss(a,b){
+  errors++;score=Math.max(0,score-20);updateStats();
+  a.el.classList.add('wrong');b.el.classList.add('wrong');
+  showExp('error','❌ No son pareja',`${a.card.pair.front} = "${a.card.pair.back}". ${a.card.pair.explanation}`);
+  setTimeout(()=>{a.el.classList.remove('flipped','wrong');b.el.classList.remove('flipped','wrong');flipped=[];processing=false},400);
+}
+
+function showExp(type,badge,text){
+  const p=document.getElementById('expPanel');p.className='exp-panel show '+type;
+  document.getElementById('expBadge').textContent=badge;
+  document.getElementById('expText').textContent=text;
+  clearTimeout(p._t);p._t=setTimeout(()=>p.classList.remove('show'),4000);
+}
+
+function updateStats(){
+  document.getElementById('score').textContent=score;
+  document.getElementById('pairs').textContent=matchedPairs+'/'+totalPairs;
+  document.getElementById('moves').textContent=moves;
+  document.getElementById('errors').textContent=errors;
+}
+
+function endGame(){
+  const el=Math.floor((Date.now()-startTime)/1000),m=Math.floor(el/60),s=el%60;
+  const tb=Math.max(300-el*2,0),eff=Math.round((totalPairs/moves)*100),fs=score+tb;
+  document.getElementById('winInfo').innerHTML=`Puntaje: <strong>${score}</strong><br>Bono tiempo: <strong>+${tb}</strong><br>Movimientos: <strong>${moves}</strong> | Errores: <strong>${errors}</strong><br>Eficiencia: <strong>${eff}%</strong><br>Tiempo: <strong>${m}:${s<10?'0':''}${s}</strong><br><br>Total: <strong class="score-total">${fs}</strong>`;
+  document.getElementById('winModal').classList.add('show');
+  if(currentUser)try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Memoria SST',puntaje:fs,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Parejas:'+totalPairs+',Movimientos:'+moves+',Errores:'+errors})}catch(e){}
+}
+
+function goBack(){try{google.script.run.withSuccessHandler(function(u){window.top.location.href=u+'?page=Portal'}).withFailureHandler(function(){window.top.location.href='kahoot.html'}).getWebAppUrl()}catch(e){window.top.location.href='kahoot.html'}}
+</script>
+</body>
+</html>
