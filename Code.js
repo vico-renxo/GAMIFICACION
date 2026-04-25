@@ -544,6 +544,63 @@ function getScoreHistory(dni) {
 
 function getWebAppUrl() { return ScriptApp.getService().getUrl(); }
 
+// ===== GAMIFICATION: LEADERBOARD GLOBAL =====
+function getLeaderboardGlobal() {
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    const sh = ss.getSheetByName(CONFIG.SHEET_RESULTADOS);
+    if (!sh || sh.getLastRow() < 2) return { success: true, players: [] };
+    const data = sh.getDataRange().getValues();
+    const byDni = {};
+    for (let i = 1; i < data.length; i++) {
+      const dni    = String(data[i][1] || '').trim();
+      const nombre = String(data[i][2] || '').trim();
+      const juego  = String(data[i][3] || '').trim();
+      const pts    = Number(data[i][4]) || 0;
+      if (!dni) continue;
+      if (!byDni[dni]) byDni[dni] = { dni, nombre, totalXP: 0, bestScore: 0, games: 0, uniqueGames: new Set() };
+      byDni[dni].totalXP   += Math.floor(pts / 10);
+      byDni[dni].bestScore  = Math.max(byDni[dni].bestScore, pts);
+      byDni[dni].games     += 1;
+      byDni[dni].uniqueGames.add(juego);
+    }
+    const players = Object.values(byDni).map(p => ({
+      dni: p.dni,
+      nombre: p.nombre,
+      totalXP: p.totalXP,
+      bestScore: p.bestScore,
+      games: p.games,
+      uniqueGames: p.uniqueGames.size
+    })).sort((a, b) => b.totalXP - a.totalXP).slice(0, 20);
+    return { success: true, players };
+  } catch(err) { return { success: false, players: [], error: err.message }; }
+}
+
+// ===== GAMIFICATION: PERFIL COMPLETO DE USUARIO =====
+function getUserProfileFull(dni) {
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    const sh = ss.getSheetByName(CONFIG.SHEET_RESULTADOS);
+    if (!sh) return { success: true, scores: [], totalXP: 0, bestScore: 0, uniqueGames: [] };
+    const data = sh.getDataRange().getValues();
+    const scores = [];
+    let totalXP = 0, bestScore = 0;
+    const gameSet = new Set();
+    const gameBest = {};
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][1]).trim() !== String(dni).trim()) continue;
+      const pts   = Number(data[i][4]) || 0;
+      const juego = String(data[i][3] || '').trim();
+      scores.push({ fecha: data[i][0], juego, puntaje: pts, tiempo: data[i][5] });
+      totalXP  += Math.floor(pts / 10);
+      bestScore = Math.max(bestScore, pts);
+      gameSet.add(juego);
+      if (!gameBest[juego] || pts > gameBest[juego]) gameBest[juego] = pts;
+    }
+    return { success: true, scores, totalXP, bestScore, uniqueGames: [...gameSet], gameBest };
+  } catch(err) { return { success: false, scores: [], totalXP: 0, bestScore: 0, uniqueGames: [], gameBest: {} }; }
+}
+
 // ===== CONFIGURACIÃ“N DINÃMICA =====
 function saveConfigFromAdmin(apiKey, sheetId, openaiKey, aiProvider) {
   try {
