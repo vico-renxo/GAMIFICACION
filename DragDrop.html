@@ -117,7 +117,8 @@ function endGame(){
   const acc=Math.round((correct/totalItems)*100),tb=Math.max(300-el,0),fs=score+tb;
   document.getElementById('winInfo').innerHTML=`Correctos: <strong>${correct}/${totalItems}</strong><br>Precisión: <strong>${acc}%</strong><br>Tiempo: <strong>${m}:${s<10?'0':''}${s}</strong><br>Bono: <strong>+${tb}</strong><br><br>Total: <strong class="score-total">${fs}</strong>`;
   document.getElementById('winModal').classList.add('show');
-  if(currentUser)try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Drag & Drop SST',puntaje:fs,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Correctos:'+correct+'/'+totalItems+',Precisión:'+acc+'%'})}catch(e){}
+  if(currentUser){try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Drag & Drop SST',puntaje:fs,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Correctos:'+correct+'/'+totalItems+',Precisión:'+acc+'%'})}catch(e){}
+  try{window.parent.postMessage({sst_action:'gameFinished',game:'DragDrop',score:fs},'*')}catch(e){}}
 }
 
 function goBack(){try{google.script.run.withSuccessHandler(function(u){window.top.location.href=u+'?page=Portal'}).withFailureHandler(function(){window.top.location.href='kahoot.html'}).getWebAppUrl()}catch(e){window.top.location.href='kahoot.html'}}

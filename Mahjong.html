@@ -197,7 +197,8 @@ function endGame(){
   const m=Math.floor(seconds/60),s=seconds%60;
   document.getElementById('winInfo').innerHTML=`Puntaje: <strong>${score}</strong><br>Bono tiempo: <strong>+${tb}</strong><br>Tiempo: <strong>${m}:${s<10?'0':''}${s}</strong><br>Pistas: <strong>${hints}</strong><br><br>Total: <strong class="score-total">${fs}</strong>`;
   document.getElementById('winModal').classList.add('show');
-  if(currentUser)try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Mahjong SST',puntaje:fs,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Parejas:'+totalPairs+',Pistas:'+hints})}catch(e){}
+  if(currentUser){try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Mahjong SST',puntaje:fs,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Parejas:'+totalPairs+',Pistas:'+hints})}catch(e){}
+  try{window.parent.postMessage({sst_action:'gameFinished',game:'Mahjong',score:fs},'*')}catch(e){}}
 }
 
 function goBack(){

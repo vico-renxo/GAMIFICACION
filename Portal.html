@@ -4,588 +4,551 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SST GameHub</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root {
-  --sb-bg: #0f172a; --sb-hover: #1e293b; --sb-active: #1d4ed8;
-  --sb-text: #94a3b8; --sb-active-text: #fff; --sb-border: #1e293b;
-  --bg: #f1f5f9; --card: #ffffff;
-  --accent: #2563eb; --accent-light: #eff6ff;
-  --green: #059669; --red: #dc2626; --orange: #ea580c; --purple: #9333ea;
-  --text: #0f172a; --text-2: #334155; --text-3: #64748b; --text-4: #94a3b8;
-  --border: #e2e8f0;
-  --sh: 0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
-  --sh-md: 0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.05);
-  --sh-lg: 0 12px 28px rgba(0,0,0,.1),0 4px 8px rgba(0,0,0,.06);
-  --r: 12px; --sb-w: 248px;
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style id="s1">
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;
+  --border:#30363d;--border2:#21262d;
+  --text:#e6edf3;--text2:#8b949e;--text3:#6e7681;
+  --blue:#1f6feb;--blue2:#388bfd;--blue3:#cae8ff;
+  --green:#3fb950;--green2:#56d364;
+  --orange:#d29922;--orange2:#e3b341;
+  --red:#da3633;--red2:#f85149;
+  --purple:#8957e5;--purple2:#a5d6ff;
+  --gold:#e3b341;
+  --sb:248px;--r:10px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex}
-
-/* ===== LOGIN ===== */
-#loginScreen{
-  position:fixed;inset:0;z-index:300;
-  background:linear-gradient(135deg,#0a0f1e 0%,#0f2044 50%,#0a0f1e 100%);
-  display:flex;align-items:center;justify-content:center;
-}
-.login-box{
-  background:#fff;border-radius:20px;padding:44px 40px;width:100%;max-width:400px;
-  box-shadow:0 32px 64px rgba(0,0,0,.45);
-  animation:fadeUp .5s cubic-bezier(.34,1.56,.64,1);
-}
-@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}}
-.login-logo{text-align:center;margin-bottom:32px}
-.login-logo .icon{
-  width:62px;height:62px;margin:0 auto 14px;
-  background:linear-gradient(135deg,#1d4ed8,#3b82f6);
-  border-radius:16px;display:flex;align-items:center;justify-content:center;
-  font-size:28px;box-shadow:0 8px 24px rgba(29,78,216,.35)
-}
-.login-logo h1{font-size:22px;font-weight:800;color:#0f172a;letter-spacing:-.5px}
-.login-logo p{font-size:13px;color:#64748b;margin-top:4px}
-.field{margin-bottom:16px}
-.field label{display:block;font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px}
-.field input{
-  width:100%;padding:12px 14px;font-size:17px;font-weight:700;font-family:'Inter';
-  background:#f8fafc;border:2px solid #e2e8f0;border-radius:10px;
-  color:#0f172a;outline:none;letter-spacing:2px;transition:all .2s
-}
-.field input:focus{border-color:#2563eb;background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-.field input::placeholder{color:#cbd5e1;letter-spacing:normal;font-weight:400;font-size:14px}
-.btn-login{
-  width:100%;padding:13px;font-size:15px;font-family:'Inter';font-weight:700;
-  background:#1d4ed8;border:none;border-radius:10px;color:#fff;cursor:pointer;
-  transition:all .2s;box-shadow:0 4px 12px rgba(29,78,216,.3)
-}
-.btn-login:hover{background:#1e40af;box-shadow:0 6px 16px rgba(29,78,216,.4);transform:translateY(-1px)}
-.btn-login:disabled{opacity:.6;cursor:wait;transform:none}
-.btn-login .spinner{display:none;width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
-@keyframes spin{to{transform:rotate(360deg)}}
-.login-error{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:14px;display:none}
-.admin-link{text-align:center;margin-top:16px}
-.admin-link a{color:#64748b;text-decoration:none;font-size:12px;font-weight:600;transition:color .2s}
-.admin-link a:hover{color:#1d4ed8}
-
-/* ===== APP SHELL ===== */
-#appShell{display:none;width:100%;height:100vh}
-#appShell.on{display:flex}
-
-/* ===== SIDEBAR ===== */
-.sidebar{
-  width:var(--sb-w);min-width:var(--sb-w);height:100vh;
-  background:var(--sb-bg);display:flex;flex-direction:column;
-  border-right:1px solid var(--sb-border);position:relative;z-index:50;
-  transition:transform .28s cubic-bezier(.4,0,.2,1)
-}
-.sb-head{
-  padding:18px 14px 15px;border-bottom:1px solid var(--sb-border);
-  display:flex;align-items:center;gap:10px;flex-shrink:0
-}
-.sb-logo{
-  width:36px;height:36px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);
-  border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0
-}
-.sb-title{font-size:14px;font-weight:800;color:#fff;letter-spacing:-.3px}
-.sb-subtitle{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-top:1px}
-.sb-nav{flex:1;padding:10px 8px;overflow-y:auto;scrollbar-width:none}
-.sb-nav::-webkit-scrollbar{display:none}
-.nav-label{font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.8px;padding:10px 8px 5px}
-.ni{
-  display:flex;align-items:center;gap:9px;
-  padding:8px 10px;border-radius:8px;cursor:pointer;
-  color:var(--sb-text);font-size:13px;font-weight:500;
-  transition:all .15s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left
-}
-.ni:hover{background:var(--sb-hover);color:#e2e8f0}
-.ni.active{background:var(--sb-active);color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(29,78,216,.3)}
-.ni .ni-ic{
-  width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;
-  font-size:15px;background:rgba(255,255,255,.05);flex-shrink:0
-}
-.ni.active .ni-ic{background:rgba(255,255,255,.15)}
-.ni .ni-lbl{flex:1}
-.ni .ni-tag{
-  background:rgba(255,255,255,.1);color:#94a3b8;
-  font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px
-}
-.ni.active .ni-tag{background:rgba(255,255,255,.18);color:#bfdbfe}
-.sb-foot{padding:10px 8px 14px;border-top:1px solid var(--sb-border);flex-shrink:0}
-.user-pill{
-  display:flex;align-items:center;gap:9px;
-  padding:9px 10px;border-radius:9px;background:rgba(255,255,255,.04);margin-bottom:6px
-}
-.user-pill .av{
-  width:34px;height:34px;background:linear-gradient(135deg,#059669,#10b981);
-  border-radius:50%;display:flex;align-items:center;justify-content:center;
-  color:#fff;font-weight:800;font-size:12px;flex-shrink:0
-}
-.user-pill .ui-name{font-size:13px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.user-pill .ui-dni{font-size:11px;color:#475569}
-.sb-btn{
-  display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border-radius:8px;
-  background:none;border:none;color:#475569;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Inter'
-}
-.sb-btn:hover{background:var(--sb-hover);color:#94a3b8}
-.sb-btn.danger:hover{color:#f87171}
-
-/* Hamburger */
-.ham{
-  display:none;position:fixed;top:10px;left:10px;z-index:100;
-  width:38px;height:38px;background:#0f172a;border:none;border-radius:9px;
-  cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-  box-shadow:0 2px 10px rgba(0,0,0,.35)
-}
-.ham span{width:16px;height:2px;background:#94a3b8;border-radius:2px}
-.sb-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:49;backdrop-filter:blur(2px)}
-
-/* ===== MAIN ===== */
-.main{flex:1;height:100vh;overflow:hidden;display:flex;flex-direction:column;min-width:0}
-
-/* Home */
-#homeView{flex:1;overflow-y:auto;padding:28px 30px;display:none;scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}
-#homeView.on{display:block}
-
-.hero{
-  background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 50%,#2563eb 100%);
-  border-radius:16px;padding:34px 32px;color:#fff;margin-bottom:24px;
-  position:relative;overflow:hidden
-}
-.hero::before,.hero::after{
-  content:'';position:absolute;border-radius:50%;
-  background:rgba(255,255,255,.06)
-}
-.hero::before{width:220px;height:220px;right:-40px;top:-60px}
-.hero::after{width:160px;height:160px;right:80px;bottom:-60px}
-.hero-greet{font-size:12px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
-.hero-name{font-size:38px;font-weight:800;letter-spacing:-1.2px;margin-bottom:8px;position:relative;z-index:1}
-.hero-sub{font-size:14px;color:rgba(255,255,255,.65);line-height:1.55;max-width:500px;position:relative;z-index:1}
-
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
-.sc{
-  background:var(--card);border-radius:var(--r);padding:16px;
-  box-shadow:var(--sh);border:1px solid var(--border)
-}
-.sc .si{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:10px}
-.sc:nth-child(1) .si{background:#eff6ff}
-.sc:nth-child(2) .si{background:#f0fdf4}
-.sc:nth-child(3) .si{background:#fff7ed}
-.sc:nth-child(4) .si{background:#fdf4ff}
-.sc .sn{font-size:26px;font-weight:800;color:#0f172a;letter-spacing:-.5px}
-.sc .sl{font-size:11px;color:#64748b;font-weight:500;margin-top:2px}
-
-.sec-label{font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
-.modules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px}
-.mc{
-  background:var(--card);border-radius:var(--r);padding:18px;
-  border:1px solid var(--border);box-shadow:var(--sh);
-  cursor:pointer;transition:all .2s;display:flex;align-items:flex-start;gap:13px
-}
-.mc:hover{border-color:#2563eb;box-shadow:var(--sh-md);transform:translateY(-2px)}
-.mc .mc-ic{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
-.mc .mc-b{flex:1;min-width:0}
-.mc .mc-name{font-size:14px;font-weight:700;color:#0f172a;margin-bottom:3px}
-.mc .mc-desc{font-size:12px;color:#64748b;line-height:1.45}
-.mc .mc-tag{display:inline-block;margin-top:8px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
-
-/* Game view */
-#gameView{flex:1;display:none;flex-direction:column;background:#fff}
-#gameView.on{display:flex}
-.game-bar{
-  padding:9px 14px;background:#fff;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:10px;flex-shrink:0;box-shadow:var(--sh)
-}
-.back-btn{
-  width:30px;height:30px;background:#f1f5f9;border:none;border-radius:7px;
-  cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;
-  transition:all .15s;color:#475569;flex-shrink:0
-}
-.back-btn:hover{background:#e2e8f0;color:#0f172a}
-.game-bar-title{font-size:14px;font-weight:700;color:#0f172a}
-.game-bar-sep{width:1px;height:16px;background:var(--border)}
-.game-bar-user{font-size:12px;color:#94a3b8;font-weight:500}
-.game-bar-reload{margin-left:auto;width:28px;height:28px;background:#f1f5f9;border:none;border-radius:7px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s;color:#475569}
-.game-bar-reload:hover{background:#e2e8f0;color:#0f172a}
-#gameFrame{flex:1;border:none;width:100%;display:block;background:var(--bg)}
-
-/* Loading indicator for iframe */
-.frame-loading{
-  position:absolute;inset:0;background:#f1f5f9;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
-  pointer-events:none;transition:opacity .3s
-}
-.frame-loading .fl-ring{
-  width:40px;height:40px;border:3px solid #e2e8f0;border-top-color:#2563eb;
-  border-radius:50%;animation:spin .8s linear infinite
-}
-.frame-loading .fl-txt{font-size:13px;color:#64748b;font-weight:500}
-#gameView{position:relative}
-#gameView .frame-loading{z-index:5}
-
-/* Mobile */
-@media(max-width:768px){
-  .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);z-index:50}
-  .sidebar.open{transform:translateX(0)}
-  .sb-ov.show{display:block}
-  .ham{display:flex}
-  .main{width:100%}
-  #homeView{padding:14px;padding-top:58px}
-  .hero{padding:24px 20px}
-  .hero-name{font-size:26px}
-  .stats-row{grid-template-columns:repeat(2,1fr)}
-  .modules-grid{grid-template-columns:1fr}
-  .game-bar{padding-left:50px}
-}
 </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="loginScreen">
-  <div class="login-box">
-    <div class="login-logo">
-      <div class="icon">🛡️</div>
-      <h1>SST GameHub</h1>
-      <p>Seguridad y Salud en el Trabajo</p>
+<div id="LS" style="position:fixed;inset:0;z-index:999;background:linear-gradient(135deg,#0d1117 0%,#0a1628 60%,#0d1117 100%);display:flex;align-items:center;justify-content:center">
+  <div id="LB" style="background:#161b22;border:1px solid #30363d;border-radius:16px;padding:40px 36px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:fadeUp .5s ease">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="width:58px;height:58px;margin:0 auto 12px;background:linear-gradient(135deg,#1f6feb,#388bfd);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 8px 24px rgba(31,111,235,.4)">🛡️</div>
+      <div style="font-size:20px;font-weight:800;letter-spacing:-.4px">SST GameHub</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:3px">Seguridad y Salud en el Trabajo</div>
     </div>
-    <div class="login-error" id="loginError"></div>
-    <div class="field">
-      <label>Número de DNI</label>
-      <input type="text" id="dniInput" placeholder="Ej: 12345678" maxlength="15"
-             autocomplete="off" onkeypress="if(event.key==='Enter')handleLogin()">
-    </div>
-    <button class="btn-login" id="btnLogin" onclick="handleLogin()">
-      <span class="btn-text">Ingresar</span>
-      <div class="spinner"></div>
+    <div id="LE" style="display:none;background:#3d1c1c;border:1px solid #da3633;border-radius:8px;padding:10px 14px;color:#f85149;font-size:13px;font-weight:600;margin-bottom:14px"></div>
+    <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Número de DNI</label>
+    <input id="DI" type="text" maxlength="15" autocomplete="off" placeholder="Ej: 12345678"
+      style="width:100%;padding:12px 14px;font-size:16px;font-weight:700;font-family:'Inter';background:#0d1117;border:2px solid #30363d;border-radius:8px;color:#e6edf3;outline:none;letter-spacing:2px;transition:border .2s"
+      onfocus="this.style.borderColor='#1f6feb'" onblur="this.style.borderColor='#30363d'"
+      onkeypress="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()" id="LBtn"
+      style="width:100%;margin-top:14px;padding:13px;font-size:14px;font-weight:700;font-family:'Inter';background:linear-gradient(135deg,#1f6feb,#388bfd);border:none;border-radius:8px;color:#fff;cursor:pointer;transition:opacity .2s;box-shadow:0 4px 14px rgba(31,111,235,.4)">
+      <span id="LBT">Ingresar al sistema</span>
+      <span id="LBS" style="display:none">⏳ Verificando...</span>
     </button>
-    <div class="admin-link">
-      <a href="#" onclick="openAdmin();return false;">⚙️ Centro de Mando (Admin)</a>
+    <div style="text-align:center;margin-top:14px">
+      <a href="#" onclick="goAdmin();return false" style="color:var(--text3);font-size:12px;font-weight:600;text-decoration:none">⚙️ Panel de Administración</a>
     </div>
   </div>
 </div>
 
-<!-- HAMBURGER (mobile) -->
-<button class="ham" id="ham" onclick="toggleSidebar()">
-  <span></span><span></span><span></span>
+<!-- HAMBURGER -->
+<button id="HAM" onclick="toggleSB()" style="display:none;position:fixed;top:10px;left:10px;z-index:200;width:38px;height:38px;background:#161b22;border:1px solid #30363d;border-radius:8px;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+  <span style="width:16px;height:2px;background:#8b949e;border-radius:2px;display:block"></span>
+  <span style="width:16px;height:2px;background:#8b949e;border-radius:2px;display:block"></span>
+  <span style="width:16px;height:2px;background:#8b949e;border-radius:2px;display:block"></span>
 </button>
-<div class="sb-ov" id="sbOv" onclick="closeSidebar()"></div>
+<div id="SBO" onclick="closeSB()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:49;backdrop-filter:blur(2px)"></div>
 
-<!-- APP SHELL -->
-<div id="appShell">
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sb-head">
-      <div class="sb-logo">🛡️</div>
-      <div>
-        <div class="sb-title">SST GameHub</div>
-        <div class="sb-subtitle">Seg. Laboral</div>
-      </div>
-    </div>
-
-    <nav class="sb-nav">
-      <div class="nav-label">Principal</div>
-      <button class="ni active" id="nav-home" onclick="showHome()">
-        <div class="ni-ic">🏠</div>
-        <span class="ni-lbl">Inicio</span>
-      </button>
-
-      <div class="nav-label" style="margin-top:6px">Módulos</div>
-      <button class="ni" id="nav-Quiz" onclick="launchGame('Quiz')">
-        <div class="ni-ic">❓</div>
-        <span class="ni-lbl">Quiz Interactivo</span>
-        <span class="ni-tag">IA</span>
-      </button>
-      <button class="ni" id="nav-Mahjong" onclick="launchGame('Mahjong')">
-        <div class="ni-ic">🀄</div>
-        <span class="ni-lbl">Mahjong SST</span>
-        <span class="ni-tag">IA</span>
-      </button>
-      <button class="ni" id="nav-Memoria" onclick="launchGame('Memoria')">
-        <div class="ni-ic">🧠</div>
-        <span class="ni-lbl">Memoria SST</span>
-        <span class="ni-tag">IA</span>
-      </button>
-      <button class="ni" id="nav-DragDrop" onclick="launchGame('DragDrop')">
-        <div class="ni-ic">🎯</div>
-        <span class="ni-lbl">Arrastra y Clasifica</span>
-        <span class="ni-tag">IA</span>
-      </button>
-      <button class="ni" id="nav-Simulacion" onclick="launchGame('Simulacion')">
-        <div class="ni-ic">🏗️</div>
-        <span class="ni-lbl">Simulación</span>
-        <span class="ni-tag">IA</span>
-      </button>
-    </nav>
-
-    <div class="sb-foot">
-      <div class="user-pill">
-        <div class="av" id="userAvatar">--</div>
-        <div>
-          <div class="ui-name" id="userName">—</div>
-          <div class="ui-dni" id="userDni">DNI: —</div>
-        </div>
-      </div>
-      <button class="sb-btn" onclick="openAdmin()">⚙️ Centro de Mando</button>
-      <button class="sb-btn danger" onclick="handleLogout()">↩ Cerrar sesión</button>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="main">
-
-    <!-- HOME -->
-    <div id="homeView">
-      <div class="hero">
-        <div class="hero-greet">Bienvenido de vuelta</div>
-        <div class="hero-name" id="welcomeName">Usuario</div>
-        <div class="hero-sub">Selecciona un módulo del menú lateral para iniciar tu capacitación en Seguridad y Salud en el Trabajo.</div>
-      </div>
-
-      <div class="stats-row">
-        <div class="sc">
-          <div class="si">🎮</div>
-          <div class="sn" id="statGames">0</div>
-          <div class="sl">Juegos jugados</div>
-        </div>
-        <div class="sc">
-          <div class="si">🏆</div>
-          <div class="sn" id="statBest">0</div>
-          <div class="sl">Mejor puntaje</div>
-        </div>
-        <div class="sc">
-          <div class="si">🔥</div>
-          <div class="sn" id="statStreak">0</div>
-          <div class="sl">Partidas racha</div>
-        </div>
-        <div class="sc">
-          <div class="si">⭐</div>
-          <div class="sn" id="statLevel">1</div>
-          <div class="sl">Nivel</div>
-        </div>
-      </div>
-
-      <div class="sec-label">Módulos disponibles</div>
-      <div class="modules-grid">
-        <div class="mc" onclick="launchGame('Quiz')">
-          <div class="mc-ic" style="background:#eff6ff">❓</div>
-          <div class="mc-b">
-            <div class="mc-name">Quiz Interactivo</div>
-            <div class="mc-desc">Preguntas sobre normativas, EPP y procedimientos de seguridad contra el reloj.</div>
-            <span class="mc-tag" style="background:#eff6ff;color:#2563eb">Difícil · IA</span>
-          </div>
-        </div>
-        <div class="mc" onclick="launchGame('Mahjong')">
-          <div class="mc-ic" style="background:#f0fdf4">🀄</div>
-          <div class="mc-b">
-            <div class="mc-name">Mahjong SST</div>
-            <div class="mc-desc">Empareja conceptos con sus definiciones en fichas apiladas. Estrategia y conocimiento.</div>
-            <span class="mc-tag" style="background:#f0fdf4;color:#059669">Medio · IA</span>
-          </div>
-        </div>
-        <div class="mc" onclick="launchGame('Memoria')">
-          <div class="mc-ic" style="background:#fdf4ff">🧠</div>
-          <div class="mc-b">
-            <div class="mc-name">Memoria SST</div>
-            <div class="mc-desc">Encuentra los pares ocultos. La IA explica cada concepto al descubrirlo.</div>
-            <span class="mc-tag" style="background:#fdf4ff;color:#9333ea">Fácil · IA</span>
-          </div>
-        </div>
-        <div class="mc" onclick="launchGame('DragDrop')">
-          <div class="mc-ic" style="background:#fff7ed">🎯</div>
-          <div class="mc-b">
-            <div class="mc-name">Arrastra y Clasifica</div>
-            <div class="mc-desc">Clasifica elementos de seguridad arrastrándolos a la categoría correcta.</div>
-            <span class="mc-tag" style="background:#fff7ed;color:#ea580c">Medio · IA</span>
-          </div>
-        </div>
-        <div class="mc" onclick="launchGame('Simulacion')">
-          <div class="mc-ic" style="background:#fef2f2">🏗️</div>
-          <div class="mc-b">
-            <div class="mc-name">Simulación de Riesgos</div>
-            <div class="mc-desc">Inspecciona escenarios laborales reales y detecta todos los peligros ocultos.</div>
-            <span class="mc-tag" style="background:#fef2f2;color:#dc2626">Difícil · IA</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- GAME VIEW -->
-    <div id="gameView">
-      <div class="frame-loading" id="frameLoading">
-        <div class="fl-ring"></div>
-        <div class="fl-txt" id="frameLoadingTxt">Cargando módulo...</div>
-      </div>
-      <div class="game-bar">
-        <button class="back-btn" onclick="showHome()" title="Volver al inicio">←</button>
-        <span class="game-bar-title" id="gameTitle">Módulo</span>
-        <div class="game-bar-sep"></div>
-        <span class="game-bar-user" id="gameUser"></span>
-        <button class="game-bar-reload" onclick="reloadGame()" title="Reiniciar módulo">↺</button>
-      </div>
-      <iframe id="gameFrame" src="" allowfullscreen
-              onload="hideFrameLoading()" onerror="hideFrameLoading()"></iframe>
-    </div>
-
-  </main>
+<!-- LEVEL UP OVERLAY -->
+<div id="LUO" style="display:none;position:fixed;inset:0;z-index:998;background:rgba(0,0,0,.85);align-items:center;justify-content:center;flex-direction:column;backdrop-filter:blur(4px)">
+  <div id="LUB" style="text-align:center;animation:lvlUp .6s cubic-bezier(.34,1.56,.64,1)">
+    <div style="font-size:72px;margin-bottom:8px">🎉</div>
+    <div style="font-size:14px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px">¡SUBISTE DE NIVEL!</div>
+    <div id="LUN" style="font-size:48px;font-weight:900;color:#fff;letter-spacing:-2px"></div>
+    <div id="LUT" style="font-size:18px;color:var(--gold);font-weight:700;margin-top:4px"></div>
+    <button onclick="document.getElementById('LUO').style.display='none'" style="margin-top:24px;padding:12px 32px;background:linear-gradient(135deg,#1f6feb,#388bfd);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter'">¡Continuar!</button>
+  </div>
 </div>
 
+<!-- BADGE TOAST -->
+<div id="BTO" style="display:none;position:fixed;bottom:24px;right:24px;z-index:997;background:#161b22;border:1px solid #3fb950;border-radius:12px;padding:14px 18px;min-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:slideIn .4s ease">
+  <div style="font-size:11px;font-weight:700;color:#3fb950;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">🏅 ¡Insignia desbloqueada!</div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div id="BTI" style="font-size:28px"></div>
+    <div><div id="BTN" style="font-size:14px;font-weight:700;color:#e6edf3"></div><div id="BTD" style="font-size:12px;color:#8b949e;margin-top:2px"></div></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="APP" style="display:none;width:100%;height:100vh;overflow:hidden;display:none">
+<style>
+.sb{width:var(--sb);min-width:var(--sb);height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:transform .28s ease;z-index:50;position:relative}
+.sb-h{padding:16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.sb-logo{width:34px;height:34px;background:linear-gradient(135deg,#1f6feb,#388bfd);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sb-nav{flex:1;padding:8px 6px;overflow-y:auto;scrollbar-width:none}
+.sb-nav::-webkit-scrollbar{display:none}
+.nl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;padding:10px 8px 4px}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;transition:all .15s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left;font-family:'Inter'}
+.ni:hover{background:var(--bg3);color:var(--text)}
+.ni.on{background:#1f2d3d;color:var(--blue2);font-weight:600}
+.ni .ic{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;background:rgba(255,255,255,.05);flex-shrink:0}
+.ni.on .ic{background:rgba(31,111,235,.2)}
+.ni .tg{background:rgba(255,255,255,.06);color:var(--text3);font-size:9px;font-weight:700;padding:2px 5px;border-radius:5px;margin-left:auto}
+.ni.on .tg{background:rgba(31,111,235,.25);color:var(--blue2)}
+.sb-xp{padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0}
+.xpbar-wrap{background:var(--bg3);border-radius:4px;height:5px;margin:4px 0 2px;overflow:hidden}
+.xpbar-fill{height:100%;border-radius:4px;transition:width 1s ease;background:linear-gradient(90deg,#1f6feb,#388bfd)}
+.sb-f{padding:8px 6px 12px;border-top:1px solid var(--border);flex-shrink:0}
+.upill{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.03);margin-bottom:5px}
+.uav{width:32px;height:32px;background:linear-gradient(135deg,#3fb950,#56d364);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:12px;flex-shrink:0;position:relative}
+.lvring{position:absolute;inset:-3px;border-radius:50%;border:2px solid var(--gold)}
+.sbb{display:flex;align-items:center;gap:7px;width:100%;padding:7px 10px;border-radius:7px;background:none;border:none;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Inter'}
+.sbb:hover{background:var(--bg3);color:var(--text2)}
+.sbb.red:hover{color:var(--red2)}
+.main{flex:1;height:100vh;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.view{flex:1;overflow-y:auto;padding:24px 26px;display:none;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.view.on{display:block}
+#VG{flex:1;display:none;flex-direction:column}
+#VG.on{display:flex}
+.gbar{padding:9px 14px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.gbk{width:30px;height:30px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all .15s}
+.gbk:hover{background:var(--border);color:var(--text)}
+#GF{flex:1;border:none;width:100%;display:block;background:var(--bg)}
+.fload{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:5}
+.fring{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+@media(max-width:768px){
+  .sb{position:fixed;left:0;top:0;transform:translateX(-100%)}
+  .sb.open{transform:translateX(0)}
+  #SBO.show{display:block!important}
+  #HAM{display:flex!important}
+  .main{width:100%}
+  .view{padding:14px;padding-top:56px}
+}
+</style>
+
+<div style="display:flex;width:100%;height:100vh">
+<!-- SIDEBAR -->
+<aside class="sb" id="SB">
+  <div class="sb-h">
+    <div class="sb-logo">🛡️</div>
+    <div>
+      <div style="font-size:13px;font-weight:800;color:var(--text)">SST GameHub</div>
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px">Seg. Laboral</div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nl">Principal</div>
+    <button class="ni on" id="nI" onclick="showV('I')"><div class="ic">🏠</div><span>Inicio</span></button>
+    <button class="ni" id="nP" onclick="showV('P')"><div class="ic">👤</div><span>Mi Perfil</span></button>
+    <button class="ni" id="nR" onclick="showV('R')"><div class="ic">🏆</div><span>Ranking</span></button>
+    <button class="ni" id="nM" onclick="showV('M')"><div class="ic">🎯</div><span>Misiones</span></button>
+    <div class="nl" style="margin-top:4px">Módulos</div>
+    <button class="ni" id="nQuiz" onclick="play('Quiz')"><div class="ic">❓</div><span>Quiz Interactivo</span><span class="tg">IA</span></button>
+    <button class="ni" id="nMahjong" onclick="play('Mahjong')"><div class="ic">🀄</div><span>Mahjong SST</span><span class="tg">IA</span></button>
+    <button class="ni" id="nMemoria" onclick="play('Memoria')"><div class="ic">🧠</div><span>Memoria SST</span><span class="tg">IA</span></button>
+    <button class="ni" id="nDragDrop" onclick="play('DragDrop')"><div class="ic">🎯</div><span>Arrastra y Clasifica</span><span class="tg">IA</span></button>
+    <button class="ni" id="nSimulacion" onclick="play('Simulacion')"><div class="ic">🏗️</div><span>Simulación</span><span class="tg">IA</span></button>
+  </nav>
+  <div class="sb-xp" id="sbXP" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span id="sbLvN" style="font-size:11px;font-weight:700;color:var(--gold)">Nivel 1 · Novato</span>
+      <span id="sbXPN" style="font-size:10px;color:var(--text3)">0 XP</span>
+    </div>
+    <div class="xpbar-wrap"><div class="xpbar-fill" id="sbXPB" style="width:0%"></div></div>
+    <div id="sbXPC" style="font-size:10px;color:var(--text3)">0 XP para siguiente nivel</div>
+  </div>
+  <div class="sb-f">
+    <div class="upill">
+      <div class="uav" id="UAV"><div class="lvring" id="LAVR"></div><span id="UAVT">--</span></div>
+      <div style="min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="UNM">—</div>
+        <div style="font-size:11px;color:var(--text3)" id="UDNI">DNI: —</div>
+      </div>
+    </div>
+    <button class="sbb" onclick="goAdmin()">⚙️ Centro de Mando</button>
+    <button class="sbb red" onclick="doLogout()">↩ Cerrar sesión</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div id="VI" class="view on"></div>
+  <div id="VP" class="view"></div>
+  <div id="VR" class="view"></div>
+  <div id="VM" class="view"></div>
+  <div id="VG" style="flex:1;display:none;flex-direction:column;position:relative">
+    <div class="fload" id="FL"><div class="fring"></div><div style="font-size:13px;color:var(--text2)" id="FLT">Cargando...</div></div>
+    <div class="gbar">
+      <button class="gbk" onclick="showV('I')" title="Volver">←</button>
+      <span style="font-size:13px;font-weight:700;color:var(--text)" id="GT">Módulo</span>
+      <div style="width:1px;height:14px;background:var(--border)"></div>
+      <span style="font-size:12px;color:var(--text3)" id="GU"></span>
+      <button class="gbk" onclick="reloadG()" title="Reiniciar" style="margin-left:auto">↺</button>
+    </div>
+    <iframe id="GF" src="" allowfullscreen onload="hideFLoad()" onerror="hideFLoad()"></iframe>
+  </div>
+</main>
+</div>
+</div>
+
+<style id="s2">
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}}
+@keyframes lvlUp{from{opacity:0;transform:scale(.5)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes xpFill{from{width:0%}}
+</style>
 <script>
-let currentUser = null, webAppUrl = '', activeGame = '';
+let U=null,WU='',AG='',prevLevel=0,PROF={xp:0,total:0,best:0,uniq:0,qBest:0,gBest:{},scores:[]};
+const GS={Quiz:{n:'Quiz Interactivo',ic:'❓',diff:'Difícil',col:'#1f6feb'},Mahjong:{n:'Mahjong SST',ic:'🀄',diff:'Medio',col:'#d29922'},Memoria:{n:'Memoria SST',ic:'🧠',diff:'Fácil',col:'#8957e5'},DragDrop:{n:'Arrastra y Clasifica',ic:'🎯',diff:'Medio',col:'#3fb950'},Simulacion:{n:'Simulación de Riesgos',ic:'🏗️',diff:'Difícil',col:'#da3633'}};
+const LVS=[{l:1,n:'Novato',min:0,max:100,c:'#6e7681'},{l:2,n:'Aprendiz',min:100,max:250,c:'#1f6feb'},{l:3,n:'Practicante',min:250,max:500,c:'#3fb950'},{l:4,n:'Competente',min:500,max:900,c:'#d29922'},{l:5,n:'Avanzado',min:900,max:1500,c:'#e85c1a'},{l:6,n:'Experto',min:1500,max:2500,c:'#da3633'},{l:7,n:'Maestro',min:2500,max:4000,c:'#8957e5'},{l:8,n:'Gurú SST',min:4000,max:99999,c:'#e3b341'}];
+const BGS=[{id:'fv',ic:'🎯',n:'Primera Victoria',d:'Completa tu primer juego',f:p=>p.total>=1},{id:'v10',ic:'🎖️',n:'Veterano',d:'Juega 10 partidas',f:p=>p.total>=10},{id:'v30',ic:'💎',n:'Leyenda',d:'Juega 30 partidas',f:p=>p.total>=30},{id:'cs',ic:'🏆',n:'Campeón',d:'Supera 1000 pts en un juego',f:p=>p.best>=1000},{id:'qm',ic:'🧠',n:'Quiz Master',d:'Quiz SST > 900 pts',f:p=>p.qBest>=900},{id:'ag',ic:'🏅',n:'Especialista SST',d:'Juega los 5 módulos',f:p=>p.uniq>=5},{id:'x1',ic:'⭐',n:'Acumulador',d:'Consigue 1000 XP',f:p=>p.xp>=1000},{id:'x5',ic:'🌟',n:'Elite SST',d:'Consigue 5000 XP',f:p=>p.xp>=5000},{id:'mem',ic:'🎭',n:'Mente Ágil',d:'Completa Memoria SST',f:p=>(p.gBest['Memoria SST']||0)>0},{id:'sim',ic:'🔍',n:'Inspector',d:'Completa Simulación de Riesgos',f:p=>(p.gBest['Simulación de Riesgos']||0)>0}];
+function getLvl(xp){return LVS.slice().reverse().find(l=>xp>=l.min)||LVS[0]}
+function xpPct(xp){const l=getLvl(xp);return l.max===99999?99:Math.min(99,Math.round((xp-l.min)/(l.max-l.min)*100))}
+function calcBadges(p){return BGS.map(b=>({...b,earned:b.f(p)}))}
 
-const GAMES = {
-  Quiz:       { name:'Quiz Interactivo',     icon:'❓' },
-  Mahjong:    { name:'Mahjong SST',           icon:'🀄' },
-  Memoria:    { name:'Memoria SST',           icon:'🧠' },
-  DragDrop:   { name:'Arrastra y Clasifica',  icon:'🎯' },
-  Simulacion: { name:'Simulación de Riesgos', icon:'🏗️' }
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-  const saved = sessionStorage.getItem('sst_user');
-  if (saved) { currentUser = JSON.parse(saved); startApp(); }
-  try { google.script.run.withSuccessHandler(u => { webAppUrl = u; }).getWebAppUrl(); } catch(e){}
-  document.getElementById('dniInput').focus();
-});
-
-/* ----- LOGIN ----- */
-function handleLogin() {
-  const dni = document.getElementById('dniInput').value.trim();
-  if (!dni) { showErr('Ingresa tu número de DNI'); return; }
-  const btn = document.getElementById('btnLogin');
-  btn.disabled = true;
-  btn.querySelector('.btn-text').style.display = 'none';
-  btn.querySelector('.spinner').style.display = 'block';
-  document.getElementById('loginError').style.display = 'none';
-  try {
+// ── LOGIN ──
+function doLogin(){
+  const dni=document.getElementById('DI').value.trim();
+  if(!dni){showLE('Ingresa tu número de DNI');return}
+  const btn=document.getElementById('LBtn');
+  btn.disabled=true;
+  document.getElementById('LBT').style.display='none';
+  document.getElementById('LBS').style.display='';
+  document.getElementById('LE').style.display='none';
+  try{
     google.script.run
-      .withSuccessHandler(r => {
-        resetBtn();
-        if (r && r.success) { currentUser = r.user; sessionStorage.setItem('sst_user', JSON.stringify(currentUser)); startApp(); }
-        else showErr((r && r.error) || 'DNI no reconocido');
+      .withSuccessHandler(r=>{
+        btn.disabled=false;document.getElementById('LBT').style.display='';document.getElementById('LBS').style.display='none';
+        if(r&&r.success){U=r.user;sessionStorage.setItem('sst_u',JSON.stringify(U));bootApp()}
+        else showLE((r&&r.error)||'DNI no registrado');
       })
-      .withFailureHandler(() => { resetBtn(); showErr('Error de conexión. Intenta de nuevo.'); })
+      .withFailureHandler(()=>{
+        btn.disabled=false;document.getElementById('LBT').style.display='';document.getElementById('LBS').style.display='none';
+        showLE('Error de conexión. Intenta de nuevo.');
+      })
       .validateLogin(dni);
-  } catch(e) {
-    resetBtn(); currentUser = { dni, nombre:'Usuario', apellido:'' };
-    sessionStorage.setItem('sst_user', JSON.stringify(currentUser)); startApp();
+  }catch(e){
+    U={dni,nombre:'Usuario',apellido:''};
+    sessionStorage.setItem('sst_u',JSON.stringify(U));bootApp();
   }
 }
-function resetBtn() {
-  const b = document.getElementById('btnLogin');
-  b.disabled = false; b.querySelector('.btn-text').style.display = '';
-  b.querySelector('.spinner').style.display = 'none';
-}
-function showErr(msg) {
-  const el = document.getElementById('loginError');
-  el.textContent = msg; el.style.display = 'block';
-}
+function showLE(m){const e=document.getElementById('LE');e.textContent=m;e.style.display='block'}
 
-/* ----- APP ----- */
-function startApp() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('appShell').classList.add('on');
-  const n = currentUser.nombre || 'Usuario';
-  const a = currentUser.apellido || '';
-  const initials = (n[0] + (a[0] || n[1] || '?')).toUpperCase();
-  document.getElementById('userAvatar').textContent = initials;
-  document.getElementById('userName').textContent = n + (a ? ' ' + a : '');
-  document.getElementById('userDni').textContent = 'DNI: ' + currentUser.dni;
-  document.getElementById('welcomeName').textContent = n + (a ? ' ' + a : '');
-  document.getElementById('gameUser').textContent = n + ' · DNI ' + currentUser.dni;
-  showHome();
-  loadStats();
+// ── BOOT ──
+function bootApp(){
+  document.getElementById('LS').style.display='none';
+  const app=document.getElementById('APP');
+  app.style.display='flex';
+  const n=U.nombre||'Usuario',a=U.apellido||'';
+  const ini=(n[0]+(a[0]||n[1]||'?')).toUpperCase();
+  document.getElementById('UAVT').textContent=ini;
+  document.getElementById('UNM').textContent=n+(a?' '+a:'');
+  document.getElementById('UDNI').textContent='DNI: '+U.dni;
+  document.getElementById('GU').textContent=n+' · DNI '+U.dni;
+  try{google.script.run.withSuccessHandler(u=>{WU=u}).getWebAppUrl()}catch(e){}
+  loadProfile(true);
+  showV('I');
 }
 
-function showHome() {
-  setView('home');
-  setActiveNav('home');
-  document.getElementById('gameFrame').src = '';
-  activeGame = '';
-  closeSidebar();
-}
-
-function launchGame(game) {
-  if (!currentUser) return;
-  activeGame = game;
-  setView('game');
-  setActiveNav(game);
-  document.getElementById('gameTitle').textContent = (GAMES[game] || {}).name || game;
-  document.getElementById('frameLoadingTxt').textContent = 'Cargando ' + ((GAMES[game] || {}).name || game) + '...';
-  document.getElementById('frameLoading').style.opacity = '1';
-  document.getElementById('frameLoading').style.pointerEvents = 'auto';
-  const load = (url) => {
-    document.getElementById('gameFrame').src = url + '?page=' + game
-      + '&dni='     + encodeURIComponent(currentUser.dni)
-      + '&nombre='  + encodeURIComponent(currentUser.nombre || '')
-      + '&apellido='+ encodeURIComponent(currentUser.apellido || '');
-  };
-  if (webAppUrl) load(webAppUrl);
-  else try { google.script.run.withSuccessHandler(u => { webAppUrl = u; load(u); }).getWebAppUrl(); } catch(e){}
-  closeSidebar();
-}
-
-function reloadGame() { if (activeGame) launchGame(activeGame); }
-
-function hideFrameLoading() {
-  const fl = document.getElementById('frameLoading');
-  fl.style.opacity = '0'; fl.style.pointerEvents = 'none';
-}
-
-function setView(v) {
-  document.getElementById('homeView').classList.toggle('on', v === 'home');
-  document.getElementById('gameView').classList.toggle('on', v === 'game');
-}
-
-function setActiveNav(key) {
-  document.querySelectorAll('.ni').forEach(el => el.classList.remove('active'));
-  const el = document.getElementById('nav-' + key);
-  if (el) el.classList.add('active');
-}
-
-function loadStats() {
-  try {
-    google.script.run.withSuccessHandler(r => {
-      if (r && r.success && r.scores && r.scores.length) {
-        document.getElementById('statGames').textContent = r.scores.length;
-        document.getElementById('statBest').textContent = Math.max(...r.scores.map(s => +s.puntaje || 0));
-        document.getElementById('statStreak').textContent = Math.min(r.scores.length, 7);
-        document.getElementById('statLevel').textContent = Math.floor(r.scores.length / 3) + 1;
+// ── PERFIL BACKEND ──
+function loadProfile(initial){
+  try{
+    google.script.run.withSuccessHandler(r=>{
+      if(!r||!r.success)return;
+      const oldXP=PROF.xp;
+      const oldBadges=calcBadges(PROF).filter(b=>b.earned).map(b=>b.id).sort().join();
+      PROF={xp:r.totalXP||0,total:r.scores.length,best:r.bestScore||0,uniq:(r.uniqueGames||[]).length,qBest:r.gameBest&&r.gameBest['Quiz SST']||0,gBest:r.gameBest||{},scores:r.scores||[]};
+      const newLv=getLvl(PROF.xp);
+      if(!initial&&newLv.l>prevLevel&&prevLevel>0)showLvlUp(newLv);
+      prevLevel=newLv.l;
+      const newBadges=calcBadges(PROF).filter(b=>b.earned).map(b=>b.id).sort().join();
+      if(!initial&&newBadges!==oldBadges){
+        const justEarned=calcBadges(PROF).filter(b=>b.earned&&!oldBadges.includes(b.id));
+        if(justEarned.length)setTimeout(()=>showBadgeToast(justEarned[0]),800);
       }
-    }).getScoreHistory(currentUser.dni);
-  } catch(e) {}
+      updateSidebar();
+      renderHome();
+    }).getUserProfileFull(U.dni);
+  }catch(e){}
 }
 
-function openAdmin() {
-  const go = u => { window.top.location.href = u + '?page=Admin'; };
-  if (webAppUrl) go(webAppUrl);
-  else try { google.script.run.withSuccessHandler(go).getWebAppUrl(); } catch(e){}
+function updateSidebar(){
+  const lv=getLvl(PROF.xp);
+  const pct=xpPct(PROF.xp);
+  const sbXP=document.getElementById('sbXP');
+  sbXP.style.display='block';
+  document.getElementById('sbLvN').textContent='Nivel '+lv.l+' · '+lv.n;
+  document.getElementById('sbLvN').style.color=lv.c;
+  document.getElementById('sbXPN').textContent=PROF.xp+' XP';
+  document.getElementById('sbXPB').style.width=pct+'%';
+  document.getElementById('sbXPB').style.background='linear-gradient(90deg,'+lv.c+','+lv.c+'aa)';
+  const toNext=lv.max===99999?'MAX':lv.max-PROF.xp+' XP para '+getLvl(PROF.xp+1).n;
+  document.getElementById('sbXPC').textContent=toNext;
+  document.getElementById('LAVR').style.borderColor=lv.c;
 }
 
-function handleLogout() {
-  currentUser = null; sessionStorage.removeItem('sst_user');
-  document.getElementById('appShell').classList.remove('on');
-  document.getElementById('gameFrame').src = '';
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('dniInput').value = '';
-  document.getElementById('loginError').style.display = 'none';
-  document.getElementById('dniInput').focus();
-  activeGame = '';
+// ── VISTAS ──
+function showV(v){
+  ['I','P','R','M'].forEach(k=>{
+    document.getElementById('V'+k).classList.toggle('on',k===v);
+  });
+  const vg=document.getElementById('VG');
+  vg.style.display=v==='G'?'flex':'none';
+  document.querySelectorAll('.ni').forEach(el=>el.classList.remove('on'));
+  const nav=document.getElementById('n'+(v==='G'?AG:v));
+  if(nav)nav.classList.add('on');
+  AG=v==='G'?AG:'';
+  closeSB();
+  if(v==='P')renderProfile();
+  if(v==='R')renderRanking();
+  if(v==='M')renderMissions();
 }
 
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sbOv').classList.toggle('show');
+// ── NAVEGACIÓN ──
+function toggleSB(){document.getElementById('SB').classList.toggle('open');document.getElementById('SBO').classList.toggle('show')}
+function closeSB(){document.getElementById('SB').classList.remove('open');document.getElementById('SBO').classList.remove('show')}
+
+// ── JUEGOS ──
+function play(g){
+  AG=g;
+  document.getElementById('GT').textContent=GS[g].n;
+  document.getElementById('FLT').textContent='Cargando '+GS[g].n+'...';
+  document.getElementById('FL').style.opacity='1';
+  document.getElementById('FL').style.pointerEvents='auto';
+  const load=u=>{document.getElementById('GF').src=u+'?page='+g+'&dni='+encodeURIComponent(U.dni)+'&nombre='+encodeURIComponent(U.nombre||'')+'&apellido='+encodeURIComponent(U.apellido||'')};
+  if(WU)load(WU);
+  else try{google.script.run.withSuccessHandler(u=>{WU=u;load(u)}).getWebAppUrl()}catch(e){}
+  ['I','P','R','M'].forEach(k=>document.getElementById('V'+k).classList.remove('on'));
+  const vg=document.getElementById('VG');vg.style.display='flex';
+  document.querySelectorAll('.ni').forEach(el=>el.classList.remove('on'));
+  const nav=document.getElementById('n'+g);if(nav)nav.classList.add('on');
+  closeSB();
 }
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sbOv').classList.remove('show');
+function reloadG(){if(AG)play(AG)}
+function hideFLoad(){const f=document.getElementById('FL');f.style.opacity='0';f.style.pointerEvents='none'}
+
+// ── OVERLAYS ──
+function showLvlUp(lv){
+  const o=document.getElementById('LUO');
+  document.getElementById('LUN').textContent='Nivel '+lv.l;
+  document.getElementById('LUT').textContent=lv.n;
+  document.getElementById('LUB').style.animation='none';
+  document.getElementById('LUB').offsetHeight;
+  document.getElementById('LUB').style.animation='lvlUp .6s cubic-bezier(.34,1.56,.64,1)';
+  o.style.display='flex';
+}
+function showBadgeToast(b){
+  document.getElementById('BTI').textContent=b.ic;
+  document.getElementById('BTN').textContent=b.n;
+  document.getElementById('BTD').textContent=b.d;
+  const t=document.getElementById('BTO');
+  t.style.display='block';
+  t.style.animation='none';t.offsetHeight;t.style.animation='slideIn .4s ease';
+  clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',4500);
 }
 
-// Listen for messages from game iframes (e.g. goBack request)
-window.addEventListener('message', function(e) {
-  if (e.data && e.data.sst_action === 'goHome') showHome();
+// ── ADMIN / LOGOUT ──
+function goAdmin(){const go=u=>window.top.location.href=u+'?page=Admin';if(WU)go(WU);else try{google.script.run.withSuccessHandler(go).getWebAppUrl()}catch(e){}}
+function doLogout(){U=null;sessionStorage.removeItem('sst_u');document.getElementById('APP').style.display='none';document.getElementById('LS').style.display='flex';document.getElementById('DI').value='';document.getElementById('LE').style.display='none';document.getElementById('GF').src=''}
+
+// ── MENSAJES DE IFRAMES ──
+window.addEventListener('message',e=>{
+  if(!e.data)return;
+  if(e.data.sst_action==='goHome'){showV('I')}
+  if(e.data.sst_action==='gameFinished'){loadProfile(false)}
+});
+
+// ── RENDER: INICIO ──
+function renderHome(){
+  const lv=getLvl(PROF.xp),pct=xpPct(PROF.xp),badges=calcBadges(PROF),earned=badges.filter(b=>b.earned).length;
+  const n=U?((U.nombre||'')+(U.apellido?' '+U.apellido:'')):'Usuario';
+  const toNext=lv.max===99999?'Nivel máximo alcanzado':'Faltan '+(lv.max-PROF.xp)+' XP para '+getLvl(PROF.xp+1).n;
+  let gc='';
+  Object.keys(GS).forEach(k=>{
+    const g=GS[k],best=PROF.gBest[g.n]||PROF.gBest[k+' SST']||0;
+    gc+=`<div onclick="play('${k}')" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;display:flex;align-items:flex-start;gap:12px" onmouseover="this.style.borderColor='${g.col}';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
+      <div style="width:42px;height:42px;border-radius:10px;background:${g.col}22;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${g.ic}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px">${g.n}</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px">${getDiffDesc(k)}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:${g.col}22;color:${g.col}">${g.diff} · IA</span>
+          <span style="font-size:11px;color:var(--text3)">Mejor: <strong style="color:${best?g.col:'var(--text3)'}">${best||'—'}</strong></span>
+        </div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('VI').innerHTML=`
+  <div style="background:linear-gradient(135deg,#0f2d5e 0%,#1f6feb 60%,#388bfd 100%);border-radius:14px;padding:28px;margin-bottom:20px;position:relative;overflow:hidden">
+    <div style="position:absolute;right:-20px;top:-20px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
+    <div style="position:absolute;right:60px;bottom:-40px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.04)"></div>
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Bienvenido de vuelta</div>
+    <div style="font-size:30px;font-weight:900;letter-spacing:-1px;color:#fff;margin-bottom:4px;position:relative">${n}</div>
+    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border-radius:20px;padding:4px 12px;margin-bottom:14px">
+      <span style="font-size:12px;font-weight:700;color:${lv.c}">⚡ Nivel ${lv.l}</span>
+      <span style="font-size:11px;color:rgba(255,255,255,.6)">${lv.n}</span>
+    </div>
+    <div style="max-width:360px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:11px;color:rgba(255,255,255,.6)">${PROF.xp} XP</span>
+        <span style="font-size:11px;color:rgba(255,255,255,.4)">${toNext}</span>
+      </div>
+      <div style="background:rgba(0,0,0,.3);border-radius:4px;height:8px;overflow:hidden">
+        <div style="height:100%;border-radius:4px;background:${lv.c};width:${pct}%;transition:width 1.2s ease;box-shadow:0 0 8px ${lv.c}88"></div>
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px">
+    ${statCard('⚡',PROF.xp,'XP Total','#1f6feb')}
+    ${statCard('🎮',PROF.total,'Partidas','#3fb950')}
+    ${statCard('🏆',PROF.best,'Mejor Puntaje','#d29922')}
+    ${statCard('🏅',earned,'Insignias','#8957e5')}
+  </div>
+  <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Módulos disponibles</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px">${gc}</div>`;
+}
+function statCard(ic,val,lbl,col){return`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;border-top:3px solid ${col}"><div style="font-size:16px;margin-bottom:6px">${ic}</div><div style="font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.5px">${val}</div><div style="font-size:11px;color:var(--text3);margin-top:1px">${lbl}</div></div>`}
+function getDiffDesc(k){return{Quiz:'Preguntas de normativas, EPP y procedimientos',Mahjong:'Empareja conceptos con sus definiciones',Memoria:'Encuentra los pares ocultos de SST',DragDrop:'Clasifica elementos arrastrándolos',Simulacion:'Detecta peligros en escenarios laborales'}[k]||''}
+
+// ── RENDER: PERFIL ──
+function renderProfile(){
+  const lv=getLvl(PROF.xp),pct=xpPct(PROF.xp),badges=calcBadges(PROF);
+  const n=U?((U.nombre||'')+(U.apellido?' '+U.apellido:'')):'—';
+  const ini=n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()||'--';
+  let badgeHtml='';
+  badges.forEach(b=>{
+    badgeHtml+=`<div title="${b.n}: ${b.d}" style="background:${b.earned?'var(--bg3)':'var(--bg2)'};border:1px solid ${b.earned?lv.c:'var(--border)'};border-radius:10px;padding:12px 8px;text-align:center;opacity:${b.earned?'1':'.35'};transition:all .2s">
+      <div style="font-size:26px;margin-bottom:5px">${b.ic}</div>
+      <div style="font-size:10px;font-weight:700;color:${b.earned?'var(--text)':'var(--text3)'};line-height:1.3">${b.n}</div>
+    </div>`;
+  });
+  const recientes=PROF.scores.slice(-8).reverse().map(s=>`<tr><td style="padding:8px 10px;font-size:12px;color:var(--text2)">${String(s.fecha).split(' ')[0]||'—'}</td><td style="padding:8px 10px;font-size:12px;color:var(--text);font-weight:600">${s.juego||'—'}</td><td style="padding:8px 10px;font-size:12px;font-weight:700;color:var(--gold)">${s.puntaje||0}</td></tr>`).join('');
+  document.getElementById('VP').innerHTML=`
+  <div style="max-width:680px;margin:0 auto">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px;display:flex;align-items:center;gap:20px">
+      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#3fb950,#56d364);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 0 0 4px ${lv.c}55,0 0 0 6px ${lv.c}22">${ini}</div>
+      <div style="flex:1">
+        <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.3px">${n}</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">DNI: ${U.dni||'—'}</div>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:${lv.c}22;border-radius:20px;padding:4px 12px">
+          <span style="font-size:12px;font-weight:700;color:${lv.c}">⚡ Nivel ${lv.l} · ${lv.n}</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:28px;font-weight:900;color:${lv.c}">${PROF.xp}</div>
+        <div style="font-size:11px;color:var(--text3)">XP Total</div>
+      </div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Progreso de nivel</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px;color:var(--text2)"><span>${lv.n} (${lv.min} XP)</span><span>${lv.max===99999?'Máximo':'→ '+getLvl(PROF.xp+1).n+' ('+lv.max+' XP)'}</span></div>
+      <div style="background:var(--bg3);border-radius:6px;height:10px;overflow:hidden">
+        <div style="height:100%;background:${lv.c};width:${pct}%;border-radius:6px;transition:width 1s ease;box-shadow:0 0 6px ${lv.c}66"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:right">${pct}% completado</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Insignias (${badges.filter(b=>b.earned).length}/${badges.length})</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">${badgeHtml}</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Últimas partidas</div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--bg3)"><th style="padding:8px 10px;font-size:11px;color:var(--text3);font-weight:600;text-align:left">Fecha</th><th style="padding:8px 10px;font-size:11px;color:var(--text3);font-weight:600;text-align:left">Módulo</th><th style="padding:8px 10px;font-size:11px;color:var(--text3);font-weight:600;text-align:left">Puntaje</th></tr></thead>
+        <tbody>${recientes||'<tr><td colspan="3" style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Aún no has jugado ninguna partida</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── RENDER: RANKING ──
+function renderRanking(){
+  document.getElementById('VR').innerHTML='<div style="display:flex;align-items:center;justify-content:center;padding:40px;color:var(--text3)"><div class="fring"></div></div>';
+  try{
+    google.script.run.withSuccessHandler(r=>{
+      if(!r||!r.success||!r.players.length){document.getElementById('VR').innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">No hay datos de ranking aún.<br>¡Juega la primera partida!</div>';return}
+      const medals=['🥇','🥈','🥉'];
+      let rows='';
+      r.players.forEach((p,i)=>{
+        const isSelf=p.dni===U.dni;
+        const lv=getLvl(p.totalXP);
+        rows+=`<tr style="background:${isSelf?'#1a2840':'transparent'};border-bottom:1px solid var(--border2)">
+          <td style="padding:12px 14px;font-size:16px;text-align:center">${medals[i]||'<span style="font-size:13px;color:var(--text3);font-weight:700">#'+(i+1)+'</span>'}</td>
+          <td style="padding:12px 14px">
+            <div style="font-size:13px;font-weight:${isSelf?'800':'600'};color:${isSelf?'var(--blue2)':'var(--text)'}">${p.nombre}${isSelf?' (Tú)':''}</div>
+            <div style="font-size:11px;color:${lv.c};margin-top:1px">Nivel ${lv.l} · ${lv.n}</div>
+          </td>
+          <td style="padding:12px 14px;font-size:15px;font-weight:800;color:var(--gold)">${p.totalXP} <span style="font-size:11px;font-weight:500;color:var(--text3)">XP</span></td>
+          <td style="padding:12px 14px;font-size:13px;color:var(--text2);text-align:center">${p.games}</td>
+          <td style="padding:12px 14px;text-align:center"><div style="display:inline-flex;gap:3px">${'🎮'.repeat(Math.min(p.uniqueGames,5))}</div></td>
+        </tr>`;
+      });
+      document.getElementById('VR').innerHTML=`
+      <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px">🏆 Tabla de Líderes</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:20px">Top jugadores del programa SST</div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:var(--bg3)">
+            <th style="padding:10px 14px;font-size:11px;color:var(--text3);font-weight:600;text-align:center">#</th>
+            <th style="padding:10px 14px;font-size:11px;color:var(--text3);font-weight:600;text-align:left">Jugador</th>
+            <th style="padding:10px 14px;font-size:11px;color:var(--text3);font-weight:600;text-align:left">XP Total</th>
+            <th style="padding:10px 14px;font-size:11px;color:var(--text3);font-weight:600;text-align:center">Partidas</th>
+            <th style="padding:10px 14px;font-size:11px;color:var(--text3);font-weight:600;text-align:center">Módulos</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }).getLeaderboardGlobal();
+  }catch(e){document.getElementById('VR').innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">No se pudo cargar el ranking.</div>'}
+}
+
+// ── RENDER: MISIONES ──
+function renderMissions(){
+  const today=new Date().toDateString();
+  const todayScores=PROF.scores.filter(s=>new Date(s.fecha).toDateString()===today);
+  const weekAgo=Date.now()-7*24*3600*1000;
+  const weekScores=PROF.scores.filter(s=>new Date(s.fecha)>=weekAgo);
+  const todayPts=todayScores.reduce((a,s)=>a+s.puntaje,0);
+  const weekPts=weekScores.reduce((a,s)=>a+s.puntaje,0);
+  const weekUniq=new Set(weekScores.map(s=>s.juego)).size;
+  const dm=[
+    {ic:'🎮',n:'Primera del día',d:'Juega 1 partida hoy',prog:Math.min(1,todayScores.length),max:1,xp:50},
+    {ic:'⭐',n:'Puntuador',d:'Consigue 500+ puntos hoy',prog:Math.min(500,todayPts),max:500,xp:80},
+    {ic:'🔥',n:'Maratón diario',d:'Completa 3 juegos hoy',prog:Math.min(3,todayScores.length),max:3,xp:150},
+  ];
+  const wm=[
+    {ic:'🏆',n:'Explorador',d:'Juega los 5 módulos esta semana',prog:Math.min(5,weekUniq),max:5,xp:300},
+    {ic:'💯',n:'Semana intensa',d:'Acumula 2000 puntos esta semana',prog:Math.min(2000,weekPts),max:2000,xp:200},
+    {ic:'🎯',n:'Dedicado',d:'Juega 10 partidas esta semana',prog:Math.min(10,weekScores.length),max:10,xp:500},
+  ];
+  const mCard=(m,done)=>`<div style="background:var(--bg2);border:1px solid ${done?'#3fb95066':'var(--border)'};border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;${done?'opacity:.75':''}">
+    <div style="font-size:28px">${done?'✅':m.ic}</div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:var(--text)">${m.n}</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px">${m.d}</div>
+      <div style="background:var(--bg3);border-radius:4px;height:6px;overflow:hidden">
+        <div style="height:100%;background:${done?'#3fb950':'var(--blue)'};width:${Math.min(100,Math.round(m.prog/m.max*100))}%;border-radius:4px;transition:width .8s ease"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <span style="font-size:11px;color:var(--text3)">${m.prog}/${m.max}</span>
+        <span style="font-size:11px;font-weight:700;color:var(--gold)">+${m.xp} XP</span>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('VM').innerHTML=`
+  <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px">🎯 Misiones</div>
+  <div style="font-size:12px;color:var(--text3);margin-bottom:20px">Completa misiones para ganar XP bonus</div>
+  <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Misiones diarias</div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:22px">${dm.map(m=>mCard(m,m.prog>=m.max)).join('')}</div>
+  <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Misiones semanales</div>
+  <div style="display:flex;flex-direction:column;gap:8px">${wm.map(m=>mCard(m,m.prog>=m.max)).join('')}</div>`;
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded',()=>{
+  const s=sessionStorage.getItem('sst_u');
+  if(s){U=JSON.parse(s);bootApp()}
+  else document.getElementById('DI').focus();
+  try{google.script.run.withSuccessHandler(u=>WU=u).getWebAppUrl()}catch(e){}
 });
 </script>
 </body>

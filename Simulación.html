@@ -166,7 +166,8 @@ function finish(){
   document.getElementById('resInfo').innerHTML=`Encontrados: <strong>${fc}/${tc}</strong><br>Efectividad: <strong>${pct}%</strong><br>${bonus?`Bono completo: <strong>+${bonus}</strong><br>`:''}Escenario: <strong>${scenario.title}</strong>`;
   setTimeout(()=>document.getElementById('resultModal').classList.add('show'),1200);
 
-  if(currentUser)try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Simulación SST',puntaje:fs,tiempo:(90-timeRem)+'s',detalles:'Escenario:'+scenario.title+',Encontrados:'+fc+'/'+tc})}catch(e){}
+  if(currentUser){try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Simulación SST',puntaje:fs,tiempo:(90-timeRem)+'s',detalles:'Escenario:'+scenario.title+',Encontrados:'+fc+'/'+tc})}catch(e){}
+  try{window.parent.postMessage({sst_action:'gameFinished',game:'Simulacion',score:fs},'*')}catch(e){}}
 }
 
 function goBack(){if(timerInt)clearInterval(timerInt);try{google.script.run.withSuccessHandler(function(u){window.top.location.href=u+'?page=Portal'}).withFailureHandler(function(){window.top.location.href='kahoot.html'}).getWebAppUrl()}catch(e){window.top.location.href='kahoot.html'}}

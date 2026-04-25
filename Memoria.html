@@ -132,7 +132,8 @@ function endGame(){
   const tb=Math.max(300-el*2,0),eff=Math.round((totalPairs/moves)*100),fs=score+tb;
   document.getElementById('winInfo').innerHTML=`Puntaje: <strong>${score}</strong><br>Bono tiempo: <strong>+${tb}</strong><br>Movimientos: <strong>${moves}</strong> | Errores: <strong>${errors}</strong><br>Eficiencia: <strong>${eff}%</strong><br>Tiempo: <strong>${m}:${s<10?'0':''}${s}</strong><br><br>Total: <strong class="score-total">${fs}</strong>`;
   document.getElementById('winModal').classList.add('show');
-  if(currentUser)try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Memoria SST',puntaje:fs,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Parejas:'+totalPairs+',Movimientos:'+moves+',Errores:'+errors})}catch(e){}
+  if(currentUser){try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Memoria SST',puntaje:fs,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Parejas:'+totalPairs+',Movimientos:'+moves+',Errores:'+errors})}catch(e){}
+  try{window.parent.postMessage({sst_action:'gameFinished',game:'Memoria',score:fs},'*')}catch(e){}}
 }
 
 function goBack(){try{google.script.run.withSuccessHandler(function(u){window.top.location.href=u+'?page=Portal'}).withFailureHandler(function(){window.top.location.href='kahoot.html'}).getWebAppUrl()}catch(e){window.top.location.href='kahoot.html'}}

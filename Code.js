@@ -57,11 +57,11 @@ function loadConfig_() {
 loadConfig_();
 
 const PAGE_FILES = {
-  Portal: 'kahoot',
+  Portal: 'Portal',
   Admin: 'Admin',
   Mahjong: 'Mahjong',
   Memoria: 'Memoria',
-  DragDrop: 'GragDrop',
+  DragDrop: 'DragDrop',
   Quiz: 'Quiz',
   Simulacion: 'Simulacion'
 };

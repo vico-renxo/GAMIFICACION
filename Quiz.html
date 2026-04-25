@@ -139,7 +139,8 @@ function showResults(){
   document.getElementById('resFinal').textContent=score;document.getElementById('resOk').textContent=ok;
   document.getElementById('resFail').textContent=fail;document.getElementById('resStreak').textContent=bestStreak;
   document.getElementById('resultsBg').classList.add('show');
-  if(currentUser){const m=Math.floor(el/60),s=el%60;try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Quiz SST',puntaje:score,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Correctas:'+ok+'/'+questions.length+',Racha:'+bestStreak+',Precisión:'+pct+'%'})}catch(e){}}
+  if(currentUser){const m=Math.floor(el/60),s=el%60;try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Quiz SST',puntaje:score,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Correctas:'+ok+'/'+questions.length+',Racha:'+bestStreak+',Precisión:'+pct+'%'})}catch(e){}
+  try{window.parent.postMessage({sst_action:'gameFinished',game:'Quiz',score:score},'*')}catch(e){}}
 }
 
 function goBack(){if(timerInt)clearInterval(timerInt);try{google.script.run.withSuccessHandler(function(u){window.top.location.href=u+'?page=Portal'}).withFailureHandler(function(){window.top.location.href='kahoot.html'}).getWebAppUrl()}catch(e){window.top.location.href='kahoot.html'}}
