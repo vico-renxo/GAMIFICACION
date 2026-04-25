@@ -6,7 +6,10 @@
 <title>SST GameHub - Drag & Drop</title>
 <?!= include('css'); ?>
 </head>
-<body class="sst-shell page-dragdrop">
+<body class="sst-shell page-dragdrop game-epic">
+<div class="animated-bg"><div class="floating-shapes"><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div></div></div>
+<div class="ge-particles" id="geParticles"></div>
+<canvas class="ge-confetti" id="geConfetti"></canvas>
 <div class="loading" id="loadingScreen"><div class="ld-spinner"></div><div class="ld-text">Generando elementos con IA... 🤖</div></div>
 
 <div class="topbar">
@@ -32,7 +35,7 @@
 <script>
 let gameData,items,categories,placed=0,correct=0,totalItems=0,score=0,currentUser=null,startTime=0,draggedItem=null;
 
-document.addEventListener('DOMContentLoaded',()=>{const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);startGame()});
+document.addEventListener('DOMContentLoaded',()=>{const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);if(typeof createGameParticles==='function')createGameParticles('geParticles');startGame()});
 
 async function getDataFromAI(){return new Promise(r=>{try{google.script.run.withSuccessHandler(function(d){if(d&&d.categories&&d.items)r(d);else r(simAI())}).withFailureHandler(function(){r(simAI())}).getAIContent('dragdrop',{items:9})}catch(e){r(simAI())}})}
 function simAI(){
@@ -93,8 +96,8 @@ function handleDrop(targetCat){
 
   document.getElementById('cnt-'+targetCat.replace(/\s/g,'-')).textContent=zone.children.length;
 
-  if(ok)showToast('success','✅ ¡Correcto!',item.explanation);
-  else showToast('error',`❌ Pertenece a "${item.category}"`,item.explanation);
+  if(ok){showToast('success','✅ ¡Correcto!',item.explanation);if(typeof SFX!=='undefined')SFX.play('correct');}
+  else{showToast('error',`❌ Pertenece a "${item.category}"`,item.explanation);if(typeof SFX!=='undefined')SFX.play('wrong');}
 
   const poolItem=document.querySelector(`.drag-item[data-id="${item.id}"]`);
   if(poolItem){poolItem.classList.add(ok?'correct':'wrong');setTimeout(()=>{poolItem.style.transition='all .3s';poolItem.style.opacity='0';poolItem.style.height='0';poolItem.style.padding='0';poolItem.style.margin='0';poolItem.style.overflow='hidden';setTimeout(()=>poolItem.remove(),300)},500)}
@@ -116,6 +119,8 @@ function endGame(){
   const el=Math.floor((Date.now()-startTime)/1000),m=Math.floor(el/60),s=el%60;
   const acc=Math.round((correct/totalItems)*100),tb=Math.max(300-el,0),fs=score+tb;
   document.getElementById('winInfo').innerHTML=`Correctos: <strong>${correct}/${totalItems}</strong><br>Precisión: <strong>${acc}%</strong><br>Tiempo: <strong>${m}:${s<10?'0':''}${s}</strong><br>Bono: <strong>+${tb}</strong><br><br>Total: <strong class="score-total">${fs}</strong>`;
+  if(typeof launchConfetti==='function')launchConfetti('geConfetti');
+  if(typeof SFX!=='undefined')SFX.play('victory');
   document.getElementById('winModal').classList.add('show');
   if(currentUser){try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Drag & Drop SST',puntaje:fs,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Correctos:'+correct+'/'+totalItems+',Precisión:'+acc+'%'})}catch(e){}
   try{window.parent.postMessage({sst_action:'gameFinished',game:'DragDrop',score:fs},'*')}catch(e){}}

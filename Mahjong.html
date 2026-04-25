@@ -6,7 +6,10 @@
 <title>SST GameHub - Mahjong</title>
 <?!= include('css'); ?>
 </head>
-<body class="sst-shell page-mahjong">
+<body class="sst-shell page-mahjong game-epic">
+<div class="animated-bg"><div class="floating-shapes"><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div></div></div>
+<div class="ge-particles" id="geParticles"></div>
+<canvas class="ge-confetti" id="geConfetti"></canvas>
 
 <div class="loading" id="loadingScreen"><div class="ld-spinner"></div><div class="ld-text">Generando fichas con IA... 🤖</div></div>
 
@@ -47,6 +50,7 @@ let gameData=null,tiles=[],selectedTile=null,matchedCount=0,totalPairs=0,score=0
 
 document.addEventListener('DOMContentLoaded',()=>{
   const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);
+  if(typeof createGameParticles==='function')createGameParticles('geParticles');
   startGame();
 });
 
@@ -146,6 +150,7 @@ function matchOk(t1,t2){
   setTimeout(()=>{t1.el&&t1.el.remove();t2.el&&t2.el.remove();updateBlocked()},500);
   document.getElementById('score').textContent=score;
   document.getElementById('pairs').textContent=matchedCount+'/'+totalPairs;
+  if(typeof SFX!=='undefined')SFX.play('correct');
   showFB('success','✅ ¡Correcto!',t1.pair.concept+' = '+t1.pair.match);
   selectedTile=null;
   if(matchedCount>=totalPairs)setTimeout(endGame,700);
@@ -154,6 +159,7 @@ function matchOk(t1,t2){
 function matchFail(t1,t2,el2){
   t1.el.classList.remove('selected');t1.el.classList.add('wrong');el2.classList.add('wrong');
   score=Math.max(0,score-15);document.getElementById('score').textContent=score;
+  if(typeof SFX!=='undefined')SFX.play('wrong');
   showFB('error','❌ No es pareja','Busca el concepto con su definición correcta');
   setTimeout(()=>{t1.el&&t1.el.classList.remove('wrong');el2.classList.remove('wrong')},500);
   selectedTile=null;
@@ -196,6 +202,8 @@ function endGame(){
   const tb=Math.max(500-seconds*2,0),fs=score+tb;
   const m=Math.floor(seconds/60),s=seconds%60;
   document.getElementById('winInfo').innerHTML=`Puntaje: <strong>${score}</strong><br>Bono tiempo: <strong>+${tb}</strong><br>Tiempo: <strong>${m}:${s<10?'0':''}${s}</strong><br>Pistas: <strong>${hints}</strong><br><br>Total: <strong class="score-total">${fs}</strong>`;
+  if(typeof launchConfetti==='function')launchConfetti('geConfetti');
+  if(typeof SFX!=='undefined')SFX.play('victory');
   document.getElementById('winModal').classList.add('show');
   if(currentUser){try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Mahjong SST',puntaje:fs,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Parejas:'+totalPairs+',Pistas:'+hints})}catch(e){}
   try{window.parent.postMessage({sst_action:'gameFinished',game:'Mahjong',score:fs},'*')}catch(e){}}

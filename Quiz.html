@@ -3,147 +3,250 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SST GameHub - Quiz</title>
+<title>SST GameHub - Quiz Épico</title>
 <?!= include('css'); ?>
 </head>
-<body class="sst-shell page-quiz">
-<div class="loading" id="loadingScreen"><div class="ld-spinner"></div><div class="ld-text">Generando preguntas con IA... 🤖</div></div>
+<body class="sst-shell page-quiz game-epic">
 
+<!-- ANIMATED BG -->
+<div class="animated-bg"><div class="floating-shapes"><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div></div></div>
+<div class="ge-particles" id="geParticles"></div>
+<canvas class="ge-confetti" id="geConfetti"></canvas>
+<div class="ge-toast-wrap" id="geToasts"></div>
+
+<!-- OVERLAY: COUNTDOWN -->
+<div class="ge-overlay" id="ovCountdown">
+  <div class="ge-countdown-wrap">
+    <div class="ge-cd-ring"></div>
+    <div class="ge-cd-num" id="cdNum">3</div>
+    <div class="ge-cd-msg" id="cdMsg">🔥 PREPÁRATE</div>
+  </div>
+</div>
+
+<!-- OVERLAY: FEEDBACK -->
+<div class="ge-overlay" id="ovFeedback">
+  <div class="ge-feedback-wrap">
+    <div class="ge-fb-img"><img id="fbImg" src="" alt="feedback"></div>
+    <div class="ge-fb-label" id="fbLabel">¡ÉPICO!</div>
+    <div class="ge-fb-pts" id="fbPts"></div>
+    <div class="ge-fb-exp" id="fbExp"></div>
+  </div>
+</div>
+
+<!-- OVERLAY: MINI RANKING -->
+<div class="ge-overlay" id="ovMiniRank">
+  <div class="ge-mini-rank">
+    <h3>📊 ¿CÓMO VAS?</h3>
+    <p id="mrSubtitle">Mitad del desafío</p>
+    <div id="mrBody"></div>
+    <div class="ge-mr-timer">Continuando en <span id="mrTimer">4</span>s...</div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading" id="loadingScreen"><div class="ld-spinner"></div><div class="ld-text">Cargando preguntas épicas... 🚀</div></div>
+
+<!-- TOPBAR -->
 <div class="topbar">
-  <div class="topbar-left"><button class="btn-back" onclick="goBack()">← Volver</button><h1>❓ Quiz SST</h1></div>
+  <div class="topbar-left"><button class="btn-back" onclick="goBack()">← Volver</button><h1>⚡ Quiz SST</h1></div>
   <div class="stats">
-<div class="stat"><div class="v tone-success" id="score">0</div><div class="l">Puntaje</div></div>
-<div class="stat"><div class="v tone-primary" id="qNum">1/10</div><div class="l">Pregunta</div></div>
-<div class="stat"><div class="v tone-warning" id="streak">0🔥</div><div class="l">Racha</div></div>
+    <div class="stat"><div class="v tone-success" id="statScore">0</div><div class="l">Puntaje</div></div>
+    <div class="stat"><div class="v tone-primary" id="statQ">1/10</div><div class="l">Pregunta</div></div>
+    <div class="stat"><div class="v tone-warning" id="statStreak">0🔥</div><div class="l">Racha</div></div>
+  </div>
+  <button class="btn-new" onclick="startGame()">🔄 Nuevo</button>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="ge-progress-outer"><div class="ge-progress-fill" id="progFill"></div></div>
+
+<!-- QUESTION AREA -->
+<div class="ge-quiz-area">
+  <div class="ge-qcard glass" id="qCard">
+    <div class="ge-qnum" id="qNum">⚡ PREGUNTA 1 DE 10</div>
+    <div class="ge-qimg" id="qImg" style="display:none"><img id="qImgEl" src="" alt="imagen"></div>
+    <div class="ge-qtext" id="qText">Cargando...</div>
+    <div class="ge-options" id="optGrid"></div>
   </div>
 </div>
 
-<div class="progress-dots" id="progressDots"></div>
-
-<div class="quiz-area">
-  <div class="q-card" id="qCard">
-    <div class="q-num" id="qLabel">PREGUNTA 1 DE 10</div>
-    <div class="q-text" id="qText"></div>
-    <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
-    <div class="options" id="options"></div>
-  </div>
-  <div class="exp-card" id="expCard"><div class="eb" id="expBadge"></div><div class="et" id="expText"></div><div class="ai">🤖 Explicación generada por IA</div></div>
-  <button class="btn-next" id="btnNext" onclick="nextQ()">Siguiente →</button>
-</div>
-
-<div class="results-bg" id="resultsBg">
-  <div class="results">
-    <div class="trophy" id="resTrophy">🏆</div>
-    <h2 id="resTitle">¡Quiz completado!</h2>
-    <div class="score-big" id="resFinal">0</div>
-    <div class="score-lbl">PUNTAJE FINAL</div>
-    <div class="res-stats">
-<div class="rs"><div class="rv tone-success" id="resOk">0</div><div class="rl">Correctas</div></div>
-<div class="rs"><div class="rv tone-danger" id="resFail">0</div><div class="rl">Incorrectas</div></div>
-<div class="rs"><div class="rv tone-warning" id="resStreak">0</div><div class="rl">Mejor racha</div></div>
+<!-- RESULTS -->
+<div class="ge-results-bg" id="resultsBg">
+  <div class="ge-results-card glass">
+    <div class="ge-res-trophy" id="resTrophy">🏆</div>
+    <div class="ge-res-title" id="resTitle">¡Quiz completado!</div>
+    <div class="ge-res-score" id="resScore">0</div>
+    <div class="ge-res-lbl">PUNTAJE FINAL</div>
+    <div class="ge-res-stats">
+      <div class="ge-rs"><div class="ge-rv tone-success" id="resOk">0</div><div class="ge-rl">Correctas</div></div>
+      <div class="ge-rs"><div class="ge-rv tone-danger" id="resFail">0</div><div class="ge-rl">Incorrectas</div></div>
+      <div class="ge-rs"><div class="ge-rv tone-warning" id="resBest">0</div><div class="ge-rl">Mejor racha</div></div>
     </div>
-    <div class="res-btns">
+    <div class="modal-btns">
       <button class="btn-secondary" onclick="goBack()">← Menú</button>
-      <button class="btn-primary" onclick="startGame();document.getElementById('resultsBg').classList.remove('show')">Jugar de nuevo ▶</button>
+      <button class="btn-primary" onclick="startGame();document.getElementById('resultsBg').classList.remove('show')">Nuevo ▶</button>
     </div>
   </div>
 </div>
 
 <script>
-let questions=[],curQ=0,score=0,ok=0,fail=0,streak=0,bestStreak=0,timerInt=null,timeLeft=100,answered=false,currentUser=null,startTime=0;
+const OPT_COLORS=['#e74c3c','#3498db','#f39c12','#27ae60'];
+const OPT_ICONS=['🔺','🔷','🔶','🟢'];
+const OK_MSGS=['🔥 ¡ÉPICO!','⚡ ¡BRUTAL!','💥 ¡EXACTO!','🚀 ¡GENIAL!','🎯 ¡PERFECTO!','✨ ¡INCREÍBLE!'];
+const FAIL_MSGS=['💀 ¡FALLASTE!','😵 ¡UPS!','🤯 ¡NO ERA ESA!','😱 ¡CASI!','🫠 ¡NOOOO!'];
 
-document.addEventListener('DOMContentLoaded',()=>{const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);startGame()});
+let questions=[],curQ=0,score=0,ok=0,fail=0,streak=0,bestStreak=0,
+    timerInt=null,timeLeft=100,answered=false,currentUser=null,startTime=0;
 
-async function getDataFromAI(){return new Promise(r=>{try{google.script.run.withSuccessHandler(function(d){if(d&&d.questions)r(d);else r(simAI())}).withFailureHandler(function(){r(simAI())}).getAIContent('quiz',{count:10})}catch(e){r(simAI())}})}
-function simAI(){
-  return{questions:[{id:1,question:"Sin datos. Llena la hoja Quiz_Manual en tu Google Sheet.",options:["Ir al Admin","Abrir Sheet","Agregar preguntas","Todas"],correct:3,explanation:"Abre tu Google Sheet y llena la hoja Quiz_Manual."}]};
-}
+document.addEventListener('DOMContentLoaded',()=>{
+  const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);
+  if(typeof createGameParticles==='function')createGameParticles('geParticles');
+  startGame();
+});
+
+async function getDataFromAI(){return new Promise(r=>{try{google.script.run.withSuccessHandler(d=>{if(d&&d.questions)r(d);else r(simAI())}).withFailureHandler(()=>r(simAI())).getAIContent('quiz',{count:10})}catch(e){r(simAI())}})}
+function simAI(){return{questions:[{id:1,question:"Sin datos. Llena la hoja Quiz_Manual en tu Google Sheet.",options:["Ir al Admin","Abrir Sheet","Agregar preguntas","Todas las anteriores"],correct:3,explanation:"Ve a tu Google Sheet y llena la hoja Quiz_Manual con tus preguntas SST."}]};}
 
 async function startGame(){
-  curQ=0;score=0;ok=0;fail=0;streak=0;bestStreak=0;startTime=Date.now();
-  document.getElementById('score').textContent='0';document.getElementById('streak').textContent='0🔥';
+  curQ=0;score=0;ok=0;fail=0;streak=0;bestStreak=0;startTime=Date.now();answered=false;
+  if(timerInt)clearInterval(timerInt);
+  document.getElementById('statScore').textContent='0';
+  document.getElementById('statStreak').textContent='0🔥';
+  document.getElementById('resultsBg').classList.remove('show');
+  document.getElementById('progFill').style.width='0%';
   document.getElementById('loadingScreen').classList.remove('hidden');
   const d=await getDataFromAI();questions=d.questions;
-  const dots=document.getElementById('progressDots');dots.innerHTML='';
-  questions.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.id='dot-'+i;dots.appendChild(d)});
-  setTimeout(()=>{document.getElementById('loadingScreen').classList.add('hidden');showQ()},300);
+  setTimeout(()=>{document.getElementById('loadingScreen').classList.add('hidden');runCountdown(showQ);},400);
+}
+
+function runCountdown(cb){
+  const ov=document.getElementById('ovCountdown');
+  const num=document.getElementById('cdNum'),msg=document.getElementById('cdMsg');
+  const msgs={3:'🔥 PREPÁRATE PARA LA BATALLA',2:'⚡ CONCÉNTRATE',1:'💥 ¡A RESPONDER!',0:'🚀 ¡¡¡VAMOS!!!'};
+  let c=3;num.textContent=c;msg.textContent=msgs[c];ov.classList.add('show');
+  if(typeof SFX!=='undefined')SFX.play('countdown');
+  const int=setInterval(()=>{
+    c--;
+    if(c>=0){num.textContent=c===0?'GO!':c;msg.textContent=msgs[c];if(typeof SFX!=='undefined')SFX.play(c===0?'go':'countdown');}
+    else{clearInterval(int);ov.classList.remove('show');cb();}
+  },900);
 }
 
 function showQ(){
+  if(curQ>=questions.length){finish();return;}
   const q=questions[curQ];answered=false;
-  document.getElementById('qLabel').textContent=`PREGUNTA ${curQ+1} DE ${questions.length}`;
-  document.getElementById('qNum').textContent=`${curQ+1}/${questions.length}`;
+  document.getElementById('qNum').textContent=`⚡ PREGUNTA ${curQ+1} DE ${questions.length}`;
+  document.getElementById('statQ').textContent=`${curQ+1}/${questions.length}`;
+  document.getElementById('progFill').style.width=(curQ/questions.length*100)+'%';
   document.getElementById('qText').textContent=q.question;
-  document.getElementById('dot-'+curQ).classList.add('current');
-
-  const o=document.getElementById('options');o.innerHTML='';
-  ['A','B','C','D'].forEach((l,i)=>{
-    if(!q.options[i])return;
-    const b=document.createElement('button');b.className='opt-btn';
-    b.innerHTML=`<span class="letter">${l}</span><span>${q.options[i]}</span>`;
-    b.onclick=()=>answer(i);o.appendChild(b);
+  const imgDiv=document.getElementById('qImg'),imgEl=document.getElementById('qImgEl');
+  if(q.imageUrl){imgEl.src=q.imageUrl;imgDiv.style.display='block';}
+  else imgDiv.style.display='none';
+  const card=document.getElementById('qCard');
+  card.style.animation='none';void card.offsetHeight;card.style.animation='ge-card-in .5s cubic-bezier(.68,-.55,.265,1.55)';
+  const grid=document.getElementById('optGrid');grid.innerHTML='';
+  q.options.forEach((opt,i)=>{
+    if(!opt)return;
+    const b=document.createElement('button');b.className='ge-opt';
+    b.style.setProperty('--opt-color',OPT_COLORS[i]);
+    b.innerHTML=`<span class="ge-opt-icon">${OPT_ICONS[i]}</span><span class="ge-opt-text">${opt}</span>`;
+    b.onclick=()=>answer(i);
+    b.style.animation=`ge-opt-in .3s ease ${i*.08}s both`;
+    grid.appendChild(b);
   });
-
-  document.getElementById('expCard').className='exp-card';
-  document.getElementById('btnNext').classList.remove('show');
-  const c=document.getElementById('qCard');c.style.animation='none';c.offsetHeight;c.style.animation='cardIn .4s ease';
   startTimer();
 }
 
 function startTimer(){
-  timeLeft=100;const f=document.getElementById('timerFill');f.style.width='100%';
-  if(timerInt)clearInterval(timerInt);
-  timerInt=setInterval(()=>{timeLeft-=.5;f.style.width=timeLeft+'%';if(timeLeft<=0){clearInterval(timerInt);if(!answered)timeout()}},75);
+  timeLeft=100;if(timerInt)clearInterval(timerInt);
+  timerInt=setInterval(()=>{timeLeft-=.5;if(timeLeft<=0){clearInterval(timerInt);if(!answered)timeout();}},75);
 }
 
 function answer(idx){
   if(answered)return;answered=true;clearInterval(timerInt);
-  const q=questions[curQ],opts=document.querySelectorAll('.opt-btn'),isOk=idx===q.correct;
-  opts.forEach(o=>o.classList.add('disabled'));
-  opts[q.correct].classList.add('correct');
-  if(!isOk)opts[idx].classList.add('wrong');
-
-  if(isOk){const tb=Math.floor(timeLeft/5),sb=streak*10;score+=100+tb+sb;ok++;streak++;if(streak>bestStreak)bestStreak=streak}
-  else{score=Math.max(0,score-25);fail++;streak=0}
-
-  document.getElementById('score').textContent=score;document.getElementById('streak').textContent=streak+'🔥';
-  const dot=document.getElementById('dot-'+curQ);dot.classList.remove('current');dot.classList.add(isOk?'correct':'wrong');
-
-  const ec=document.getElementById('expCard');ec.className='exp-card show '+(isOk?'success':'error');
-  document.getElementById('expBadge').textContent=isOk?'✅ ¡Correcto!':'❌ Incorrecto';
-  document.getElementById('expText').textContent=q.explanation;
-
-  const nb=document.getElementById('btnNext');nb.classList.add('show');
-  nb.textContent=curQ<questions.length-1?'Siguiente →':'Ver resultados →';
+  const q=questions[curQ],isOk=idx===q.correct;
+  const opts=document.querySelectorAll('.ge-opt');
+  opts.forEach(o=>o.disabled=true);
+  if(opts[q.correct])opts[q.correct].classList.add('ge-opt-correct');
+  if(!isOk){opts[idx].classList.add('ge-opt-wrong');fail++;streak=0;}
+  else{const tb=Math.floor(timeLeft/5),sb=streak*10;score+=100+tb+sb;ok++;streak++;if(streak>bestStreak)bestStreak=streak;if(streak>=3)showStreakBadge(streak);}
+  document.getElementById('statScore').textContent=score;
+  document.getElementById('statStreak').textContent=streak+'🔥';
+  setTimeout(()=>showFeedback(isOk,q),600);
 }
 
 function timeout(){
-  answered=true;fail++;streak=0;document.getElementById('streak').textContent='0🔥';
-  const q=questions[curQ],opts=document.querySelectorAll('.opt-btn');
-  opts.forEach(o=>o.classList.add('disabled'));opts[q.correct].classList.add('correct');
-  const dot=document.getElementById('dot-'+curQ);dot.classList.remove('current');dot.classList.add('wrong');
-  const ec=document.getElementById('expCard');ec.className='exp-card show error';
-  document.getElementById('expBadge').textContent='⏰ Tiempo agotado';
-  document.getElementById('expText').textContent=q.explanation;
-  document.getElementById('btnNext').classList.add('show');
+  if(answered)return;answered=true;fail++;streak=0;
+  document.getElementById('statStreak').textContent='0🔥';
+  const q=questions[curQ],opts=document.querySelectorAll('.ge-opt');
+  opts.forEach(o=>o.disabled=true);
+  if(opts[q.correct])opts[q.correct].classList.add('ge-opt-correct');
+  setTimeout(()=>showFeedback(false,q,true),400);
 }
 
-function nextQ(){curQ++;curQ>=questions.length?showResults():showQ()}
+function showFeedback(isOk,q,isTimeout=false){
+  const ov=document.getElementById('ovFeedback');
+  const lbl=document.getElementById('fbLabel');
+  lbl.textContent=isTimeout?'⏰ ¡TIEMPO!':isOk?OK_MSGS[Math.floor(Math.random()*OK_MSGS.length)]:FAIL_MSGS[Math.floor(Math.random()*FAIL_MSGS.length)];
+  lbl.className='ge-fb-label '+(isOk?'ok':'fail');
+  const pts=Math.max(50,100-Math.floor((100-timeLeft)*0.7));
+  document.getElementById('fbPts').textContent=isOk?`+${pts} pts`:'';
+  document.getElementById('fbExp').textContent=q.explanation||'';
+  document.getElementById('fbImg').src=isOk
+    ?(q.gifCorrecto||'https://media.giphy.com/media/26u4cqiYI30juCOGY/giphy.gif')
+    :(q.gifIncorrecto||'https://media.giphy.com/media/l2JehQ2GitHGdVG9y/giphy.gif');
+  if(typeof SFX!=='undefined')SFX.play(isOk?'correct':'wrong');
+  ov.classList.add('show');
+  setTimeout(()=>{
+    ov.classList.remove('show');curQ++;
+    if(curQ<questions.length&&curQ%5===0)showMiniRanking(()=>runCountdown(showQ));
+    else if(curQ<questions.length)runCountdown(showQ);
+    else finish();
+  },2500);
+}
 
-function showResults(){
-  const el=Math.floor((Date.now()-startTime)/1000),pct=Math.round((ok/questions.length)*100);
-  let trophy,title;
-  if(pct>=90){trophy='🏆';title='¡Excelente!'}else if(pct>=70){trophy='🥈';title='¡Muy bien!'}else if(pct>=50){trophy='🥉';title='¡Buen intento!'}else{trophy='📚';title='Sigue practicando'}
+function showMiniRanking(cb){
+  const ov=document.getElementById('ovMiniRank');
+  document.getElementById('mrSubtitle').textContent=`Después de ${curQ} preguntas`;
+  document.getElementById('mrBody').innerHTML=`<div style="text-align:center;padding:24px 0"><div style="font-size:3rem">⚡</div><div style="font-family:'Fredoka',cursive;font-size:2rem;color:var(--amber);font-weight:700">${score} pts</div><div style="color:var(--text-muted);margin-top:8px">Correctas: ${ok} | Incorrectas: ${fail}</div></div>`;
+  ov.classList.add('show');
+  let t=4;document.getElementById('mrTimer').textContent=t;
+  const int=setInterval(()=>{t--;document.getElementById('mrTimer').textContent=t;if(t<=0){clearInterval(int);ov.classList.remove('show');cb();}},1000);
+}
+
+function showStreakBadge(n){
+  const ex=document.querySelector('.ge-streak');if(ex)ex.remove();
+  const b=document.createElement('div');b.className='ge-streak';b.textContent='🔥 RACHA x'+n+'!';
+  document.body.appendChild(b);if(typeof SFX!=='undefined')SFX.play('streak');
+  setTimeout(()=>b.remove(),2200);
+}
+
+function finish(){
+  if(timerInt)clearInterval(timerInt);
+  if(typeof launchConfetti==='function')launchConfetti('geConfetti');
+  if(typeof SFX!=='undefined')SFX.play('victory');
+  document.getElementById('progFill').style.width='100%';
+  const pct=Math.round((ok/questions.length)*100);
+  let trophy='📚',title='Sigue practicando',clr='var(--amber)';
+  if(pct>=90){trophy='🏆';title='¡EXPERTO SST!';clr='var(--green)';}
+  else if(pct>=70){trophy='🥈';title='¡Muy bien!';clr='var(--blue)';}
+  else if(pct>=50){trophy='🥉';title='¡Buen intento!';clr='var(--amber)';}
   document.getElementById('resTrophy').textContent=trophy;
-  document.getElementById('resTitle').textContent=title;document.getElementById('resTitle').style.color=pct>=70?'var(--green)':'var(--yellow)';
-  document.getElementById('resFinal').textContent=score;document.getElementById('resOk').textContent=ok;
-  document.getElementById('resFail').textContent=fail;document.getElementById('resStreak').textContent=bestStreak;
+  document.getElementById('resTitle').textContent=title;
+  document.getElementById('resTitle').style.color=clr;
+  document.getElementById('resScore').textContent=score;
+  document.getElementById('resOk').textContent=ok;
+  document.getElementById('resFail').textContent=fail;
+  document.getElementById('resBest').textContent=bestStreak;
   document.getElementById('resultsBg').classList.add('show');
-  if(currentUser){const m=Math.floor(el/60),s=el%60;try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Quiz SST',puntaje:score,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Correctas:'+ok+'/'+questions.length+',Racha:'+bestStreak+',Precisión:'+pct+'%'})}catch(e){}
-  try{window.parent.postMessage({sst_action:'gameFinished',game:'Quiz',score:score},'*')}catch(e){}}
+  if(currentUser){
+    const el=Math.floor((Date.now()-startTime)/1000),m=Math.floor(el/60),s=el%60;
+    try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Quiz SST',puntaje:score,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Correctas:'+ok+'/'+questions.length+',Racha:'+bestStreak+',Precisión:'+pct+'%'})}catch(e){}
+    try{window.parent.postMessage({sst_action:'gameFinished',game:'Quiz',score},'*')}catch(e){}
+  }
 }
 
-function goBack(){if(timerInt)clearInterval(timerInt);try{google.script.run.withSuccessHandler(function(u){window.top.location.href=u+'?page=Portal'}).withFailureHandler(function(){window.top.location.href='kahoot.html'}).getWebAppUrl()}catch(e){window.top.location.href='kahoot.html'}}
+function goBack(){if(timerInt)clearInterval(timerInt);try{google.script.run.withSuccessHandler(u=>window.top.location.href=u+'?page=Portal').withFailureHandler(()=>window.top.location.href='kahoot.html').getWebAppUrl()}catch(e){window.top.location.href='kahoot.html'}}
 </script>
 </body>
 </html>

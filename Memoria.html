@@ -6,7 +6,10 @@
 <title>SST GameHub - Memoria</title>
 <?!= include('css'); ?>
 </head>
-<body class="sst-shell page-memoria">
+<body class="sst-shell page-memoria game-epic">
+<div class="animated-bg"><div class="floating-shapes"><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div></div></div>
+<div class="ge-particles" id="geParticles"></div>
+<canvas class="ge-confetti" id="geConfetti"></canvas>
 <div class="loading" id="loadingScreen"><div class="ld-spinner"></div><div class="ld-text">Generando tarjetas con IA... 🤖</div></div>
 
 <div class="topbar">
@@ -48,6 +51,7 @@ let gameData=null,cards=[],flipped=[],matchedPairs=0,totalPairs=0,moves=0,errors
 
 document.addEventListener('DOMContentLoaded',()=>{
   const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);
+  if(typeof createGameParticles==='function')createGameParticles('geParticles');
   startGame();
 });
 
@@ -101,6 +105,7 @@ function flipCard(idx,el){
 
 function handleMatch(a,b){
   a.el.classList.add('matched');b.el.classList.add('matched');matchedPairs++;score+=100;updateStats();
+  if(typeof SFX!=='undefined')SFX.play('correct');
   showExp('success','✅ ¡Par encontrado!',a.card.pair.explanation);
   flipped=[];processing=false;
   if(matchedPairs>=totalPairs)setTimeout(endGame,1200);
@@ -108,6 +113,7 @@ function handleMatch(a,b){
 
 function handleMiss(a,b){
   errors++;score=Math.max(0,score-20);updateStats();
+  if(typeof SFX!=='undefined')SFX.play('wrong');
   a.el.classList.add('wrong');b.el.classList.add('wrong');
   showExp('error','❌ No son pareja',`${a.card.pair.front} = "${a.card.pair.back}". ${a.card.pair.explanation}`);
   setTimeout(()=>{a.el.classList.remove('flipped','wrong');b.el.classList.remove('flipped','wrong');flipped=[];processing=false},400);
@@ -131,6 +137,8 @@ function endGame(){
   const el=Math.floor((Date.now()-startTime)/1000),m=Math.floor(el/60),s=el%60;
   const tb=Math.max(300-el*2,0),eff=Math.round((totalPairs/moves)*100),fs=score+tb;
   document.getElementById('winInfo').innerHTML=`Puntaje: <strong>${score}</strong><br>Bono tiempo: <strong>+${tb}</strong><br>Movimientos: <strong>${moves}</strong> | Errores: <strong>${errors}</strong><br>Eficiencia: <strong>${eff}%</strong><br>Tiempo: <strong>${m}:${s<10?'0':''}${s}</strong><br><br>Total: <strong class="score-total">${fs}</strong>`;
+  if(typeof launchConfetti==='function')launchConfetti('geConfetti');
+  if(typeof SFX!=='undefined')SFX.play('victory');
   document.getElementById('winModal').classList.add('show');
   if(currentUser){try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Memoria SST',puntaje:fs,tiempo:m+':'+(s<10?'0':'')+s,detalles:'Parejas:'+totalPairs+',Movimientos:'+moves+',Errores:'+errors})}catch(e){}
   try{window.parent.postMessage({sst_action:'gameFinished',game:'Memoria',score:fs},'*')}catch(e){}}

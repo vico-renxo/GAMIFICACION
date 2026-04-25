@@ -7,7 +7,10 @@
 <title>SST GameHub - Simulación</title>
 <?!= include('css'); ?>
 </head>
-<body class="sst-shell page-simulacion">
+<body class="sst-shell page-simulacion game-epic">
+<div class="animated-bg"><div class="floating-shapes"><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div></div></div>
+<div class="ge-particles" id="geParticles"></div>
+<canvas class="ge-confetti" id="geConfetti"></canvas>
 <div class="loading" id="loadingScreen"><div class="ld-spinner"></div><div class="ld-text">Generando escenario con IA... 🤖</div></div>
 
 <div class="topbar">
@@ -51,7 +54,7 @@
 <script>
 let scenario=null,hazards=[],foundSet=new Set(),score=0,timerInt=null,timeRem=90,gameOver=false,currentUser=null;
 
-document.addEventListener('DOMContentLoaded',()=>{const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);startGame()});
+document.addEventListener('DOMContentLoaded',()=>{const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);if(typeof createGameParticles==='function')createGameParticles('geParticles');startGame()});
 
 async function getDataFromAI(){return new Promise(r=>{try{google.script.run.withSuccessHandler(function(d){if(d&&d.scenario&&d.hazards)r(d);else r(simAI())}).withFailureHandler(function(){r(simAI())}).getAIContent('simulacion',{})}catch(e){r(simAI())}})}
 function simAI(){
@@ -116,6 +119,7 @@ function findHazard(id){
   document.getElementById('found').textContent=foundSet.size+'/'+hazards.length;
   document.getElementById('fc').textContent=foundSet.size;
 
+  if(typeof SFX!=='undefined')SFX.play('correct');
   document.getElementById('hz-'+id).classList.add('found');
   const it=document.getElementById('hi-'+id);it.classList.add('found');
   it.querySelector('.hi-name').textContent='✅ '+h.name;
@@ -164,6 +168,8 @@ function finish(){
   document.getElementById('resTitle').textContent=title;document.getElementById('resTitle').style.color=clr;
   document.getElementById('resFinal').textContent=fs;
   document.getElementById('resInfo').innerHTML=`Encontrados: <strong>${fc}/${tc}</strong><br>Efectividad: <strong>${pct}%</strong><br>${bonus?`Bono completo: <strong>+${bonus}</strong><br>`:''}Escenario: <strong>${scenario.title}</strong>`;
+  if(pct>=80&&typeof launchConfetti==='function')launchConfetti('geConfetti');
+  if(typeof SFX!=='undefined')SFX.play('victory');
   setTimeout(()=>document.getElementById('resultModal').classList.add('show'),1200);
 
   if(currentUser){try{google.script.run.saveScore({dni:currentUser.dni,nombre:currentUser.nombre+' '+currentUser.apellido,juego:'Simulación SST',puntaje:fs,tiempo:(90-timeRem)+'s',detalles:'Escenario:'+scenario.title+',Encontrados:'+fc+'/'+tc})}catch(e){}

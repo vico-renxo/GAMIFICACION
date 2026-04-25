@@ -1740,8 +1740,9 @@ function leerDatosManualQuiz() {
         id: questions.length + 1,
         question: String(data[i][0]).trim(),
         options: [String(data[i][1]).trim(), String(data[i][2]).trim(), String(data[i][3]).trim(), String(data[i][4]).trim()],
-        correct: correcta - 1, // Convertir 1-4 a Ã­ndice 0-3
-        explanation: String(data[i][6] || '').trim()
+        correct: correcta - 1,
+        explanation: String(data[i][6] || '').trim(),
+        imageUrl: String(data[i][7] || '').trim() || undefined
       });
     }
     if (questions.length === 0) return null;
