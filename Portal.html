@@ -141,7 +141,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
     <button class="ni" id="nR" onclick="showV('R')"><div class="ic">🏆</div><span>Ranking</span></button>
     <button class="ni" id="nM" onclick="showV('M')"><div class="ic">🎯</div><span>Misiones</span></button>
     <div class="nl" style="margin-top:4px">Módulos</div>
-    <button class="ni" id="nQuiz" onclick="play('Quiz')"><div class="ic">❓</div><span>Quiz Interactivo</span><span class="tg">IA</span></button>
+    <button class="ni" id="nKahoot" onclick="play('Kahoot')"><div class="ic">🚀</div><span>Kahoot Arena</span><span class="tg">ÉPICO</span></button>
     <button class="ni" id="nMahjong" onclick="play('Mahjong')"><div class="ic">🀄</div><span>Mahjong SST</span><span class="tg">IA</span></button>
     <button class="ni" id="nMemoria" onclick="play('Memoria')"><div class="ic">🧠</div><span>Memoria SST</span><span class="tg">IA</span></button>
     <button class="ni" id="nDragDrop" onclick="play('DragDrop')"><div class="ic">🎯</div><span>Arrastra y Clasifica</span><span class="tg">IA</span></button>
@@ -198,7 +198,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 </style>
 <script>
 let U=null,WU='',AG='',prevLevel=0,PROF={xp:0,total:0,best:0,uniq:0,qBest:0,gBest:{},scores:[]};
-const GS={Quiz:{n:'Quiz Interactivo',ic:'❓',diff:'Difícil',col:'#1f6feb'},Mahjong:{n:'Mahjong SST',ic:'🀄',diff:'Medio',col:'#d29922'},Memoria:{n:'Memoria SST',ic:'🧠',diff:'Fácil',col:'#8957e5'},DragDrop:{n:'Arrastra y Clasifica',ic:'🎯',diff:'Medio',col:'#3fb950'},Simulacion:{n:'Simulación de Riesgos',ic:'🏗️',diff:'Difícil',col:'#da3633'}};
+const GS={Kahoot:{n:'Kahoot Arena',ic:'🚀',diff:'Épico',col:'#00f5ff'},Mahjong:{n:'Mahjong SST',ic:'🀄',diff:'Medio',col:'#d29922'},Memoria:{n:'Memoria SST',ic:'🧠',diff:'Fácil',col:'#8957e5'},DragDrop:{n:'Arrastra y Clasifica',ic:'🎯',diff:'Medio',col:'#3fb950'},Simulacion:{n:'Simulación de Riesgos',ic:'🏗️',diff:'Difícil',col:'#da3633'}};
 const LVS=[{l:1,n:'Novato',min:0,max:100,c:'#6e7681'},{l:2,n:'Aprendiz',min:100,max:250,c:'#1f6feb'},{l:3,n:'Practicante',min:250,max:500,c:'#3fb950'},{l:4,n:'Competente',min:500,max:900,c:'#d29922'},{l:5,n:'Avanzado',min:900,max:1500,c:'#e85c1a'},{l:6,n:'Experto',min:1500,max:2500,c:'#da3633'},{l:7,n:'Maestro',min:2500,max:4000,c:'#8957e5'},{l:8,n:'Gurú SST',min:4000,max:99999,c:'#e3b341'}];
 const BGS=[{id:'fv',ic:'🎯',n:'Primera Victoria',d:'Completa tu primer juego',f:p=>p.total>=1},{id:'v10',ic:'🎖️',n:'Veterano',d:'Juega 10 partidas',f:p=>p.total>=10},{id:'v30',ic:'💎',n:'Leyenda',d:'Juega 30 partidas',f:p=>p.total>=30},{id:'cs',ic:'🏆',n:'Campeón',d:'Supera 1000 pts en un juego',f:p=>p.best>=1000},{id:'qm',ic:'🧠',n:'Quiz Master',d:'Quiz SST > 900 pts',f:p=>p.qBest>=900},{id:'ag',ic:'🏅',n:'Especialista SST',d:'Juega los 5 módulos',f:p=>p.uniq>=5},{id:'x1',ic:'⭐',n:'Acumulador',d:'Consigue 1000 XP',f:p=>p.xp>=1000},{id:'x5',ic:'🌟',n:'Elite SST',d:'Consigue 5000 XP',f:p=>p.xp>=5000},{id:'mem',ic:'🎭',n:'Mente Ágil',d:'Completa Memoria SST',f:p=>(p.gBest['Memoria SST']||0)>0},{id:'sim',ic:'🔍',n:'Inspector',d:'Completa Simulación de Riesgos',f:p=>(p.gBest['Simulación de Riesgos']||0)>0}];
 function getLvl(xp){return LVS.slice().reverse().find(l=>xp>=l.min)||LVS[0]}
@@ -407,7 +407,7 @@ function renderHome(){
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px">${gc}</div>`;
 }
 function statCard(ic,val,lbl,col){return`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;border-top:3px solid ${col}"><div style="font-size:16px;margin-bottom:6px">${ic}</div><div style="font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.5px">${val}</div><div style="font-size:11px;color:var(--text3);margin-top:1px">${lbl}</div></div>`}
-function getDiffDesc(k){return{Quiz:'Preguntas de normativas, EPP y procedimientos',Mahjong:'Empareja conceptos con sus definiciones',Memoria:'Encuentra los pares ocultos de SST',DragDrop:'Clasifica elementos arrastrándolos',Simulacion:'Detecta peligros en escenarios laborales'}[k]||''}
+function getDiffDesc(k){return{Kahoot:'Responde preguntas contra el reloj. ¡Hazlo más rápido para más puntos!',Mahjong:'Empareja conceptos con sus definiciones',Memoria:'Encuentra los pares ocultos de SST',DragDrop:'Clasifica elementos arrastrándolos',Simulacion:'Detecta peligros en escenarios laborales'}[k]||''}
 
 // ── RENDER: PERFIL ──
 function renderProfile(){

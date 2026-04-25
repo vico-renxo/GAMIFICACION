@@ -25,10 +25,12 @@
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('manual', this)">📊 Hojas Manuales</button>
-    <button class="tab" onclick="switchTab('upload', this)">📤 Generar con IA</button>
-    <button class="tab" onclick="switchTab('content', this)">📋 Contenido Guardado</button>
-    <button class="tab" onclick="switchTab('config', this)">🔧 Configuración IA</button>
+    <button class="tab active" onclick="switchTab('manual', this)">📊 Módulos</button>
+    <button class="tab" onclick="switchTab('kahoot', this)">🚀 Kahoot Arena</button>
+    <button class="tab" onclick="switchTab('imagenes', this)">🖼️ Imágenes</button>
+    <button class="tab" onclick="switchTab('upload', this)">🤖 Generar con IA</button>
+    <button class="tab" onclick="switchTab('content', this)">📋 Contenido</button>
+    <button class="tab" onclick="switchTab('config', this)">🔧 Configuración</button>
   </div>
 
   <!-- TAB: Manual Sheets -->
@@ -193,6 +195,107 @@
           <li><strong>IA en tiempo real</strong> (Gemini/ChatGPT) — Se usa si no hay datos guardados</li>
           <li><strong>Datos predeterminados</strong> — Respaldo final si nada funciona</li>
         </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Kahoot Arena -->
+  <div class="tab-content" id="tab-kahoot">
+    <div class="upload-area">
+      <h4>🚀 Gestión de Arenas Kahoot</h4>
+      <p class="copy-note">Administra los temas disponibles en el Kahoot Arena. Activa o desactiva arenas para los jugadores.</p>
+      <div class="row-actions" style="margin-bottom:16px">
+        <button class="manual-mini-btn primary" onclick="loadKahootArenas()">🔄 Recargar arenas</button>
+        <button class="manual-mini-btn secondary" onclick="showNewArena()">➕ Nueva arena</button>
+      </div>
+      <div id="kahootArenaResult" class="result-card mb-20" style="display:none"><h5 id="karTitle"></h5><p id="karMsg"></p></div>
+      <div class="manual-form-card" id="newArenaForm" style="display:none">
+        <div class="manual-summary">Nueva arena</div>
+        <div class="manual-form-grid">
+          <div><label class="field-label">Título del tema *</label><input type="text" id="arTitulo" placeholder="Ej: Trabajo en Altura"></div>
+          <div><label class="field-label">Descripción</label><input type="text" id="arDesc" placeholder="Breve descripción del tema"></div>
+          <div><label class="field-label">Estado</label>
+            <select id="arEstado"><option value="ACTIVO">🟢 Activo</option><option value="INACTIVO">🔴 Inactivo</option></select>
+          </div>
+          <div><label class="field-label">Imagen URL (opcional)</label><input type="text" id="arImg" placeholder="https://drive.google.com/uc?id=..."></div>
+        </div>
+        <div class="row-actions">
+          <button class="manual-mini-btn primary" onclick="saveNewArena()">💾 Guardar arena</button>
+          <button class="manual-mini-btn secondary" onclick="document.getElementById('newArenaForm').style.display='none'">Cancelar</button>
+        </div>
+      </div>
+      <div id="kahootArenasList"><div class="epic-loader" style="margin:30px auto"></div></div>
+    </div>
+    <div class="upload-area" style="margin-top:16px">
+      <h4>❓ Preguntas por Arena</h4>
+      <p class="copy-note">Selecciona una arena para ver y agregar sus preguntas. Cada pregunta puede tener una imagen de apoyo.</p>
+      <div class="manual-toolbar">
+        <div><label class="field-label">Arena</label><select id="kahootArenaSelect" onchange="loadKahootQuestions()"><option value="">— Selecciona —</option></select></div>
+        <button class="manual-mini-btn primary" onclick="loadKahootQuestions()">🔄 Ver preguntas</button>
+        <button class="manual-mini-btn secondary" onclick="showNewKahootQ()">➕ Agregar pregunta</button>
+      </div>
+      <div class="manual-form-card" id="newKahootQForm" style="display:none">
+        <div class="manual-summary">Nueva pregunta</div>
+        <div class="manual-form-grid">
+          <div class="span-full"><label class="field-label">Pregunta *</label><textarea id="kqPregunta" rows="2" placeholder="Escribe la pregunta aquí"></textarea></div>
+          <div><label class="field-label">Opción A *</label><input type="text" id="kqA" placeholder="Opción A"></div>
+          <div><label class="field-label">Opción B *</label><input type="text" id="kqB" placeholder="Opción B"></div>
+          <div><label class="field-label">Opción C *</label><input type="text" id="kqC" placeholder="Opción C"></div>
+          <div><label class="field-label">Opción D *</label><input type="text" id="kqD" placeholder="Opción D"></div>
+          <div><label class="field-label">Correcta (1-4) *</label><select id="kqCorrecta"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+          <div class="span-full"><label class="field-label">🖼️ Imagen URL (opcional)</label><input type="text" id="kqImg" placeholder="https://drive.google.com/uc?export=view&id=TU_ID"><small style="color:var(--text-muted);display:block;margin-top:4px">Sube a Google Drive → Compartir → Cualquiera con enlace → Copiar URL y pegar aquí</small></div>
+          <div class="span-full"><label class="field-label">GIF respuesta correcta (opcional)</label><input type="text" id="kqGifOk" placeholder="URL del GIF para respuesta correcta"></div>
+          <div class="span-full"><label class="field-label">GIF respuesta incorrecta (opcional)</label><input type="text" id="kqGifFail" placeholder="URL del GIF para respuesta incorrecta"></div>
+        </div>
+        <div class="row-actions">
+          <button class="manual-mini-btn primary" onclick="saveKahootQuestion()">💾 Guardar pregunta</button>
+          <button class="manual-mini-btn secondary" onclick="document.getElementById('newKahootQForm').style.display='none'">Cancelar</button>
+        </div>
+      </div>
+      <div id="kahootQList"></div>
+    </div>
+  </div>
+
+  <!-- TAB: Imágenes -->
+  <div class="tab-content" id="tab-imagenes">
+    <div class="upload-area">
+      <h4>🖼️ Cómo agregar imágenes a los juegos</h4>
+      <p class="copy-note">Las imágenes se almacenan en <strong>Google Drive</strong> y se referencian por URL. El sistema es 50% administrador (imágenes) + 50% IA (texto).</p>
+      <div style="background:var(--info-soft);border:1px solid var(--cyan);border-radius:16px;padding:20px;margin-bottom:20px">
+        <h5 style="color:var(--cyan);margin-bottom:12px">📋 Pasos para agregar una imagen</h5>
+        <ol style="color:var(--text-soft);line-height:2;padding-left:20px">
+          <li>Abre <strong>Google Drive</strong> (drive.google.com)</li>
+          <li>Sube tu imagen (JPG, PNG, GIF)</li>
+          <li>Click derecho → <strong>Compartir</strong> → <strong>Cualquiera con el enlace</strong> → Copiar</li>
+          <li>El enlace es tipo: <code style="background:rgba(255,255,255,.1);padding:2px 6px;border-radius:4px">https://drive.google.com/file/d/<strong>FILE_ID</strong>/view</code></li>
+          <li>Convierte a URL directa: <code style="background:rgba(255,255,255,.1);padding:2px 6px;border-radius:4px">https://drive.google.com/uc?export=view&amp;id=<strong>FILE_ID</strong></code></li>
+          <li>Pega esa URL en el campo "Imagen URL" del módulo que desees</li>
+        </ol>
+      </div>
+      <div style="background:var(--success-soft);border:1px solid var(--green);border-radius:16px;padding:20px;margin-bottom:20px">
+        <h5 style="color:var(--green);margin-bottom:8px">🔧 Conversor rápido de URL</h5>
+        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:12px">Pega el enlace de Google Drive y obtén la URL directa:</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input type="text" id="driveUrlIn" style="flex:1;min-width:200px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:10px;padding:10px 14px;color:var(--text-base);font-size:.85rem" placeholder="Pega tu URL de Google Drive aquí">
+          <button class="manual-mini-btn primary" onclick="convertDriveUrl()">Convertir →</button>
+        </div>
+        <div id="driveUrlOut" style="margin-top:12px;display:none">
+          <label class="field-label">URL directa (cópiala):</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" id="driveUrlResult" readonly style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--green);border-radius:10px;padding:10px 14px;color:var(--green);font-size:.85rem">
+            <button class="manual-mini-btn primary" onclick="copyDriveUrl()">📋 Copiar</button>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--warning-soft);border:1px solid var(--amber);border-radius:16px;padding:20px">
+        <h5 style="color:var(--amber);margin-bottom:8px">📌 ¿Dónde pegar la URL según el juego?</h5>
+        <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+          <tr style="border-bottom:1px solid rgba(255,255,255,.1)"><th style="text-align:left;padding:8px;color:var(--text-muted)">Juego</th><th style="text-align:left;padding:8px;color:var(--text-muted)">Campo</th><th style="text-align:left;padding:8px;color:var(--text-muted)">Columna en hoja</th></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,.06)"><td style="padding:8px">🚀 Kahoot</td><td style="padding:8px">Imagen por pregunta</td><td style="padding:8px">Tab "Kahoot Arena" → Nueva pregunta → Imagen URL</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,.06)"><td style="padding:8px">⚡ Quiz SST</td><td style="padding:8px">Imagen por pregunta</td><td style="padding:8px">Hoja Quiz_Manual → columna H (IMAGEN_URL)</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,.06)"><td style="padding:8px">🧠 Memoria</td><td style="padding:8px">Imagen en tarjeta</td><td style="padding:8px">Hoja Memoria_Manual → columna D (IMAGEN_URL)</td></tr>
+          <tr><td style="padding:8px">🎯 DragDrop</td><td style="padding:8px">Imagen por ítem</td><td style="padding:8px">Hoja DragDrop_Manual → columna E (IMAGEN_URL)</td></tr>
+        </table>
       </div>
     </div>
   </div>
@@ -608,6 +711,7 @@ function switchTab(tab, btn) {
   
   if (tab === 'content') loadContentList();
   if (tab === 'manual') loadManualRecords();
+  if (tab === 'kahoot') loadKahootArenas();
   if (tab === 'config') {
     document.getElementById('configResult').classList.add('show');
   }
@@ -1232,6 +1336,145 @@ function goBack() {
       window.top.location.href = 'kahoot.html';
     }).getWebAppUrl();
   } catch(e) { window.top.location.href = 'kahoot.html'; }
+}
+
+// ── KAHOOT ARENA MANAGEMENT ──
+function loadKahootArenas() {
+  document.getElementById('kahootArenasList').innerHTML = '<div class="epic-loader" style="margin:30px auto"></div>';
+  try {
+    google.script.run.withSuccessHandler(function(ts) {
+      const sel = document.getElementById('kahootArenaSelect');
+      sel.innerHTML = '<option value="">— Selecciona —</option>';
+      if (!ts || !ts.length) {
+        document.getElementById('kahootArenasList').innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:30px">No hay arenas. Crea una con "Nueva arena".</p>';
+        return;
+      }
+      let h = '';
+      ts.forEach(function(t) {
+        const isActive = t.estado === 'ACTIVO' || t.estado === 'DISPONIBLE';
+        h += '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg-card);border-radius:12px;margin-bottom:8px;border:1px solid var(--line)">';
+        h += '<div style="flex:1"><div style="font-weight:700;color:var(--text-base)">🎯 ' + t.titulo + '</div>';
+        if (t.desc) h += '<div style="font-size:.8rem;color:var(--text-muted);margin-top:2px">' + t.desc + '</div></div>';
+        h += '<span style="font-size:.75rem;font-weight:800;padding:4px 10px;border-radius:999px;background:' + (isActive ? 'var(--success-soft)' : 'var(--danger-soft)') + ';color:' + (isActive ? 'var(--green)' : 'var(--red)') + '">' + (isActive ? '🟢 ACTIVO' : '🔴 INACTIVO') + '</span>';
+        h += '<button class="manual-mini-btn ' + (isActive ? 'secondary' : 'primary') + '" onclick="toggleArena(' + t.fila + ',\'' + (isActive ? 'INACTIVO' : 'ACTIVO') + '\')">' + (isActive ? 'Desactivar' : 'Activar') + '</button></div>';
+        sel.innerHTML += '<option value="' + t.titulo + '">' + t.titulo + '</option>';
+      });
+      document.getElementById('kahootArenasList').innerHTML = h;
+    }).withFailureHandler(function() {
+      document.getElementById('kahootArenasList').innerHTML = '<p style="color:var(--red);text-align:center;padding:20px">Error al cargar. Verifica tu configuración.</p>';
+    }).adminObtenerTemas();
+  } catch(e) {
+    document.getElementById('kahootArenasList').innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">Conecta el Admin primero.</p>';
+  }
+}
+
+function toggleArena(fila, nuevoEstado) {
+  try {
+    google.script.run.withSuccessHandler(function() {
+      showKAR('success', 'Estado actualizado', 'La arena fue ' + (nuevoEstado === 'ACTIVO' ? 'activada' : 'desactivada') + '.');
+      loadKahootArenas();
+    }).adminCambiarEstado(fila, nuevoEstado);
+  } catch(e) { showKAR('error', 'Error', 'No se pudo actualizar.'); }
+}
+
+function showNewArena() {
+  document.getElementById('newArenaForm').style.display = 'block';
+  document.getElementById('arTitulo').focus();
+}
+
+function saveNewArena() {
+  const titulo = document.getElementById('arTitulo').value.trim();
+  if (!titulo) { showKAR('error', 'Falta el título', 'El título es obligatorio.'); return; }
+  try {
+    google.script.run.withSuccessHandler(function() {
+      showKAR('success', '¡Arena creada!', '"' + titulo + '" ya está disponible.');
+      document.getElementById('newArenaForm').style.display = 'none';
+      document.getElementById('arTitulo').value = '';
+      loadKahootArenas();
+    }).adminCrearTema({
+      titulo: titulo,
+      desc: document.getElementById('arDesc').value.trim(),
+      estado: document.getElementById('arEstado').value,
+      img: document.getElementById('arImg').value.trim()
+    });
+  } catch(e) { showKAR('error', 'Error', 'Verifica la configuración del Admin.'); }
+}
+
+function showNewKahootQ() {
+  const arena = document.getElementById('kahootArenaSelect').value;
+  if (!arena) { alert('Selecciona una arena primero.'); return; }
+  document.getElementById('newKahootQForm').style.display = 'block';
+}
+
+function saveKahootQuestion() {
+  const arena = document.getElementById('kahootArenaSelect').value;
+  const pregunta = document.getElementById('kqPregunta').value.trim();
+  if (!arena || !pregunta) { alert('Arena y pregunta son obligatorios.'); return; }
+  const q = {
+    titulo: arena,
+    pregunta: pregunta,
+    opA: document.getElementById('kqA').value.trim(),
+    opB: document.getElementById('kqB').value.trim(),
+    opC: document.getElementById('kqC').value.trim(),
+    opD: document.getElementById('kqD').value.trim(),
+    correcta: document.getElementById('kqCorrecta').value,
+    gifOk: document.getElementById('kqGifOk').value.trim(),
+    gifFail: document.getElementById('kqGifFail').value.trim(),
+    imagenUrl: document.getElementById('kqImg').value.trim()
+  };
+  try {
+    google.script.run.withSuccessHandler(function() {
+      showKAR('success', '¡Pregunta guardada!', 'La pregunta fue agregada a "' + arena + '".');
+      document.getElementById('newKahootQForm').style.display = 'none';
+      document.getElementById('kqPregunta').value = '';
+      loadKahootQuestions();
+    }).adminGuardarPregunta(q);
+  } catch(e) { showKAR('error', 'Error', 'No se pudo guardar. Verifica tu configuración.'); }
+}
+
+function loadKahootQuestions() {
+  const arena = document.getElementById('kahootArenaSelect').value;
+  if (!arena) return;
+  document.getElementById('kahootQList').innerHTML = '<div class="epic-loader" style="margin:20px auto"></div>';
+  try {
+    google.script.run.withSuccessHandler(function(qs) {
+      if (!qs || !qs.length) {
+        document.getElementById('kahootQList').innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">Sin preguntas. Agrega la primera.</p>';
+        return;
+      }
+      let h = '<div style="overflow-x:auto"><table class="manual-table"><thead><tr><th>#</th><th>Pregunta</th><th>A</th><th>B</th><th>C</th><th>D</th><th>✓</th><th>Img</th></tr></thead><tbody>';
+      qs.forEach(function(q, i) {
+        h += '<tr><td>' + (i + 1) + '</td><td>' + q.pregunta + '</td><td>' + (q.opciones[0]||'') + '</td><td>' + (q.opciones[1]||'') + '</td><td>' + (q.opciones[2]||'') + '</td><td>' + (q.opciones[3]||'') + '</td><td style="color:var(--green);font-weight:800">' + (q.respuesta + 1) + '</td><td>' + (q.imagenUrl ? '<a href="' + q.imagenUrl + '" target="_blank" style="color:var(--cyan)">Ver</a>' : '—') + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+      document.getElementById('kahootQList').innerHTML = h;
+    }).obtenerPreguntasJuego(arena);
+  } catch(e) {}
+}
+
+function showKAR(type, title, msg) {
+  const r = document.getElementById('kahootArenaResult');
+  r.className = 'result-card mb-20 ' + type; r.style.display = 'block';
+  document.getElementById('karTitle').textContent = title;
+  document.getElementById('karMsg').textContent = msg;
+  setTimeout(function() { r.style.display = 'none'; }, 4000);
+}
+
+// ── CONVERSOR URL DRIVE ──
+function convertDriveUrl() {
+  const raw = document.getElementById('driveUrlIn').value.trim();
+  const match = raw.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (!match) { alert('No se reconoce la URL de Google Drive. Asegúrate de copiar el enlace completo.'); return; }
+  const id = match[1];
+  const direct = 'https://drive.google.com/uc?export=view&id=' + id;
+  document.getElementById('driveUrlResult').value = direct;
+  document.getElementById('driveUrlOut').style.display = 'block';
+}
+
+function copyDriveUrl() {
+  const el = document.getElementById('driveUrlResult');
+  el.select(); document.execCommand('copy');
+  alert('¡URL copiada! Ahora pégala en el campo Imagen URL del juego correspondiente.');
 }
 </script>
 </body>

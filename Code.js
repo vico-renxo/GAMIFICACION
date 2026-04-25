@@ -59,6 +59,7 @@ loadConfig_();
 const PAGE_FILES = {
   Portal: 'Portal',
   Admin: 'Admin',
+  Kahoot: 'kahoot',
   Mahjong: 'Mahjong',
   Memoria: 'Memoria',
   DragDrop: 'DragDrop',
@@ -470,9 +471,9 @@ function verificarCredencialesAdmin(u, p) {
 function adminObtenerTemas() {
   var hoja = ensureKahootThemesSheet_();
   if (!hoja || hoja.getLastRow() < 2) return [];
-  return hoja.getRange(2, 1, hoja.getLastRow() - 1, Math.min(3, hoja.getLastColumn())).getValues()
+  return hoja.getRange(2, 1, hoja.getLastRow() - 1, Math.min(4, hoja.getLastColumn())).getValues()
     .map(function(row, index) {
-      return { fila: index + 2, titulo: String(row[0] || '').trim(), estado: String(row[2] || 'ACTIVO').trim() || 'ACTIVO' };
+      return { fila: index + 2, titulo: String(row[0]||'').trim(), desc: String(row[1]||'').trim(), estado: String(row[2]||'ACTIVO').trim()||'ACTIVO', img: String(row[3]||'').trim() };
     })
     .filter(function(item) { return !!item.titulo; });
 }
@@ -481,6 +482,28 @@ function adminCambiarEstado(fila, estado) {
   var hoja = ensureKahootThemesSheet_();
   if (!hoja || !fila) return;
   hoja.getRange(Number(fila), 3).setValue(estado);
+}
+
+function adminCrearTema(data) {
+  try {
+    var hoja = ensureKahootThemesSheet_();
+    hoja.appendRow([data.titulo || '', data.desc || '', data.estado || 'ACTIVO', data.img || '', new Date()]);
+    return { success: true };
+  } catch(e) { return { success: false, error: e.message }; }
+}
+
+function adminGuardarPregunta(q) {
+  try {
+    var ss = openSpreadsheet_();
+    var hoja = ss.getSheetByName('Preguntas');
+    if (!hoja) {
+      hoja = ss.insertSheet('Preguntas');
+      hoja.appendRow(['TITULO','PREGUNTA','OPCION_A','OPCION_B','OPCION_C','OPCION_D','CORRECTA','GIF_OK','GIF_FAIL','IMAGEN_URL']);
+      hoja.getRange(1,1,1,10).setFontWeight('bold');
+    }
+    hoja.appendRow([q.titulo||'', q.pregunta||'', q.opA||'', q.opB||'', q.opC||'', q.opD||'', Number(q.correcta)||1, q.gifOk||'', q.gifFail||'', q.imagenUrl||'']);
+    return { success: true };
+  } catch(e) { return { success: false, error: e.message }; }
 }
 
 function obtenerRankingDetallado(titulo) {
