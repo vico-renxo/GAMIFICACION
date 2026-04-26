@@ -6,1475 +6,1035 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SST GameHub - Centro de Mando</title>
 <?!= include('css'); ?>
+<style>
+body.admin-epic{display:flex;min-height:100vh;background:var(--bg,#0d1117)}
+.adm-sidebar{width:232px;min-height:100vh;background:rgba(13,17,23,.97);backdrop-filter:blur(24px);border-right:1px solid rgba(59,220,255,.13);display:flex;flex-direction:column;position:fixed;left:0;top:0;z-index:200;padding:0 0 20px}
+.adm-brand{display:flex;align-items:center;gap:14px;padding:24px 20px 20px;border-bottom:1px solid rgba(59,220,255,.1)}
+.adm-logo{font-size:2rem;filter:drop-shadow(0 0 10px #3bdcff88)}
+.adm-brand-title{font-size:1rem;font-weight:800;color:#fff;letter-spacing:.5px}
+.adm-brand-sub{font-size:.72rem;color:var(--cyan,#3bdcff);opacity:.7}
+.adm-nav{flex:1;padding:16px 0;overflow-y:auto}
+.adm-nav-item{display:flex;align-items:center;gap:11px;padding:11px 20px;width:100%;border:none;background:transparent;color:rgba(255,255,255,.5);font-size:.875rem;cursor:pointer;transition:all .2s;border-left:3px solid transparent;text-align:left}
+.adm-nav-item:hover{color:#fff;background:rgba(59,220,255,.07);border-left-color:rgba(59,220,255,.4)}
+.adm-nav-item.active{color:var(--cyan,#3bdcff);background:rgba(59,220,255,.12);border-left-color:var(--cyan,#3bdcff);font-weight:700}
+.adm-nav-item .ni{font-size:1.05rem;width:22px;text-align:center}
+.adm-nav-sep{height:1px;background:rgba(59,220,255,.1);margin:10px 20px}
+.adm-back-btn{margin:0 16px;padding:10px;border-radius:12px;border:1px solid rgba(59,220,255,.25);background:transparent;color:var(--cyan,#3bdcff);font-size:.82rem;cursor:pointer;transition:all .2s}
+.adm-back-btn:hover{background:rgba(59,220,255,.1)}
+.adm-main{margin-left:232px;flex:1;padding:32px 36px;min-height:100vh;box-sizing:border-box}
+.adm-section{display:none}.adm-section.active{display:block}
+.adm-section-hdr{margin-bottom:28px}
+.adm-section-title{font-size:1.65rem;font-weight:900;color:#fff;margin-bottom:6px}
+.adm-section-title span{color:var(--cyan,#3bdcff);text-shadow:0 0 20px rgba(59,220,255,.5)}
+.adm-section-sub{color:rgba(255,255,255,.45);font-size:.9rem}
+.glass{background:rgba(255,255,255,.04);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.09);border-radius:20px}
+.adm-card{padding:26px 28px;margin-bottom:22px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09)}
+.adm-card h4{font-size:1rem;font-weight:700;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.adm-card-accent-cyan{border-left:3px solid var(--cyan,#3bdcff)}
+.adm-card-accent-purple{border-left:3px solid #a855f7}
+.adm-card-accent-green{border-left:3px solid #22c55e}
+.adm-card-accent-yellow{border-left:3px solid #eab308}
+.adm-card-accent-red{border-left:3px solid #ef4444}
+.adm-card-accent-blue{border-left:3px solid #3b82f6}
+.adm-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.adm-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.adm-stat-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:20px;text-align:center}
+.adm-stat-val{font-size:2.2rem;font-weight:900;color:var(--cyan,#3bdcff);text-shadow:0 0 16px rgba(59,220,255,.4)}
+.adm-stat-lbl{font-size:.78rem;color:rgba(255,255,255,.4);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.adm-field{margin-bottom:14px}
+.adm-field label{display:block;font-size:.8rem;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.adm-field input,.adm-field select,.adm-field textarea{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;color:#fff;font-size:.875rem;box-sizing:border-box;transition:border-color .2s;font-family:inherit}
+.adm-field input:focus,.adm-field select,.adm-field textarea:focus{border-color:var(--cyan,#3bdcff);outline:none}
+.adm-field textarea{resize:vertical;min-height:72px}
+.adm-field select option{background:#1a2030}
+.adm-field small{display:block;margin-top:5px;color:rgba(255,255,255,.3);font-size:.75rem}
+.adm-btn{padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-size:.875rem;font-weight:700;transition:all .2s;font-family:inherit}
+.adm-btn-primary{background:var(--cyan,#3bdcff);color:#0d1117}
+.adm-btn-primary:hover{box-shadow:0 0 16px rgba(59,220,255,.5);transform:translateY(-1px)}
+.adm-btn-secondary{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15)}
+.adm-btn-secondary:hover{background:rgba(255,255,255,.14)}
+.adm-btn-danger{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.adm-btn-danger:hover{background:rgba(239,68,68,.25)}
+.adm-btn-success{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3)}
+.adm-btn-sm{padding:6px 14px;font-size:.8rem;border-radius:8px}
+.adm-btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.adm-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.adm-form-grid .span-full{grid-column:1/-1}
+.adm-table-wrap{overflow-x:auto;margin-top:16px}
+.adm-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.adm-table th{padding:10px 12px;text-align:left;color:rgba(255,255,255,.45);border-bottom:1px solid rgba(255,255,255,.08);font-size:.75rem;text-transform:uppercase;letter-spacing:.4px}
+.adm-table td{padding:10px 12px;color:rgba(255,255,255,.8);border-bottom:1px solid rgba(255,255,255,.05)}
+.adm-table tr:hover td{background:rgba(255,255,255,.03)}
+.adm-empty{text-align:center;padding:40px;color:rgba(255,255,255,.25);font-size:.9rem}
+.adm-badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:800}
+.adm-badge-active{background:rgba(34,197,94,.15);color:#22c55e}
+.adm-badge-inactive{background:rgba(239,68,68,.15);color:#ef4444}
+.adm-alert{border-radius:14px;padding:14px 18px;margin-bottom:16px;font-size:.875rem;display:none}
+.adm-alert.show{display:block}
+.adm-alert-ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#4ade80}
+.adm-alert-err{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#f87171}
+.adm-alert-info{background:rgba(59,220,255,.1);border:1px solid rgba(59,220,255,.25);color:var(--cyan,#3bdcff)}
+.adm-collapsible{display:none}.adm-collapsible.open{display:block}
+.adm-help-fab{position:fixed;bottom:32px;right:32px;width:50px;height:50px;border-radius:50%;background:var(--cyan,#3bdcff);color:#0d1117;font-size:1.35rem;font-weight:900;border:none;cursor:pointer;z-index:500;box-shadow:0 0 24px rgba(59,220,255,.55);transition:all .2s}
+.adm-help-fab:hover{transform:scale(1.1)}
+.adm-help-overlay{position:fixed;inset:0;z-index:600;background:rgba(4,10,20,.88);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center}
+.adm-help-overlay.show{display:flex}
+.adm-help-card{max-width:540px;width:90%;max-height:80vh;overflow-y:auto;padding:32px;position:relative;border-radius:24px}
+.adm-help-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem}
+#helpContent h3{color:var(--cyan,#3bdcff);margin-bottom:12px;font-size:1.2rem}
+#helpContent h4{color:#fff;margin:18px 0 8px;font-size:.95rem}
+#helpContent p,#helpContent li{color:rgba(255,255,255,.65);font-size:.875rem;line-height:1.7}
+#helpContent ul,#helpContent ol{padding-left:20px}
+#helpContent code{background:rgba(255,255,255,.1);padding:1px 6px;border-radius:4px;font-size:.8rem;color:var(--cyan,#3bdcff)}
+.adm-toast{position:fixed;bottom:96px;right:32px;background:#1e2a3a;border:1px solid rgba(59,220,255,.3);color:#fff;padding:12px 20px;border-radius:12px;font-size:.875rem;z-index:550;opacity:0;transition:opacity .3s;pointer-events:none}
+.adm-toast.show{opacity:1}
+.adm-game-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);font-size:.82rem;color:rgba(255,255,255,.6)}
+.adm-spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--cyan,#3bdcff);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.drop-zone-upload{border:2px dashed rgba(59,220,255,.35);border-radius:16px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;color:rgba(255,255,255,.5)}
+.drop-zone-upload:hover,.drop-zone-upload.dragover{border-color:var(--cyan,#3bdcff);background:rgba(59,220,255,.06);color:#fff}
+.file-prev-row{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.05);border-radius:12px;padding:12px 16px;margin-top:12px;display:none}
+.file-prev-row.show{display:flex}
+.game-pill{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:999px;border:2px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.5);cursor:pointer;transition:all .2s;font-size:.85rem}
+.game-pill:hover{border-color:rgba(59,220,255,.5);color:#fff}
+.game-pill.selected{border-color:var(--cyan,#3bdcff);background:rgba(59,220,255,.15);color:var(--cyan,#3bdcff);font-weight:700}
+.adm-pills-row{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.dashboard-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:20px}
+.dash-game-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:20px;text-align:center;cursor:pointer;transition:all .25s}
+.dash-game-card:hover{border-color:var(--cyan,#3bdcff);background:rgba(59,220,255,.08);transform:translateY(-3px)}
+.dash-game-icon{font-size:2.2rem;margin-bottom:8px}
+.dash-game-name{font-size:.85rem;font-weight:700;color:#fff}
+.dash-game-count{font-size:.75rem;color:rgba(255,255,255,.35);margin-top:4px}
+@media(max-width:768px){.adm-sidebar{transform:translateX(-100%);transition:transform .3s}.adm-main{margin-left:0;padding:20px 16px}.adm-form-grid{grid-template-columns:1fr}.adm-grid2{grid-template-columns:1fr}.adm-grid3{grid-template-columns:1fr 1fr}}
+</style>
 </head>
-<body class="sst-shell page-admin">
+<body class="sst-shell page-admin admin-epic">
+<div class="animated-bg"><div class="floating-shapes"><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div></div></div>
 
-<div class="container">
-  <nav class="topnav">
-    <div class="topnav-left">
-      <div class="brand">⚙️</div>
-      <h2>Centro de Mando</h2>
-    </div>
-    <button class="btn-back" onclick="goBack()">← Volver al Portal</button>
+<aside class="adm-sidebar">
+  <div class="adm-brand">
+    <div class="adm-logo">⚙️</div>
+    <div><div class="adm-brand-title">Centro de Mando</div><div class="adm-brand-sub">SST GameHub</div></div>
+  </div>
+  <nav class="adm-nav">
+    <button class="adm-nav-item active" onclick="switchSection('dashboard',this)"><span class="ni">📊</span>Dashboard</button>
+    <button class="adm-nav-item" onclick="switchSection('kahoot',this)"><span class="ni">🚀</span>Kahoot Arena</button>
+    <button class="adm-nav-item" onclick="switchSection('memoria',this)"><span class="ni">🧠</span>Memoria</button>
+    <button class="adm-nav-item" onclick="switchSection('mahjong',this)"><span class="ni">🀄</span>Mahjong</button>
+    <button class="adm-nav-item" onclick="switchSection('dragdrop',this)"><span class="ni">🎯</span>Drag &amp; Drop</button>
+    <button class="adm-nav-item" onclick="switchSection('simulacion',this)"><span class="ni">🏗️</span>Simulación</button>
+    <div class="adm-nav-sep"></div>
+    <button class="adm-nav-item" onclick="switchSection('imagenes',this)"><span class="ni">🖼️</span>Imágenes</button>
+    <button class="adm-nav-item" onclick="switchSection('ia',this)"><span class="ni">🤖</span>IA &amp; Config</button>
   </nav>
+  <button class="adm-back-btn" onclick="goBack()">← Volver al Portal</button>
+</aside>
 
-  <div class="header-card">
-    <h3>Panel de Administración 🎛️</h3>
-    <p>Sube documentos o imágenes sobre SST y la IA de Gemini generará automáticamente el contenido para los juegos.</p>
+<main class="adm-main">
+
+<!-- ═══ SECTION: DASHBOARD ═══ -->
+<div class="adm-section active" id="sec-dashboard">
+<div class="adm-section-hdr">
+  <div class="adm-section-title">📊 <span>Centro de Mando</span></div>
+  <div class="adm-section-sub">Bienvenido al panel de control de SST GameHub. Administra el contenido de cada módulo.</div>
+</div>
+<div class="adm-grid3">
+  <div class="adm-stat-card"><div class="adm-stat-val" id="dashKahootQ">—</div><div class="adm-stat-lbl">Preguntas Kahoot</div></div>
+  <div class="adm-stat-card"><div class="adm-stat-val" id="dashArenas">—</div><div class="adm-stat-lbl">Arenas activas</div></div>
+  <div class="adm-stat-card"><div class="adm-stat-val" id="dashMemoria">—</div><div class="adm-stat-lbl">Pares Memoria</div></div>
+</div>
+<div class="adm-card" style="margin-top:22px">
+  <h4>🎮 Módulos del juego — click para administrar</h4>
+  <div class="dashboard-games">
+    <div class="dash-game-card" onclick="switchSection('kahoot',document.querySelector('[onclick*=kahoot]'))">
+      <div class="dash-game-icon">🚀</div><div class="dash-game-name">Kahoot Arena</div><div class="dash-game-count" id="dkk">Arenas + preguntas</div>
+    </div>
+    <div class="dash-game-card" onclick="switchSection('memoria',document.querySelector('[onclick*=memoria]'))">
+      <div class="dash-game-icon">🧠</div><div class="dash-game-name">Memoria</div><div class="dash-game-count">Pares concepto-emoji</div>
+    </div>
+    <div class="dash-game-card" onclick="switchSection('mahjong',document.querySelector('[onclick*=mahjong]'))">
+      <div class="dash-game-icon">🀄</div><div class="dash-game-name">Mahjong</div><div class="dash-game-count">Pares concepto-def.</div>
+    </div>
+    <div class="dash-game-card" onclick="switchSection('dragdrop',document.querySelector('[onclick*=dragdrop]'))">
+      <div class="dash-game-icon">🎯</div><div class="dash-game-name">Drag &amp; Drop</div><div class="dash-game-count">Categorías y elementos</div>
+    </div>
+    <div class="dash-game-card" onclick="switchSection('simulacion',document.querySelector('[onclick*=simulacion]'))">
+      <div class="dash-game-icon">🏗️</div><div class="dash-game-name">Simulación</div><div class="dash-game-count">Escenarios de riesgo</div>
+    </div>
+    <div class="dash-game-card" onclick="switchSection('imagenes',document.querySelector('[onclick*=imagenes]'))">
+      <div class="dash-game-icon">🖼️</div><div class="dash-game-name">Imágenes</div><div class="dash-game-count">Conversor Drive URL</div>
+    </div>
   </div>
-
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('manual', this)">📊 Módulos</button>
-    <button class="tab" onclick="switchTab('kahoot', this)">🚀 Kahoot Arena</button>
-    <button class="tab" onclick="switchTab('imagenes', this)">🖼️ Imágenes</button>
-    <button class="tab" onclick="switchTab('upload', this)">🤖 Generar con IA</button>
-    <button class="tab" onclick="switchTab('content', this)">📋 Contenido</button>
-    <button class="tab" onclick="switchTab('config', this)">🔧 Configuración</button>
+</div>
+<div class="adm-card adm-card-accent-cyan">
+  <h4>🔑 Prioridad de datos</h4>
+  <ol style="margin:0;padding-left:20px;color:rgba(255,255,255,.6);font-size:.875rem;line-height:2">
+    <li><strong style="color:#fff">Este panel</strong> — Registros manuales que ingresas aquí (máxima prioridad)</li>
+    <li><strong style="color:#fff">Contenido IA guardado</strong> — Generado y almacenado con tu API Key</li>
+    <li><strong style="color:#fff">IA en tiempo real</strong> — Gemini/ChatGPT responde directamente</li>
+    <li><strong style="color:#fff">Datos de respaldo</strong> — Predeterminados del sistema</li>
+  </ol>
+</div>
+<div class="adm-grid2" style="margin-top:0">
+  <div class="adm-card adm-card-accent-purple">
+    <h4>🏆 Ranking de jugadores <button class="adm-btn adm-btn-secondary adm-btn-sm" style="margin-left:auto" onclick="loadRanking()">🔄</button></h4>
+    <div id="dashRanking"><div class="adm-empty">Cargando ranking...</div></div>
   </div>
+  <div class="adm-card adm-card-accent-green">
+    <h4>📈 Actividad reciente <button class="adm-btn adm-btn-secondary adm-btn-sm" style="margin-left:auto" onclick="loadActivity()">🔄</button></h4>
+    <div id="dashActivity"><div class="adm-empty">Cargando actividad...</div></div>
+  </div>
+</div>
+</div>
 
-  <!-- TAB: Manual Sheets -->
-  <div class="tab-content active" id="tab-manual">
-    <div class="upload-area">
-      <h4>📊 Contenido Manual — Sin IA, tú controlas los datos</h4>
-      <p class="copy-note">
-        Crea hojas de cálculo dedicadas para cada juego. Llena las columnas manualmente y los juegos leerán esos datos <strong>antes</strong> que cualquier contenido de IA.
-      </p>
-
-      <button class="btn-generate mb-20" onclick="crearHojasManuales()" id="btnCrearHojas">
-        📊 Crear Hojas en mi Google Sheet
-      </button>
-
-      <div class="result-card mb-20" id="manualResult">
-        <h5 id="manualResultTitle"></h5>
-        <p id="manualResultMsg"></p>
+<!-- ═══ SECTION: KAHOOT ═══ -->
+<div class="adm-section" id="sec-kahoot">
+<div class="adm-section-hdr">
+  <div class="adm-section-title">🚀 <span>Kahoot Arena</span></div>
+  <div class="adm-section-sub">Gestiona arenas (temas) y las preguntas de cada arena con imágenes y GIFs.</div>
+</div>
+<div class="adm-card adm-card-accent-cyan">
+  <h4>🏟️ Arenas disponibles
+    <button class="adm-btn adm-btn-primary adm-btn-sm" style="margin-left:auto" onclick="toggleForm('newArenaForm')">➕ Nueva arena</button>
+    <button class="adm-btn adm-btn-secondary adm-btn-sm" onclick="loadKahootArenas()">🔄</button>
+  </h4>
+  <div class="adm-collapsible" id="newArenaForm">
+    <div style="background:rgba(255,255,255,.03);border-radius:14px;padding:20px;margin-bottom:16px">
+      <div class="adm-form-grid">
+        <div class="adm-field"><label>Título *</label><input id="arTitulo" placeholder="Ej: Trabajo en Altura"></div>
+        <div class="adm-field"><label>Descripción</label><input id="arDesc" placeholder="Breve descripción"></div>
+        <div class="adm-field"><label>Estado</label>
+          <select id="arEstado"><option value="ACTIVO">🟢 Activo</option><option value="INACTIVO">🔴 Inactivo</option></select></div>
+        <div class="adm-field"><label>Imagen URL</label><input id="arImg" placeholder="https://drive.google.com/uc?export=view&id=..."></div>
       </div>
-
-      <div class="manual-manager">
-        <h4>🧩 Editor de Registros Manuales</h4>
-        <p class="copy-note">
-          Administra el contenido de cada juego desde aquí. Puedes agregar, editar y eliminar registros sin abrir Google Sheets.
-        </p>
-
-        <div class="manual-toolbar">
-          <div>
-            <label class="field-label">Juego</label>
-            <select id="manualGameSelect"></select>
-          </div>
-          <div>
-            <label class="field-label">Estado</label>
-            <div class="manual-summary" id="manualSheetSummary">Cargando configuración manual...</div>
-          </div>
-          <button class="manual-mini-btn primary" type="button" onclick="loadManualRecords()">🔄 Recargar</button>
-          <button class="manual-mini-btn secondary" type="button" onclick="resetManualForm()">➕ Nuevo</button>
-        </div>
-
-        <div class="manual-form-card">
-          <div class="manual-summary" id="manualFormTitle">Nuevo registro</div>
-          <input type="hidden" id="manualRow">
-          <div class="manual-form-grid" id="manualFormGrid"></div>
-          <div class="row-actions">
-            <button class="manual-mini-btn primary" type="button" onclick="saveManualRecord()">💾 Guardar registro</button>
-            <button class="manual-mini-btn secondary" type="button" onclick="resetManualForm()">Limpiar formulario</button>
-          </div>
-        </div>
-
-        <div class="quiz-ai-panel" id="quizAiPanel">
-          <h4>🧠 Generar preguntas para Quiz_Manual</h4>
-          <p class="copy-note compact">
-            Sube un documento o pega texto base y la IA generará preguntas que se guardarán directamente en la hoja manual del quiz.
-          </p>
-          <div class="quiz-ai-grid">
-            <div>
-              <label class="field-label">Número de preguntas</label>
-              <input type="number" id="quizAiCount" min="1" max="20" value="5">
-            </div>
-            <div>
-              <label class="field-label">Archivo base</label>
-              <input type="file" id="quizAiFile" accept=".pdf,.jpg,.jpeg,.png,.txt,.doc,.docx" onchange="handleManualQuizFile(this)">
-            </div>
-            <div class="span-full">
-              <label class="field-label">Texto base o indicaciones</label>
-              <textarea id="quizAiText" placeholder="Pega aquí el contenido del tema o escribe instrucciones para que la IA genere preguntas."></textarea>
-            </div>
-          </div>
-          <div class="row-actions centered">
-            <label class="option-check">
-              <input type="checkbox" id="quizAiReplace">
-              Reemplazar preguntas existentes de Quiz_Manual
-            </label>
-            <button class="manual-mini-btn primary" type="button" id="btnQuizAiGenerate" onclick="generateManualQuizAI()">Generar y guardar</button>
-          </div>
-          <div class="quiz-ai-status" id="quizAiStatus">Disponible solo cuando el juego seleccionado es Quiz.</div>
-        </div>
-
-        <div class="result-card result-card-flat" id="manualCrudResult">
-          <h5 id="manualCrudTitle"></h5>
-          <p id="manualCrudMsg"></p>
-        </div>
-
-        <div class="manual-table-wrap">
-          <div id="manualRecordsTable"></div>
-        </div>
-      </div>
-
-      <div class="stack-grid">
-        <!-- Quiz -->
-        <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--purple)">
-          <h4 style="margin-bottom:8px">❓ Quiz_Manual</h4>
-          <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:10px">
-            <tr style="background:#f5f0ff"><th style="padding:6px;text-align:left;border:1px solid #e0d4f5">PREGUNTA</th><th style="padding:6px;border:1px solid #e0d4f5">OPCION_A</th><th style="padding:6px;border:1px solid #e0d4f5">OPCION_B</th><th style="padding:6px;border:1px solid #e0d4f5">OPCION_C</th><th style="padding:6px;border:1px solid #e0d4f5">OPCION_D</th><th style="padding:6px;border:1px solid #e0d4f5">CORRECTA</th><th style="padding:6px;border:1px solid #e0d4f5">EXPLICACION</th></tr>
-            <tr><td style="padding:6px;border:1px solid #eee">¿Altura mínima?</td><td style="padding:6px;border:1px solid #eee">1.00m</td><td style="padding:6px;border:1px solid #eee">1.50m</td><td style="padding:6px;border:1px solid #eee;background:#e8f5e9;font-weight:bold">1.80m</td><td style="padding:6px;border:1px solid #eee">2.50m</td><td style="padding:6px;border:1px solid #eee;text-align:center;font-weight:bold">3</td><td style="padding:6px;border:1px solid #eee;font-size:11px">Desde 1.80m...</td></tr>
-          </table>
-          <div style="font-size:13px;color:var(--text-light)">
-            <strong>CORRECTA:</strong> Pon 1, 2, 3 o 4 (número de la opción correcta).<br>
-            <strong>Mínimo:</strong> 3 preguntas. El juego toma hasta 10 al azar.
-          </div>
-        </div>
-
-        <!-- Mahjong -->
-        <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--red)">
-          <h4 style="margin-bottom:8px">🀄 Mahjong_Manual</h4>
-          <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:10px">
-            <tr style="background:#ffebee"><th style="padding:6px;text-align:left;border:1px solid #f5c6cb">CONCEPTO (con emoji)</th><th style="padding:6px;text-align:left;border:1px solid #f5c6cb">DEFINICION</th></tr>
-            <tr><td style="padding:6px;border:1px solid #eee">🪖 Casco</td><td style="padding:6px;border:1px solid #eee">Protección craneal contra impactos</td></tr>
-          </table>
-          <div style="font-size:13px;color:var(--text-light)">
-            <strong>Mínimo:</strong> 6 pares. El juego toma hasta 12 al azar.<br>
-            <strong>Tip:</strong> Incluye un emoji al inicio del concepto para hacerlo visual.
-          </div>
-        </div>
-
-        <!-- Memoria -->
-        <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--blue)">
-          <h4 style="margin-bottom:8px">🧠 Memoria_Manual</h4>
-          <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:10px">
-            <tr style="background:#e3f2fd"><th style="padding:6px;text-align:left;border:1px solid #b3d4fc">EMOJI</th><th style="padding:6px;text-align:left;border:1px solid #b3d4fc">CONCEPTO</th><th style="padding:6px;text-align:left;border:1px solid #b3d4fc">EXPLICACION</th></tr>
-            <tr><td style="padding:6px;border:1px solid #eee">🪖</td><td style="padding:6px;border:1px solid #eee">CASCO</td><td style="padding:6px;border:1px solid #eee;font-size:11px">El casco protege la cabeza...</td></tr>
-          </table>
-          <div style="font-size:13px;color:var(--text-light)">
-            <strong>Mínimo:</strong> 4 pares. El juego toma hasta 8 al azar.<br>
-            <strong>Tip:</strong> Concepto en MAYÚSCULAS. Un solo emoji por fila.
-          </div>
-        </div>
-
-        <!-- Drag & Drop -->
-        <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--yellow)">
-          <h4 style="margin-bottom:8px">🎯 DragDrop_Manual</h4>
-          <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:10px">
-            <tr style="background:#fff8e1"><th style="padding:6px;text-align:left;border:1px solid #ffe082">CATEGORIA</th><th style="padding:6px;border:1px solid #ffe082">COLOR_HEX</th><th style="padding:6px;text-align:left;border:1px solid #ffe082">ELEMENTO</th><th style="padding:6px;text-align:left;border:1px solid #ffe082">EXPLICACION</th></tr>
-            <tr><td style="padding:6px;border:1px solid #eee">EPP Obligatorio</td><td style="padding:6px;border:1px solid #eee">#e74c3c</td><td style="padding:6px;border:1px solid #eee">Casco de seguridad</td><td style="padding:6px;border:1px solid #eee;font-size:11px">EPP craneal obligatorio</td></tr>
-            <tr><td style="padding:6px;border:1px solid #eee">Señalización</td><td style="padding:6px;border:1px solid #eee">#f39c12</td><td style="padding:6px;border:1px solid #eee">Señal prohibido fumar</td><td style="padding:6px;border:1px solid #eee;font-size:11px">Señal roja que prohíbe</td></tr>
-          </table>
-          <div style="font-size:13px;color:var(--text-light)">
-            <strong>Mínimo:</strong> 2 categorías, 4 elementos total.<br>
-            <strong>Tip:</strong> Repite el mismo nombre de CATEGORIA para agrupar. Usa colores hex diferentes por categoría.
-          </div>
-        </div>
-
-        <!-- Simulacion -->
-        <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--green)">
-          <h4 style="margin-bottom:8px">🏗️ Simulacion_Manual</h4>
-          <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:10px">
-            <tr style="background:#e8f5e9"><th style="padding:6px;border:1px solid #a5d6a7">ESC_ID</th><th style="padding:6px;border:1px solid #a5d6a7">TITULO</th><th style="padding:6px;border:1px solid #a5d6a7">DESCRIPCION</th><th style="padding:6px;border:1px solid #a5d6a7">AMBIENTE</th><th style="padding:6px;border:1px solid #a5d6a7">PELIGRO</th><th style="padding:6px;border:1px solid #a5d6a7">SEVERIDAD</th><th style="padding:6px;border:1px solid #a5d6a7">X</th><th style="padding:6px;border:1px solid #a5d6a7">Y</th><th style="padding:6px;border:1px solid #a5d6a7">SOLUCION</th></tr>
-            <tr><td style="padding:6px;border:1px solid #eee">ESC1</td><td style="padding:6px;border:1px solid #eee;font-size:11px">Obra</td><td style="padding:6px;border:1px solid #eee;font-size:11px">Inspecciona...</td><td style="padding:6px;border:1px solid #eee;font-size:11px">construccion</td><td style="padding:6px;border:1px solid #eee;font-size:11px">Sin casco</td><td style="padding:6px;border:1px solid #eee">alta</td><td style="padding:6px;border:1px solid #eee">15</td><td style="padding:6px;border:1px solid #eee">25</td><td style="padding:6px;border:1px solid #eee;font-size:11px">Casco obligatorio</td></tr>
-          </table>
-          <div style="font-size:13px;color:var(--text-light)">
-            <strong>ESC_ID:</strong> Los peligros del mismo escenario comparten ID (ej: ESC1, ESC2).<br>
-            <strong>X, Y, ANCHO, ALTO:</strong> Son porcentajes (0-100) para posicionar la zona clickeable.<br>
-            <strong>SEVERIDAD:</strong> baja, media, alta o critica.
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-top:20px;background:#fff8e1;border-radius:var(--radius-sm);padding:16px;border-left:4px solid var(--yellow)">
-        <h4 style="margin-bottom:6px">Prioridad de datos</h4>
-        <ol style="font-size:13px;color:var(--text-light);line-height:1.8;padding-left:20px">
-          <li><strong>Hojas manuales</strong> (Quiz_Manual, Mahjong_Manual, etc.) — Si tienen datos, se usan PRIMERO</li>
-          <li><strong>Contenido IA guardado</strong> (hoja CONTENIDO_IA) — Se usa si no hay datos manuales</li>
-          <li><strong>IA en tiempo real</strong> (Gemini/ChatGPT) — Se usa si no hay datos guardados</li>
-          <li><strong>Datos predeterminados</strong> — Respaldo final si nada funciona</li>
-        </ol>
+      <div class="adm-btn-row">
+        <button class="adm-btn adm-btn-primary" onclick="saveNewArena()">💾 Guardar arena</button>
+        <button class="adm-btn adm-btn-secondary" onclick="toggleForm('newArenaForm')">Cancelar</button>
       </div>
     </div>
   </div>
-
-  <!-- TAB: Kahoot Arena -->
-  <div class="tab-content" id="tab-kahoot">
-    <div class="upload-area">
-      <h4>🚀 Gestión de Arenas Kahoot</h4>
-      <p class="copy-note">Administra los temas disponibles en el Kahoot Arena. Activa o desactiva arenas para los jugadores.</p>
-      <div class="row-actions" style="margin-bottom:16px">
-        <button class="manual-mini-btn primary" onclick="loadKahootArenas()">🔄 Recargar arenas</button>
-        <button class="manual-mini-btn secondary" onclick="showNewArena()">➕ Nueva arena</button>
-      </div>
-      <div id="kahootArenaResult" class="result-card mb-20" style="display:none"><h5 id="karTitle"></h5><p id="karMsg"></p></div>
-      <div class="manual-form-card" id="newArenaForm" style="display:none">
-        <div class="manual-summary">Nueva arena</div>
-        <div class="manual-form-grid">
-          <div><label class="field-label">Título del tema *</label><input type="text" id="arTitulo" placeholder="Ej: Trabajo en Altura"></div>
-          <div><label class="field-label">Descripción</label><input type="text" id="arDesc" placeholder="Breve descripción del tema"></div>
-          <div><label class="field-label">Estado</label>
-            <select id="arEstado"><option value="ACTIVO">🟢 Activo</option><option value="INACTIVO">🔴 Inactivo</option></select>
-          </div>
-          <div><label class="field-label">Imagen URL (opcional)</label><input type="text" id="arImg" placeholder="https://drive.google.com/uc?id=..."></div>
-        </div>
-        <div class="row-actions">
-          <button class="manual-mini-btn primary" onclick="saveNewArena()">💾 Guardar arena</button>
-          <button class="manual-mini-btn secondary" onclick="document.getElementById('newArenaForm').style.display='none'">Cancelar</button>
-        </div>
-      </div>
-      <div id="kahootArenasList"><div class="epic-loader" style="margin:30px auto"></div></div>
-    </div>
-    <div class="upload-area" style="margin-top:16px">
-      <h4>❓ Preguntas por Arena</h4>
-      <p class="copy-note">Selecciona una arena para ver y agregar sus preguntas. Cada pregunta puede tener una imagen de apoyo.</p>
-      <div class="manual-toolbar">
-        <div><label class="field-label">Arena</label><select id="kahootArenaSelect" onchange="loadKahootQuestions()"><option value="">— Selecciona —</option></select></div>
-        <button class="manual-mini-btn primary" onclick="loadKahootQuestions()">🔄 Ver preguntas</button>
-        <button class="manual-mini-btn secondary" onclick="showNewKahootQ()">➕ Agregar pregunta</button>
-      </div>
-      <div class="manual-form-card" id="newKahootQForm" style="display:none">
-        <div class="manual-summary">Nueva pregunta</div>
-        <div class="manual-form-grid">
-          <div class="span-full"><label class="field-label">Pregunta *</label><textarea id="kqPregunta" rows="2" placeholder="Escribe la pregunta aquí"></textarea></div>
-          <div><label class="field-label">Opción A *</label><input type="text" id="kqA" placeholder="Opción A"></div>
-          <div><label class="field-label">Opción B *</label><input type="text" id="kqB" placeholder="Opción B"></div>
-          <div><label class="field-label">Opción C *</label><input type="text" id="kqC" placeholder="Opción C"></div>
-          <div><label class="field-label">Opción D *</label><input type="text" id="kqD" placeholder="Opción D"></div>
-          <div><label class="field-label">Correcta (1-4) *</label><select id="kqCorrecta"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
-          <div class="span-full"><label class="field-label">🖼️ Imagen URL (opcional)</label><input type="text" id="kqImg" placeholder="https://drive.google.com/uc?export=view&id=TU_ID"><small style="color:var(--text-muted);display:block;margin-top:4px">Sube a Google Drive → Compartir → Cualquiera con enlace → Copiar URL y pegar aquí</small></div>
-          <div class="span-full"><label class="field-label">GIF respuesta correcta (opcional)</label><input type="text" id="kqGifOk" placeholder="URL del GIF para respuesta correcta"></div>
-          <div class="span-full"><label class="field-label">GIF respuesta incorrecta (opcional)</label><input type="text" id="kqGifFail" placeholder="URL del GIF para respuesta incorrecta"></div>
-        </div>
-        <div class="row-actions">
-          <button class="manual-mini-btn primary" onclick="saveKahootQuestion()">💾 Guardar pregunta</button>
-          <button class="manual-mini-btn secondary" onclick="document.getElementById('newKahootQForm').style.display='none'">Cancelar</button>
-        </div>
-      </div>
-      <div id="kahootQList"></div>
-    </div>
+  <div class="adm-alert" id="kahootArenaAlert"></div>
+  <div id="kahootArenasList"><div class="adm-empty">Cargando arenas...</div></div>
+</div>
+<div class="adm-card adm-card-accent-purple">
+  <h4>❓ Preguntas por arena
+    <button class="adm-btn adm-btn-primary adm-btn-sm" style="margin-left:auto" onclick="showNewKahootQ()">➕ Agregar pregunta</button>
+  </h4>
+  <div class="adm-field" style="max-width:320px">
+    <label>Selecciona arena</label>
+    <select id="kahootArenaSelect" onchange="loadKahootQuestions()"><option value="">— Elige una arena —</option></select>
   </div>
-
-  <!-- TAB: Imágenes -->
-  <div class="tab-content" id="tab-imagenes">
-    <div class="upload-area">
-      <h4>🖼️ Cómo agregar imágenes a los juegos</h4>
-      <p class="copy-note">Las imágenes se almacenan en <strong>Google Drive</strong> y se referencian por URL. El sistema es 50% administrador (imágenes) + 50% IA (texto).</p>
-      <div style="background:var(--info-soft);border:1px solid var(--cyan);border-radius:16px;padding:20px;margin-bottom:20px">
-        <h5 style="color:var(--cyan);margin-bottom:12px">📋 Pasos para agregar una imagen</h5>
-        <ol style="color:var(--text-soft);line-height:2;padding-left:20px">
-          <li>Abre <strong>Google Drive</strong> (drive.google.com)</li>
-          <li>Sube tu imagen (JPG, PNG, GIF)</li>
-          <li>Click derecho → <strong>Compartir</strong> → <strong>Cualquiera con el enlace</strong> → Copiar</li>
-          <li>El enlace es tipo: <code style="background:rgba(255,255,255,.1);padding:2px 6px;border-radius:4px">https://drive.google.com/file/d/<strong>FILE_ID</strong>/view</code></li>
-          <li>Convierte a URL directa: <code style="background:rgba(255,255,255,.1);padding:2px 6px;border-radius:4px">https://drive.google.com/uc?export=view&amp;id=<strong>FILE_ID</strong></code></li>
-          <li>Pega esa URL en el campo "Imagen URL" del módulo que desees</li>
-        </ol>
+  <div class="adm-collapsible" id="newKahootQForm">
+    <div style="background:rgba(255,255,255,.03);border-radius:14px;padding:20px;margin-bottom:16px">
+      <div class="adm-form-grid">
+        <div class="adm-field span-full"><label>Pregunta *</label><textarea id="kqPregunta" rows="2" placeholder="Escribe la pregunta aquí"></textarea></div>
+        <div class="adm-field"><label>Opción A *</label><input id="kqA" placeholder="Opción A"></div>
+        <div class="adm-field"><label>Opción B *</label><input id="kqB" placeholder="Opción B"></div>
+        <div class="adm-field"><label>Opción C *</label><input id="kqC" placeholder="Opción C"></div>
+        <div class="adm-field"><label>Opción D *</label><input id="kqD" placeholder="Opción D"></div>
+        <div class="adm-field"><label>Correcta (1-4) *</label>
+          <select id="kqCorrecta"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+        <div class="adm-field"><label>Tiempo (seg)</label><input id="kqTiempo" type="number" value="20" min="5" max="60"></div>
+        <div class="adm-field span-full"><label>🖼️ Imagen URL</label>
+          <input id="kqImg" placeholder="https://drive.google.com/uc?export=view&id=TU_ID">
+          <small>Sube a Drive → Compartir → Cualquiera con enlace → Pega URL convertida aquí</small></div>
+        <div class="adm-field span-full"><label>GIF respuesta correcta</label><input id="kqGifOk" placeholder="URL del GIF para acierto"></div>
+        <div class="adm-field span-full"><label>GIF respuesta incorrecta</label><input id="kqGifFail" placeholder="URL del GIF para error"></div>
+        <div class="adm-field span-full"><label>Explicación</label><textarea id="kqExpl" rows="2" placeholder="Explicación de la respuesta correcta (opcional)"></textarea></div>
       </div>
-      <div style="background:var(--success-soft);border:1px solid var(--green);border-radius:16px;padding:20px;margin-bottom:20px">
-        <h5 style="color:var(--green);margin-bottom:8px">🔧 Conversor rápido de URL</h5>
-        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:12px">Pega el enlace de Google Drive y obtén la URL directa:</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <input type="text" id="driveUrlIn" style="flex:1;min-width:200px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:10px;padding:10px 14px;color:var(--text-base);font-size:.85rem" placeholder="Pega tu URL de Google Drive aquí">
-          <button class="manual-mini-btn primary" onclick="convertDriveUrl()">Convertir →</button>
-        </div>
-        <div id="driveUrlOut" style="margin-top:12px;display:none">
-          <label class="field-label">URL directa (cópiala):</label>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input type="text" id="driveUrlResult" readonly style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--green);border-radius:10px;padding:10px 14px;color:var(--green);font-size:.85rem">
-            <button class="manual-mini-btn primary" onclick="copyDriveUrl()">📋 Copiar</button>
-          </div>
-        </div>
-      </div>
-      <div style="background:var(--warning-soft);border:1px solid var(--amber);border-radius:16px;padding:20px">
-        <h5 style="color:var(--amber);margin-bottom:8px">📌 ¿Dónde pegar la URL según el juego?</h5>
-        <table style="width:100%;border-collapse:collapse;font-size:.85rem">
-          <tr style="border-bottom:1px solid rgba(255,255,255,.1)"><th style="text-align:left;padding:8px;color:var(--text-muted)">Juego</th><th style="text-align:left;padding:8px;color:var(--text-muted)">Campo</th><th style="text-align:left;padding:8px;color:var(--text-muted)">Columna en hoja</th></tr>
-          <tr style="border-bottom:1px solid rgba(255,255,255,.06)"><td style="padding:8px">🚀 Kahoot</td><td style="padding:8px">Imagen por pregunta</td><td style="padding:8px">Tab "Kahoot Arena" → Nueva pregunta → Imagen URL</td></tr>
-          <tr style="border-bottom:1px solid rgba(255,255,255,.06)"><td style="padding:8px">⚡ Quiz SST</td><td style="padding:8px">Imagen por pregunta</td><td style="padding:8px">Hoja Quiz_Manual → columna H (IMAGEN_URL)</td></tr>
-          <tr style="border-bottom:1px solid rgba(255,255,255,.06)"><td style="padding:8px">🧠 Memoria</td><td style="padding:8px">Imagen en tarjeta</td><td style="padding:8px">Hoja Memoria_Manual → columna D (IMAGEN_URL)</td></tr>
-          <tr><td style="padding:8px">🎯 DragDrop</td><td style="padding:8px">Imagen por ítem</td><td style="padding:8px">Hoja DragDrop_Manual → columna E (IMAGEN_URL)</td></tr>
-        </table>
+      <div class="adm-btn-row">
+        <button class="adm-btn adm-btn-primary" onclick="saveKahootQuestion()">💾 Guardar pregunta</button>
+        <button class="adm-btn adm-btn-secondary" onclick="toggleForm('newKahootQForm')">Cancelar</button>
       </div>
     </div>
   </div>
+  <div id="kahootQList"><div class="adm-empty">Selecciona una arena para ver sus preguntas.</div></div>
+</div>
+</div>
 
-  <!-- TAB: Upload & Generate -->
-  <div class="tab-content" id="tab-upload">
-    <div class="upload-area">
-      <h4>📤 Subir Archivo para IA</h4>
-      
-      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-        <div class="dz-icon">📁</div>
-        <div class="dz-text">Arrastra un archivo aquí o haz clic para seleccionar</div>
-        <div class="dz-sub">PDF, imágenes (JPG, PNG), documentos de texto — Máx 10MB</div>
-        <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt" onchange="handleFile(this)">
+<!-- ═══ SECTION: MEMORIA ═══ -->
+<div class="adm-section" id="sec-memoria">
+<div class="adm-section-hdr">
+  <div class="adm-section-title">🧠 <span>Memoria SST</span></div>
+  <div class="adm-section-sub">Pares de tarjetas: emoji + concepto. El juego toma hasta 8 pares al azar.</div>
+</div>
+<div class="adm-card adm-card-accent-blue">
+  <h4>➕ Agregar par de tarjetas
+    <button class="adm-btn adm-btn-primary adm-btn-sm" style="margin-left:auto" onclick="toggleForm('memoriaForm')">Nuevo par</button>
+  </h4>
+  <div class="adm-collapsible" id="memoriaForm">
+    <div style="background:rgba(255,255,255,.03);border-radius:14px;padding:20px;margin-bottom:16px">
+      <input type="hidden" id="memoriaRow">
+      <div class="adm-form-grid">
+        <div class="adm-field"><label>Emoji *</label><input id="memoria_emoji" placeholder="🪖"></div>
+        <div class="adm-field"><label>Concepto *</label><input id="memoria_concepto" placeholder="CASCO DE SEGURIDAD"></div>
+        <div class="adm-field span-full"><label>Explicación</label><textarea id="memoria_explicacion" rows="2" placeholder="Descripción que aparece al hacer match"></textarea></div>
+        <div class="adm-field span-full"><label>🖼️ Imagen URL (opcional)</label><input id="memoria_imagen_url" placeholder="https://drive.google.com/uc?export=view&id=..."></div>
       </div>
-
-      <div class="file-preview" id="filePreview">
-        <div class="fp-icon" id="fpIcon">📄</div>
-        <div class="fp-info">
-          <div class="fp-name" id="fpName">archivo.pdf</div>
-          <div class="fp-size" id="fpSize">1.2 MB</div>
-        </div>
-        <button class="fp-remove" onclick="removeFile()">✕ Quitar</button>
-      </div>
-
-      <h4 style="margin-top:20px">🎮 ¿Para qué juego quieres generar contenido?</h4>
-      <div class="game-selector" id="gameSelector">
-        <div class="game-opt" data-game="mahjong" onclick="selectGame(this,'mahjong')">
-          <span class="go-emoji">🀄</span>Mahjong
-        </div>
-        <div class="game-opt" data-game="memoria" onclick="selectGame(this,'memoria')">
-          <span class="go-emoji">🧠</span>Memoria
-        </div>
-        <div class="game-opt" data-game="dragdrop" onclick="selectGame(this,'dragdrop')">
-          <span class="go-emoji">🎯</span>Drag & Drop
-        </div>
-        <div class="game-opt" data-game="quiz" onclick="selectGame(this,'quiz')">
-          <span class="go-emoji">❓</span>Quiz
-        </div>
-        <div class="game-opt" data-game="simulacion" onclick="selectGame(this,'simulacion')">
-          <span class="go-emoji">🏗️</span>Simulación
-        </div>
-      </div>
-
-      <button class="btn-generate" id="btnGenerate" onclick="generateContent()">
-        🤖 Generar Contenido con IA
-      </button>
-
-      <div class="processing" id="processing">
-        <div class="proc-spinner"></div>
-        <div class="proc-text">Gemini AI procesando tu archivo...</div>
-        <div class="proc-sub">Esto puede tomar unos segundos</div>
-      </div>
-
-      <div class="result-card" id="resultCard">
-        <h5 id="resultTitle">✅ ¡Contenido generado exitosamente!</h5>
-        <p id="resultMsg"></p>
-        <div class="preview-data" id="previewData"></div>
+      <div class="adm-btn-row">
+        <button class="adm-btn adm-btn-primary" onclick="saveGameRecord('memoria')">💾 Guardar</button>
+        <button class="adm-btn adm-btn-secondary" onclick="resetGameForm('memoria')">Limpiar</button>
       </div>
     </div>
   </div>
+  <div class="adm-alert" id="memoriaAlert"></div>
+  <div class="adm-table-wrap"><div id="memoriaTable"><div class="adm-empty">Cargando...</div></div></div>
+</div>
+<div class="adm-card" style="border-left:3px solid rgba(59,130,246,.5)">
+  <h4>📋 Formato de columnas en Google Sheet</h4>
+  <div class="adm-table-wrap">
+    <table class="adm-table"><thead><tr><th>EMOJI</th><th>CONCEPTO</th><th>EXPLICACION</th><th>IMAGEN_URL</th></tr></thead>
+    <tbody><tr><td>🪖</td><td>CASCO</td><td>El casco protege la cabeza...</td><td>(opcional)</td></tr></tbody></table>
+  </div>
+  <p style="color:rgba(255,255,255,.4);font-size:.8rem;margin-top:10px">Mínimo 4 pares. El juego toma hasta 8 al azar. Concepto en MAYÚSCULAS.</p>
+</div>
+</div>
 
-  <!-- TAB: Content List -->
-  <div class="tab-content" id="tab-content">
-    <div class="content-list">
-      <h4>📋 Contenido Generado</h4>
-      <div id="contentList">
-        <div class="empty-state">
-          <div class="es-icon">📭</div>
-          <p>Aún no hay contenido generado.<br>Sube un archivo en la pestaña "Generar Contenido".</p>
-        </div>
+<!-- ═══ SECTION: MAHJONG ═══ -->
+<div class="adm-section" id="sec-mahjong">
+<div class="adm-section-hdr">
+  <div class="adm-section-title">🀄 <span>Mahjong SST</span></div>
+  <div class="adm-section-sub">Pares concepto-definición. El juego toma hasta 12 pares al azar. Mínimo 6 pares.</div>
+</div>
+<div class="adm-card adm-card-accent-red">
+  <h4>➕ Agregar par concepto-definición
+    <button class="adm-btn adm-btn-primary adm-btn-sm" style="margin-left:auto" onclick="toggleForm('mahjongForm')">Nuevo par</button>
+  </h4>
+  <div class="adm-collapsible" id="mahjongForm">
+    <div style="background:rgba(255,255,255,.03);border-radius:14px;padding:20px;margin-bottom:16px">
+      <input type="hidden" id="mahjongRow">
+      <div class="adm-form-grid">
+        <div class="adm-field"><label>Concepto * (con emoji)</label><input id="mahjong_concepto" placeholder="🪖 Casco de seguridad"></div>
+        <div class="adm-field span-full"><label>Definición *</label><textarea id="mahjong_definicion" rows="2" placeholder="Protección craneal contra impactos y caída de objetos"></textarea></div>
+      </div>
+      <div class="adm-btn-row">
+        <button class="adm-btn adm-btn-primary" onclick="saveGameRecord('mahjong')">💾 Guardar</button>
+        <button class="adm-btn adm-btn-secondary" onclick="resetGameForm('mahjong')">Limpiar</button>
       </div>
     </div>
   </div>
+  <div class="adm-alert" id="mahjongAlert"></div>
+  <div class="adm-table-wrap"><div id="mahjongTable"><div class="adm-empty">Cargando...</div></div></div>
+</div>
+<div class="adm-card" style="border-left:3px solid rgba(239,68,68,.5)">
+  <h4>📋 Formato de columnas en Google Sheet</h4>
+  <div class="adm-table-wrap">
+    <table class="adm-table"><thead><tr><th>CONCEPTO</th><th>DEFINICION</th></tr></thead>
+    <tbody><tr><td>🪖 Casco</td><td>Protección craneal contra impactos</td></tr></tbody></table>
+  </div>
+  <p style="color:rgba(255,255,255,.4);font-size:.8rem;margin-top:10px">Incluye un emoji al inicio del concepto para hacerlo visual.</p>
+</div>
+</div>
 
-  <!-- TAB: Config -->
-  <div class="tab-content" id="tab-config">
-    <div class="config-card">
-      <h4>🔧 Configuración de IA (Gemini + ChatGPT)</h4>
-
-      <div class="mb-20">
-        <span>Estado: </span>
-        <span class="status-badge disconnected" id="apiStatus">⚪ Modo Simulado</span>
+<!-- ═══ SECTION: DRAGDROP ═══ -->
+<div class="adm-section" id="sec-dragdrop">
+<div class="adm-section-hdr">
+  <div class="adm-section-title">🎯 <span>Drag &amp; Drop SST</span></div>
+  <div class="adm-section-sub">Categorías con elementos clasificables. Mínimo 2 categorías y 4 elementos en total.</div>
+</div>
+<div class="adm-card adm-card-accent-yellow">
+  <h4>➕ Agregar elemento
+    <button class="adm-btn adm-btn-primary adm-btn-sm" style="margin-left:auto" onclick="toggleForm('dragdropForm')">Nuevo elemento</button>
+  </h4>
+  <div class="adm-collapsible" id="dragdropForm">
+    <div style="background:rgba(255,255,255,.03);border-radius:14px;padding:20px;margin-bottom:16px">
+      <input type="hidden" id="dragdropRow">
+      <div class="adm-form-grid">
+        <div class="adm-field"><label>Categoría *</label><input id="dragdrop_categoria" placeholder="EPP Obligatorio"></div>
+        <div class="adm-field"><label>Color Hex</label><input id="dragdrop_color_hex" placeholder="#e74c3c"></div>
+        <div class="adm-field"><label>Elemento *</label><input id="dragdrop_elemento" placeholder="Casco de seguridad"></div>
+        <div class="adm-field span-full"><label>Explicación</label><textarea id="dragdrop_explicacion" rows="2" placeholder="Por qué pertenece a esta categoría"></textarea></div>
       </div>
-
-      <div class="config-field">
-        <label>Proveedor de IA</label>
-        <select id="aiProviderSelect">
-          <option value="auto">🔄 Auto (Gemini primero, ChatGPT como respaldo)</option>
-          <option value="gemini">🟦 Solo Gemini</option>
-          <option value="openai">🟩 Solo ChatGPT/OpenAI</option>
-        </select>
-        <div class="hint">En modo <strong>Auto</strong>, si Gemini falla se usa ChatGPT automáticamente</div>
+      <div class="adm-btn-row">
+        <button class="adm-btn adm-btn-primary" onclick="saveGameRecord('dragdrop')">💾 Guardar</button>
+        <button class="adm-btn adm-btn-secondary" onclick="resetGameForm('dragdrop')">Limpiar</button>
       </div>
+    </div>
+  </div>
+  <div class="adm-alert" id="dragdropAlert"></div>
+  <div class="adm-table-wrap"><div id="dragdropTable"><div class="adm-empty">Cargando...</div></div></div>
+</div>
+<div class="adm-card" style="border-left:3px solid rgba(234,179,8,.5)">
+  <h4>📋 Formato de columnas en Google Sheet</h4>
+  <div class="adm-table-wrap">
+    <table class="adm-table"><thead><tr><th>CATEGORIA</th><th>COLOR_HEX</th><th>ELEMENTO</th><th>EXPLICACION</th></tr></thead>
+    <tbody>
+      <tr><td>EPP Obligatorio</td><td>#e74c3c</td><td>Casco de seguridad</td><td>EPP craneal obligatorio</td></tr>
+      <tr><td>Señalización</td><td>#f39c12</td><td>Señal prohibido fumar</td><td>Señal roja que prohíbe</td></tr>
+    </tbody></table>
+  </div>
+  <p style="color:rgba(255,255,255,.4);font-size:.8rem;margin-top:10px">Repite el mismo nombre de CATEGORIA para agrupar. Usa colores hex distintos por categoría.</p>
+</div>
+</div>
 
-      <div class="config-field">
-        <label>🟦 Gemini API Key</label>
-        <input type="password" id="apiKeyInput" placeholder="AIzaSy... (tu API Key de Google AI Studio)">
-        <div class="hint">Obtén tu clave gratis en <strong>aistudio.google.com</strong> → Get API Key</div>
+<!-- ═══ SECTION: SIMULACION ═══ -->
+<div class="adm-section" id="sec-simulacion">
+<div class="adm-section-hdr">
+  <div class="adm-section-title">🏗️ <span>Simulación SST</span></div>
+  <div class="adm-section-sub">Escenarios con peligros clickeables. Los peligros del mismo ESC_ID forman un escenario.</div>
+</div>
+<div class="adm-card adm-card-accent-green">
+  <h4>➕ Agregar peligro de escenario
+    <button class="adm-btn adm-btn-primary adm-btn-sm" style="margin-left:auto" onclick="toggleForm('simulacionForm')">Nuevo peligro</button>
+  </h4>
+  <div class="adm-collapsible" id="simulacionForm">
+    <div style="background:rgba(255,255,255,.03);border-radius:14px;padding:20px;margin-bottom:16px">
+      <input type="hidden" id="simulacionRow">
+      <div class="adm-form-grid">
+        <div class="adm-field"><label>Escenario ID *</label><input id="simulacion_escenario_id" placeholder="ESC1"></div>
+        <div class="adm-field"><label>Título del escenario *</label><input id="simulacion_titulo" placeholder="Obra en construcción"></div>
+        <div class="adm-field span-full"><label>Descripción</label><textarea id="simulacion_descripcion_escenario" rows="2" placeholder="Inspecciona el área buscando peligros..."></textarea></div>
+        <div class="adm-field"><label>Ambiente</label>
+          <select id="simulacion_ambiente"><option value="construccion">🏗️ construccion</option><option value="taller">🔧 taller</option><option value="oficina">🏢 oficina</option></select></div>
+        <div class="adm-field"><label>Nombre del peligro *</label><input id="simulacion_nombre_peligro" placeholder="Sin casco de seguridad"></div>
+        <div class="adm-field span-full"><label>Descripción del peligro</label><textarea id="simulacion_desc_peligro" rows="2" placeholder="Trabajador sin EPP craneal en zona de riesgo"></textarea></div>
+        <div class="adm-field"><label>Severidad</label>
+          <select id="simulacion_severidad"><option value="alta">🔴 Alta</option><option value="media">🟡 Media</option><option value="baja">🟢 Baja</option><option value="critica">⚫ Crítica</option></select></div>
+        <div class="adm-field span-full"><label>Solución</label><textarea id="simulacion_solucion" rows="2" placeholder="Usar casco de seguridad obligatoriamente..."></textarea></div>
+        <div class="adm-field"><label>X % (posición horizontal)</label><input id="simulacion_x" type="number" min="0" max="100" placeholder="15"></div>
+        <div class="adm-field"><label>Y % (posición vertical)</label><input id="simulacion_y" type="number" min="0" max="100" placeholder="25"></div>
+        <div class="adm-field"><label>Ancho %</label><input id="simulacion_ancho" type="number" min="1" max="50" placeholder="15"></div>
+        <div class="adm-field"><label>Alto %</label><input id="simulacion_alto" type="number" min="1" max="50" placeholder="20"></div>
       </div>
-
-      <div class="config-field">
-        <label>🟩 OpenAI (ChatGPT) API Key</label>
-        <input type="password" id="openaiKeyInput" placeholder="sk-... (tu API Key de OpenAI)">
-        <div class="hint">Obtén tu clave en <strong>platform.openai.com/api-keys</strong> (tiene costo por uso)</div>
+      <div class="adm-btn-row">
+        <button class="adm-btn adm-btn-primary" onclick="saveGameRecord('simulacion')">💾 Guardar</button>
+        <button class="adm-btn adm-btn-secondary" onclick="resetGameForm('simulacion')">Limpiar</button>
       </div>
+    </div>
+  </div>
+  <div class="adm-alert" id="simulacionAlert"></div>
+  <div class="adm-table-wrap"><div id="simulacionTable"><div class="adm-empty">Cargando...</div></div></div>
+</div>
+<div class="adm-card" style="border-left:3px solid rgba(34,197,94,.5)">
+  <h4>📋 Tip de uso</h4>
+  <p style="color:rgba(255,255,255,.55);font-size:.875rem;line-height:1.7">
+    <strong style="color:#fff">ESC_ID:</strong> Los peligros del mismo escenario comparten el mismo ID (ej: ESC1, ESC2).<br>
+    <strong style="color:#fff">X, Y, ANCHO, ALTO:</strong> Son porcentajes (0-100) que posicionan la zona clickeable en la escena.<br>
+    <strong style="color:#fff">Ambiente:</strong> <code>construccion</code> | <code>taller</code> | <code>oficina</code>
+  </p>
+</div>
+</div>
 
-      <div class="config-field">
-        <label>ID de Google Sheet</label>
-        <input type="text" id="sheetIdInput" placeholder="ID de tu hoja de cálculo">
-        <div class="hint">Se encuentra en la URL: docs.google.com/spreadsheets/d/<strong>ESTE_ID</strong>/edit</div>
-      </div>
-
-      <div class="config-actions">
-        <button class="btn-generate flex-1" onclick="saveConfig()">
-          💾 Guardar Configuración
-        </button>
-        <button class="btn-generate btn-success flex-1" onclick="testConnection()" id="btnTest">
-          🧪 Probar Conexión IA
-        </button>
-      </div>
-
-      <div class="result-card" id="configResult">
-        <h5 id="cfgResultTitle">ℹ️ ¿Cómo configurar?</h5>
-        <p id="cfgResultMsg">1. Obtén tu API Key gratis en <strong>aistudio.google.com</strong> → Get API Key<br>
-        2. Copia el ID de tu Google Sheet desde la URL<br>
-        3. Pega ambos valores arriba y haz clic en Guardar<br><br>
-        <strong>Sin API Key:</strong> Los juegos usan contenido predeterminado (no lee tus documentos).<br>
-        <strong>Con API Key:</strong> Gemini analiza tus documentos y genera contenido personalizado.</p>
+<!-- ═══ SECTION: IMÁGENES ═══ -->
+<div class="adm-section" id="sec-imagenes">
+<div class="adm-section-hdr">
+  <div class="adm-section-title">🖼️ <span>Gestión de Imágenes</span></div>
+  <div class="adm-section-sub">Las imágenes se almacenan en Google Drive. Convierte el enlace compartido en URL directa.</div>
+</div>
+<div class="adm-card adm-card-accent-cyan">
+  <h4>📋 Pasos para agregar una imagen</h4>
+  <ol style="margin:0;padding-left:20px;color:rgba(255,255,255,.6);font-size:.875rem;line-height:2.2">
+    <li>Abre <strong style="color:#fff">Google Drive</strong> (drive.google.com) y sube tu imagen</li>
+    <li>Click derecho → <strong style="color:#fff">Compartir</strong> → <strong style="color:#fff">Cualquiera con el enlace</strong> → Copiar</li>
+    <li>El enlace es: <code>https://drive.google.com/file/d/<strong>FILE_ID</strong>/view</code></li>
+    <li>Pega abajo en el conversor para obtener la URL directa</li>
+    <li>Copia la URL directa y pégala en el campo "Imagen URL" del módulo</li>
+  </ol>
+</div>
+<div class="adm-card adm-card-accent-green">
+  <h4>🔧 Conversor de URL de Google Drive</h4>
+  <div class="adm-field"><label>URL de Google Drive (compartida)</label>
+    <input id="driveUrlIn" placeholder="https://drive.google.com/file/d/ABC123.../view?usp=sharing">
+  </div>
+  <div class="adm-btn-row">
+    <button class="adm-btn adm-btn-primary" onclick="convertDriveUrl()">Convertir →</button>
+  </div>
+  <div id="driveUrlOut" style="display:none;margin-top:14px">
+    <div class="adm-field"><label>URL directa (lista para usar)</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="driveUrlResult" readonly style="border-color:rgba(34,197,94,.4);color:#4ade80">
+        <button class="adm-btn adm-btn-success adm-btn-sm" onclick="copyDriveUrl()">📋 Copiar</button>
       </div>
     </div>
   </div>
 </div>
+<div class="adm-card adm-card-accent-yellow">
+  <h4>📌 ¿Dónde pegar la URL según el juego?</h4>
+  <div class="adm-table-wrap">
+    <table class="adm-table">
+      <thead><tr><th>Juego</th><th>Dónde pegar</th></tr></thead>
+      <tbody>
+        <tr><td>🚀 Kahoot</td><td>Sección Kahoot Arena → Preguntas → campo "Imagen URL"</td></tr>
+        <tr><td>🧠 Memoria</td><td>Sección Memoria → campo "Imagen URL"</td></tr>
+        <tr><td>🎯 DragDrop</td><td>Hoja DragDrop_Manual → columna IMAGEN_URL (coming soon)</td></tr>
+        <tr><td>🏗️ Simulación</td><td>Imagen del escenario en la hoja Simulacion_Manual</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ═══ SECTION: IA & CONFIG ═══ -->
+<div class="adm-section" id="sec-ia">
+<div class="adm-section-hdr">
+  <div class="adm-section-title">🤖 <span>IA &amp; Configuración</span></div>
+  <div class="adm-section-sub">Genera contenido automáticamente con Gemini AI y configura tus API Keys.</div>
+</div>
+<div class="adm-card adm-card-accent-cyan">
+  <h4>🔑 Configuración de IA</h4>
+  <div style="margin-bottom:12px"><span style="color:rgba(255,255,255,.5);font-size:.85rem">Estado: </span><span id="apiStatus" class="adm-badge adm-badge-inactive" style="margin-left:8px">⚪ Sin configurar</span></div>
+  <div class="adm-form-grid">
+    <div class="adm-field">
+      <label>Proveedor IA</label>
+      <select id="aiProviderSelect">
+        <option value="auto">🔄 Auto (Gemini → ChatGPT)</option>
+        <option value="gemini">🟦 Solo Gemini</option>
+        <option value="openai">🟩 Solo ChatGPT/OpenAI</option>
+      </select>
+    </div>
+    <div class="adm-field">
+      <label>🟦 Gemini API Key</label>
+      <input type="password" id="apiKeyInput" placeholder="AIzaSy..."><small>Gratis en aistudio.google.com → Get API Key</small>
+    </div>
+    <div class="adm-field">
+      <label>🟩 OpenAI API Key</label>
+      <input type="password" id="openaiKeyInput" placeholder="sk-..."><small>platform.openai.com/api-keys</small>
+    </div>
+    <div class="adm-field">
+      <label>ID de Google Sheet</label>
+      <input id="sheetIdInput" placeholder="ID de tu hoja"><small>URL: docs.google.com/spreadsheets/d/<strong>ESTE_ID</strong>/edit</small>
+    </div>
+  </div>
+  <div class="adm-btn-row">
+    <button class="adm-btn adm-btn-primary" onclick="saveConfig()">💾 Guardar configuración</button>
+    <button class="adm-btn adm-btn-secondary" id="btnTest" onclick="testConnection()">🧪 Probar Gemini</button>
+  </div>
+  <div class="adm-alert" id="configAlert" style="margin-top:14px"></div>
+</div>
+<div class="adm-card adm-card-accent-purple">
+  <h4>📤 Generar contenido con IA</h4>
+  <p style="color:rgba(255,255,255,.45);font-size:.875rem;margin-bottom:16px">Sube un documento sobre SST y la IA generará el contenido para el juego elegido.</p>
+  <div class="drop-zone-upload" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <div style="font-size:2.5rem;margin-bottom:10px">📁</div>
+    <div style="font-size:.95rem;font-weight:600">Arrastra un archivo aquí o haz clic</div>
+    <div style="font-size:.8rem;margin-top:6px;opacity:.6">PDF, JPG, PNG, TXT, DOC — Máx 10MB</div>
+    <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt" onchange="handleFile(this)" style="display:none">
+  </div>
+  <div class="file-prev-row" id="filePreview">
+    <span id="fpIcon" style="font-size:1.8rem">📄</span>
+    <div style="flex:1"><div id="fpName" style="color:#fff;font-size:.875rem"></div><div id="fpSize" style="color:rgba(255,255,255,.4);font-size:.78rem"></div></div>
+    <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="removeFile()">✕</button>
+  </div>
+  <div style="margin-top:16px"><label style="display:block;font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Juego destino</label>
+    <div class="adm-pills-row">
+      <button class="game-pill" onclick="selectGame(this,'mahjong')">🀄 Mahjong</button>
+      <button class="game-pill" onclick="selectGame(this,'memoria')">🧠 Memoria</button>
+      <button class="game-pill" onclick="selectGame(this,'dragdrop')">🎯 Drag &amp; Drop</button>
+      <button class="game-pill" onclick="selectGame(this,'simulacion')">🏗️ Simulación</button>
+    </div>
+  </div>
+  <div class="adm-btn-row" style="margin-top:16px">
+    <button class="adm-btn adm-btn-primary" id="btnGenerate" onclick="generateContent()" style="min-width:200px">🤖 Generar con IA</button>
+  </div>
+  <div id="iaProcessing" style="display:none;text-align:center;padding:20px;color:rgba(255,255,255,.6)">
+    <div class="adm-spinner"></div> <span id="iaProcText" style="margin-left:10px">Procesando...</span>
+  </div>
+  <div class="adm-alert" id="iaResultAlert" style="margin-top:14px"></div>
+</div>
+<div class="adm-card adm-card-accent-blue">
+  <h4>📊 Crear hojas en Google Sheet</h4>
+  <p style="color:rgba(255,255,255,.45);font-size:.875rem;margin-bottom:14px">Crea automáticamente las hojas manuales (Memoria_Manual, Mahjong_Manual, etc.) en tu Google Sheet con encabezados y ejemplos.</p>
+  <button class="adm-btn adm-btn-secondary" id="btnCrearHojas" onclick="crearHojasManuales()">📊 Crear hojas manuales</button>
+  <div class="adm-alert" id="hojasAlert" style="margin-top:14px"></div>
+</div>
+</div>
+
+</main>
+
+<button class="adm-help-fab" onclick="toggleHelp()">?</button>
+<div class="adm-help-overlay" id="helpOverlay">
+  <div class="adm-help-card glass">
+    <button class="adm-help-close" onclick="toggleHelp()">✕</button>
+    <div id="helpContent">
+      <h3>Ayuda</h3><p>Cargando...</p>
+    </div>
+  </div>
+</div>
+
+<div class="adm-toast" id="admToast"><span id="admToastMsg"></span></div>
 
 <script>
-let selectedFile = null;
-let selectedFileBase64 = null;
-let selectedGame = null;
-let manualSchemas = {};
-let currentManualGame = 'quiz';
-let currentManualColumns = [];
-let currentManualRecords = [];
-let manualQuizFile = null;
-let manualQuizFileBase64 = null;
+let currentSection = 'dashboard';
+let selectedFile = null, selectedFileBase64 = null, selectedGame = null;
+let gameRecords = {};
 
-// Drag & Drop for file upload
-const dz = document.getElementById('dropZone');
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
-dz.addEventListener('drop', e => {
-  e.preventDefault(); dz.classList.remove('dragover');
-  if (e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]);
-});
-
-function handleFile(input) {
-  if (input.files.length) processFile(input.files[0]);
+/* ── NAVIGATION ── */
+function switchSection(sec, btn) {
+  document.querySelectorAll('.adm-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.adm-nav-item').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('sec-' + sec);
+  if (el) el.classList.add('active');
+  if (btn) btn.classList.add('active');
+  else { const nb = document.querySelector('.adm-nav-item[onclick*="' + sec + '"]'); if (nb) nb.classList.add('active'); }
+  currentSection = sec;
+  if (sec === 'kahoot') loadKahootArenas();
+  else if (sec === 'memoria') loadGameRecords('memoria');
+  else if (sec === 'mahjong') loadGameRecords('mahjong');
+  else if (sec === 'dragdrop') loadGameRecords('dragdrop');
+  else if (sec === 'simulacion') loadGameRecords('simulacion');
+  else if (sec === 'dashboard') loadDashStats();
+  helpContexts[sec] && (currentHelpContext = sec);
 }
-
-function processFile(file) {
-  if (file.size > 10 * 1024 * 1024) {
-    alert('El archivo es muy grande. Máximo 10MB.');
-    return;
-  }
-  selectedFile = file;
-  selectedFileBase64 = null; // Reset until ready
-
-  // Show preview
-  const icons = { 'pdf':'📕', 'jpg':'🖼️', 'jpeg':'🖼️', 'png':'🖼️', 'doc':'📄', 'docx':'📄', 'txt':'📝' };
-  const ext = file.name.split('.').pop().toLowerCase();
-  document.getElementById('fpIcon').textContent = icons[ext] || '📄';
-  document.getElementById('fpName').textContent = file.name;
-  document.getElementById('fpSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
-  document.getElementById('filePreview').classList.add('show');
-
-  // Disable generate button while reading file
-  document.getElementById('btnGenerate').disabled = true;
-  document.getElementById('btnGenerate').textContent = '📂 Leyendo archivo...';
-
-  // Convert to base64
-  const reader = new FileReader();
-  reader.onload = () => {
-    selectedFileBase64 = reader.result.split(',')[1];
-    document.getElementById('btnGenerate').disabled = false;
-    document.getElementById('btnGenerate').textContent = '🤖 Generar Contenido con IA';
-  };
-  reader.onerror = () => {
-    alert('Error al leer el archivo. Intenta de nuevo.');
-    selectedFile = null;
-    selectedFileBase64 = null;
-    document.getElementById('btnGenerate').disabled = false;
-    document.getElementById('btnGenerate').textContent = '🤖 Generar Contenido con IA';
-  };
-  reader.readAsDataURL(file);
+function toggleForm(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
 }
+function goBack(){try{google.script.run.withSuccessHandler(function(u){window.top.location.href=u+'?page=Portal'}).withFailureHandler(function(){window.top.location.href='kahoot.html'}).getWebAppUrl()}catch(e){window.top.location.href='kahoot.html'}}
 
-function removeFile() {
-  selectedFile = null;
-  selectedFileBase64 = null;
-  document.getElementById('filePreview').classList.remove('show');
-  document.getElementById('fileInput').value = '';
-}
+/* ── GAME SCHEMAS ── */
+const gameSchemas = {
+  memoria: ['emoji','concepto','explicacion','imagen_url'],
+  mahjong: ['concepto','definicion'],
+  dragdrop: ['categoria','color_hex','elemento','explicacion'],
+  simulacion: ['escenario_id','titulo','descripcion_escenario','ambiente','nombre_peligro','desc_peligro','severidad','x','y','ancho','alto','solucion']
+};
+const gameLabels = {
+  memoria: { emoji:'Emoji', concepto:'Concepto', explicacion:'Explicación', imagen_url:'Imagen URL' },
+  mahjong: { concepto:'Concepto', definicion:'Definición' },
+  dragdrop: { categoria:'Categoría', color_hex:'Color', elemento:'Elemento', explicacion:'Explicación' },
+  simulacion: { escenario_id:'ESC ID', titulo:'Título', descripcion_escenario:'Descripción', ambiente:'Ambiente', nombre_peligro:'Peligro', desc_peligro:'Desc.Peligro', severidad:'Severidad', x:'X%', y:'Y%', ancho:'Ancho%', alto:'Alto%', solucion:'Solución' }
+};
 
-function selectGame(el, game) {
-  document.querySelectorAll('.game-opt').forEach(g => g.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedGame = game;
-}
-
-function generateContent() {
-  // Validaciones
-  if (!selectedFile || !selectedFileBase64) {
-    alert('⚠️ Primero sube un archivo (documento, imagen o PDF) para que la IA genere contenido basado en él.');
-    return;
-  }
-  if (!selectedGame) {
-    alert('⚠️ Selecciona para qué juego quieres generar contenido.');
-    return;
-  }
-
-  // Check file size - google.script.run limit is ~256KB for parameters
-  var base64Size = selectedFileBase64.length;
-  if (base64Size > 200000) {
-    // Try to compress if it's an image
-    if (selectedFile.type.startsWith('image/')) {
-      compressAndSend();
-      return;
-    }
-    // For PDFs and other non-image files, use chunked upload
-    sendChunked(selectedFileBase64, selectedFile.name, selectedFile.type || 'application/octet-stream');
-    return;
-  }
-
-  sendToServer(selectedFileBase64, selectedFile.name, selectedFile.type || 'application/octet-stream');
-}
-
-function compressAndSend() {
-  var proc = document.getElementById('processing');
-  proc.classList.add('show');
-  document.querySelector('.processing .proc-text').textContent = 'Comprimiendo imagen...';
-
-  var img = new Image();
-  img.onload = function() {
-    var canvas = document.createElement('canvas');
-    var maxDim = 1200; // Max dimension
-    var w = img.width, h = img.height;
-    if (w > maxDim || h > maxDim) {
-      if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
-      else { w = Math.round(w * maxDim / h); h = maxDim; }
-    }
-    canvas.width = w;
-    canvas.height = h;
-    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-    var compressed = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
-
-    if (compressed.length > 200000) {
-      // Still too large, compress more
-      canvas.width = Math.round(w * 0.6);
-      canvas.height = Math.round(h * 0.6);
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      compressed = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
-    }
-
-    document.querySelector('.processing .proc-text').textContent = 'Gemini AI procesando tu archivo...';
-    sendToServer(compressed, selectedFile.name, 'image/jpeg');
-  };
-  img.onerror = function() {
-    proc.classList.remove('show');
-    alert('No se pudo comprimir la imagen. Intenta con un archivo más pequeño.');
-  };
-  img.src = 'data:' + selectedFile.type + ';base64,' + selectedFileBase64;
-}
-
-function sendChunked(base64Data, fileName, mimeType) {
-  var btn = document.getElementById('btnGenerate');
-  var proc = document.getElementById('processing');
-  var result = document.getElementById('resultCard');
-
-  btn.disabled = true;
-  proc.classList.add('show');
-  result.classList.remove('show');
-  result.classList.remove('error');
-
-  var CHUNK_SIZE = 180000; // ~180KB per chunk (safe under 256KB with JSON overhead)
-  var uploadId = Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
-  var chunks = [];
-  for (var i = 0; i < base64Data.length; i += CHUNK_SIZE) {
-    chunks.push(base64Data.substring(i, i + CHUNK_SIZE));
-  }
-  var totalChunks = chunks.length;
-  var sentChunks = 0;
-
-  document.querySelector('.processing .proc-text').textContent = 'Subiendo archivo en partes...';
-  document.querySelector('.processing .proc-sub').textContent = 'Parte 1 de ' + totalChunks + ' (' + (base64Data.length / 1024).toFixed(0) + ' KB total)';
-
-  function sendNextChunk(index) {
-    if (index >= totalChunks) {
-      // All chunks sent, now process
-      document.querySelector('.processing .proc-text').textContent = 'Gemini AI procesando tu archivo...';
-      document.querySelector('.processing .proc-sub').textContent = 'Archivo completo enviado. Esperando respuesta de IA...';
-
-      google.script.run
-        .withSuccessHandler(function(r) {
-          btn.disabled = false;
-          proc.classList.remove('show');
-          handleServerResponse(r, fileName, result);
-        })
-        .withFailureHandler(function(err) {
-          btn.disabled = false;
-          proc.classList.remove('show');
-          showServerError(err, base64Data.length, result);
-        })
-        .processChunkedFile(uploadId, totalChunks, fileName, mimeType, selectedGame);
-      return;
-    }
-
-    document.querySelector('.processing .proc-sub').textContent = 'Parte ' + (index + 1) + ' de ' + totalChunks;
-
-    google.script.run
-      .withSuccessHandler(function() {
-        sendNextChunk(index + 1);
-      })
-      .withFailureHandler(function(err) {
-        btn.disabled = false;
-        proc.classList.remove('show');
-        result.classList.add('show');
-        result.classList.add('error');
-        document.getElementById('resultTitle').textContent = '❌ Error subiendo archivo';
-        document.getElementById('resultMsg').textContent = 'Falló al enviar parte ' + (index + 1) + ' de ' + totalChunks + ': ' + (err ? err.message || String(err) : 'desconocido');
-        document.getElementById('previewData').textContent = '';
-      })
-      .uploadFileChunk(uploadId, index, chunks[index]);
-  }
-
-  sendNextChunk(0);
-}
-
-function handleServerResponse(r, fileName, result) {
-  result.classList.add('show');
-  if (r && r.success) {
-    if (r.source === 'gemini') {
-      document.getElementById('resultTitle').textContent = '✅ ¡Contenido generado por Gemini AI!';
-      document.getElementById('resultMsg').textContent =
-        'Gemini analizó "' + fileName + '" y generó contenido personalizado. Ya está guardado y disponible en el juego.';
-      document.getElementById('previewData').textContent = JSON.stringify(r.data, null, 2).substring(0, 1200);
-    } else {
-      result.classList.add('error');
-      var errorMsg = r.geminiError || 'Error desconocido';
-      document.getElementById('resultTitle').textContent = '❌ Gemini no pudo procesar el archivo';
-      document.getElementById('resultMsg').textContent = 'Error de Gemini: ' + errorMsg;
-      document.getElementById('previewData').textContent =
-        'Se guardó contenido genérico como respaldo.\n\nPara diagnosticar:\n1. Ve a "Configuración IA" y haz clic en "Probar Conexión"\n2. Verifica que tu API Key esté activa en aistudio.google.com\n3. Intenta con otro archivo (imagen JPG/PNG o PDF pequeño)';
-    }
-  } else {
-    result.classList.add('error');
-    document.getElementById('resultTitle').textContent = '❌ Error';
-    document.getElementById('resultMsg').textContent = (r && r.error) ? r.error : 'Error desconocido';
-    document.getElementById('previewData').textContent = '';
-  }
-}
-
-function showServerError(err, dataSize, result) {
-  result.classList.add('show');
-  result.classList.add('error');
-  var errMsg = err ? (err.message || String(err)) : 'desconocido';
-  document.getElementById('resultTitle').textContent = '❌ Error de conexión';
-  document.getElementById('resultMsg').textContent = 'La llamada al servidor falló: ' + errMsg;
-  document.getElementById('previewData').textContent =
-    'Posibles causas:\n- Error de red\n- Web App no desplegada correctamente\n\nTamaño enviado: ' + (dataSize / 1024).toFixed(0) + ' KB';
-}
-
-function sendToServer(base64Data, fileName, mimeType) {
-  var btn = document.getElementById('btnGenerate');
-  var proc = document.getElementById('processing');
-  var result = document.getElementById('resultCard');
-
-  btn.disabled = true;
-  proc.classList.add('show');
-  document.querySelector('.processing .proc-text').textContent = 'Gemini AI procesando tu archivo...';
-  document.querySelector('.processing .proc-sub').textContent = 'Enviando ' + (base64Data.length / 1024).toFixed(0) + ' KB a Gemini...';
-  result.classList.remove('show');
-  result.classList.remove('error');
-
-  try {
-    google.script.run
-      .withSuccessHandler(function(r) {
-        btn.disabled = false;
-        proc.classList.remove('show');
-        handleServerResponse(r, fileName, result);
-      })
-      .withFailureHandler(function(err) {
-        btn.disabled = false;
-        proc.classList.remove('show');
-        showServerError(err, base64Data.length, result);
-      })
-      .processUploadedFile(base64Data, fileName, mimeType, selectedGame);
-  } catch(e) {
-    btn.disabled = false;
-    proc.classList.remove('show');
-    result.classList.add('show');
-    result.classList.add('error');
-    document.getElementById('resultTitle').textContent = '❌ No conectado a Apps Script';
-    document.getElementById('resultMsg').textContent = 'Despliega el proyecto como Web App primero.';
-    document.getElementById('previewData').textContent = '';
-  }
-}
-
-// Tabs
-function switchTab(tab, btn) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-' + tab).classList.add('active');
-  
-  if (tab === 'content') loadContentList();
-  if (tab === 'manual') loadManualRecords();
-  if (tab === 'kahoot') loadKahootArenas();
-  if (tab === 'config') {
-    document.getElementById('configResult').classList.add('show');
-  }
-}
-
-function loadContentList() {
-  try {
-    google.script.run.withSuccessHandler(list => {
-      const container = document.getElementById('contentList');
-      if (!list || list.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="es-icon">📭</div><p>Aún no hay contenido generado.</p></div>';
-        return;
-      }
-      const icons = { mahjong:'🀄', memoria:'🧠', dragdrop:'🎯', quiz:'❓', simulacion:'🏗️' };
-      container.innerHTML = list.map(item => `
-        <div class="content-item">
-          <div class="ci-icon">${icons[item.juego] || '📄'}</div>
-          <div class="ci-info">
-            <div class="ci-game">${item.juego}</div>
-            <div class="ci-meta">📅 ${item.fecha} — 📎 ${item.fuente}</div>
-          </div>
-          <button class="ci-delete" onclick="deleteItem(${item.row})">🗑️ Eliminar</button>
-        </div>
-      `).join('');
-    }).getSavedContentList();
-  } catch(e) {
-    document.getElementById('contentList').innerHTML = '<div class="empty-state"><div class="es-icon">📭</div><p>Modo demo — contenido se muestra al conectar con Apps Script.</p></div>';
-  }
-}
-
-function deleteItem(row) {
-  if (!confirm('¿Eliminar este contenido?')) return;
-  try {
-    google.script.run.withSuccessHandler(() => loadContentList()).deleteContent(row);
-  } catch(e) { alert('Error al eliminar'); }
-}
-
-// Load config status on page load
-document.addEventListener('DOMContentLoaded', function() {
-  setupManualManager();
-  loadManualRecords();
-  try {
-    google.script.run.withSuccessHandler(function(cfg) {
-      var statusParts = [];
-      if (cfg.hasGeminiKey) {
-        statusParts.push('Gemini (' + cfg.apiKeyPreview + ')');
-        document.getElementById('apiKeyInput').placeholder = 'Clave guardada: ' + cfg.apiKeyPreview;
-      }
-      if (cfg.hasOpenAIKey) {
-        statusParts.push('OpenAI (' + cfg.openaiKeyPreview + ')');
-        document.getElementById('openaiKeyInput').placeholder = 'Clave guardada: ' + cfg.openaiKeyPreview;
-      }
-      if (statusParts.length > 0) {
-        document.getElementById('apiStatus').className = 'status-badge connected';
-        document.getElementById('apiStatus').textContent = '🟢 ' + statusParts.join(' + ');
-      }
-      if (cfg.hasSheetId) {
-        document.getElementById('sheetIdInput').placeholder = 'Guardado: ' + cfg.sheetIdPreview;
-      }
-      if (cfg.aiProvider) {
-        document.getElementById('aiProviderSelect').value = cfg.aiProvider;
-      }
-    }).getConfigStatus();
-  } catch(e) {}
-});
-
-function setupManualManager() {
-  const select = document.getElementById('manualGameSelect');
-  const games = [
-    { value: 'quiz', label: '❓ Quiz' },
-    { value: 'mahjong', label: '🀄 Mahjong' },
-    { value: 'memoria', label: '🧠 Memoria' },
-    { value: 'dragdrop', label: '🎯 Drag & Drop' },
-    { value: 'simulacion', label: '🏗️ Simulación' }
-  ];
-  select.innerHTML = games.map(g => `<option value="${g.value}">${g.label}</option>`).join('');
-  select.value = currentManualGame;
-  select.addEventListener('change', function() {
-    currentManualGame = this.value;
-    resetManualForm();
-    updateQuizAIPanel();
-    loadManualRecords();
-  });
-  renderManualForm([]);
-  updateQuizAIPanel();
-}
-
-function getFrontendManualSchema(game) {
-  const map = {
-    quiz: [
-      { key: 'pregunta', label: 'Pregunta', type: 'textarea', required: true },
-      { key: 'opcion_a', label: 'Opción A', required: true },
-      { key: 'opcion_b', label: 'Opción B', required: true },
-      { key: 'opcion_c', label: 'Opción C', required: true },
-      { key: 'opcion_d', label: 'Opción D', required: true },
-      { key: 'correcta', label: 'Correcta (1-4)', required: true },
-      { key: 'explicacion', label: 'Explicación', type: 'textarea' }
-    ],
-    mahjong: [
-      { key: 'concepto', label: 'Concepto', required: true },
-      { key: 'definicion', label: 'Definición', type: 'textarea', required: true }
-    ],
-    memoria: [
-      { key: 'emoji', label: 'Emoji', required: true },
-      { key: 'concepto', label: 'Concepto', required: true },
-      { key: 'explicacion', label: 'Explicación', type: 'textarea' }
-    ],
-    dragdrop: [
-      { key: 'categoria', label: 'Categoría', required: true },
-      { key: 'color_hex', label: 'Color Hex', placeholder: '#e74c3c' },
-      { key: 'elemento', label: 'Elemento', required: true },
-      { key: 'explicacion', label: 'Explicación', type: 'textarea' }
-    ],
-    simulacion: [
-      { key: 'escenario_id', label: 'Escenario ID', required: true },
-      { key: 'titulo', label: 'Título', required: true },
-      { key: 'descripcion_escenario', label: 'Descripción', type: 'textarea' },
-      { key: 'ambiente', label: 'Ambiente' },
-      { key: 'nombre_peligro', label: 'Nombre peligro', required: true },
-      { key: 'desc_peligro', label: 'Descripción peligro', type: 'textarea' },
-      { key: 'severidad', label: 'Severidad' },
-      { key: 'x', label: 'X' },
-      { key: 'y', label: 'Y' },
-      { key: 'ancho', label: 'Ancho' },
-      { key: 'alto', label: 'Alto' },
-      { key: 'solucion', label: 'Solución', type: 'textarea' }
-    ]
-  };
-  return map[game] || [];
-}
-
-function getResolvedManualColumns(game, serverColumns) {
-  const frontend = getFrontendManualSchema(game);
-  if (!serverColumns || !serverColumns.length) return frontend;
-  return serverColumns.map(col => {
-    const local = frontend.find(item => item.key === col.key) || {};
-    return Object.assign({}, local, col);
-  });
-}
-
-function renderManualForm(columns, record) {
-  const grid = document.getElementById('manualFormGrid');
-  const safeColumns = columns && columns.length ? columns : getFrontendManualSchema(currentManualGame);
-  currentManualColumns = safeColumns;
-  grid.innerHTML = safeColumns.map(col => {
-    const value = record && record[col.key] ? String(record[col.key]) : '';
-    const isTextArea = col.type === 'textarea';
-    const fieldClass = isTextArea ? 'full' : '';
-    const inputHtml = isTextArea
-      ? `<textarea id="manual_${col.key}" placeholder="${col.placeholder || ''}">${escapeHtml(value)}</textarea>`
-      : `<input id="manual_${col.key}" value="${escapeHtml(value)}" placeholder="${col.placeholder || ''}">`;
-    return `
-      <div class="${fieldClass}">
-        <label>${col.label}${col.required ? ' *' : ''}</label>
-        ${inputHtml}
-      </div>
-    `;
-  }).join('');
-}
-
-function loadManualRecords() {
-  const summary = document.getElementById('manualSheetSummary');
-  summary.textContent = 'Cargando registros...';
-  hideManualCrudResult();
-  updateQuizAIPanel();
+/* ── CRUD ── */
+function loadGameRecords(game) {
+  const tableEl = document.getElementById(game + 'Table');
+  if (tableEl) tableEl.innerHTML = '<div class="adm-empty"><div class="adm-spinner"></div></div>';
   try {
     google.script.run
       .withSuccessHandler(function(resp) {
-        if (!resp || !resp.success) {
-          summary.textContent = 'No se pudo leer la hoja manual.';
-          renderManualTable([]);
-          return;
-        }
-        manualSchemas[currentManualGame] = resp.columns || [];
-        currentManualColumns = getResolvedManualColumns(currentManualGame, resp.columns || []);
-        currentManualRecords = resp.records || [];
-        summary.innerHTML = `<span class="manual-pill">${resp.sheetName || ''}</span> ${currentManualRecords.length} registro(s) cargados`;
-        renderManualForm(currentManualColumns);
-        renderManualTable(currentManualRecords);
+        if (!resp || !resp.success) { if (tableEl) tableEl.innerHTML = '<div class="adm-empty">No se pudieron cargar los registros.</div>'; return; }
+        gameRecords[game] = resp.records || [];
+        renderGameTable(game, gameRecords[game]);
       })
       .withFailureHandler(function(err) {
-        summary.textContent = 'Error al cargar registros.';
-        renderManualTable([]);
-        showManualCrudResult(false, 'Error de conexión', err ? (err.message || String(err)) : 'No se pudo leer la hoja manual.');
+        if (tableEl) tableEl.innerHTML = '<div class="adm-empty">Error: ' + (err ? err.message || String(err) : 'desconocido') + '</div>';
       })
-      .getManualSheetRecords(currentManualGame);
+      .getManualSheetRecords(game);
   } catch(e) {
-    summary.textContent = 'Requiere Apps Script desplegado.';
+    if (tableEl) tableEl.innerHTML = '<div class="adm-empty">Requiere Apps Script desplegado.</div>';
   }
 }
 
-function renderManualTable(records) {
-  const container = document.getElementById('manualRecordsTable');
-  if (!records || !records.length) {
-    container.innerHTML = '<div class="manual-empty">Todavía no hay registros guardados para este juego.</div>';
-    return;
-  }
-  const headers = currentManualColumns.map(col => `<th>${col.label}</th>`).join('');
-  const rows = records.map(record => {
-    const values = currentManualColumns.map(col => `<td>${escapeHtml(String(record[col.key] || '')).replace(/\n/g, '<br>')}</td>`).join('');
-    return `
-      <tr>
-        ${values}
-        <td class="actions">
-          <button class="manual-mini-btn secondary" type="button" onclick="editManualRecord(${record.row})">Editar</button>
-          <button class="manual-mini-btn danger" type="button" onclick="removeManualRecord(${record.row})">Eliminar</button>
-        </td>
-      </tr>
-    `;
+function renderGameTable(game, records) {
+  const tableEl = document.getElementById(game + 'Table');
+  if (!tableEl) return;
+  if (!records || !records.length) { tableEl.innerHTML = '<div class="adm-empty">Sin registros. Agrega el primero.</div>'; return; }
+  const cols = gameSchemas[game] || [];
+  const labels = gameLabels[game] || {};
+  const heads = cols.map(c => '<th>' + (labels[c] || c) + '</th>').join('');
+  const rows = records.map(r => {
+    const cells = cols.map(c => '<td>' + esc(String(r[c] || '')) + '</td>').join('');
+    return '<tr>' + cells + '<td style="white-space:nowrap"><button class="adm-btn adm-btn-secondary adm-btn-sm" onclick="editGameRecord(\'' + game + '\',' + r.row + ')">✏️</button> <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteGameRecord(\'' + game + '\',' + r.row + ')">🗑️</button></td></tr>';
   }).join('');
-  container.innerHTML = `
-    <table class="manual-table">
-      <thead>
-        <tr>${headers}<th>Acciones</th></tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
+  tableEl.innerHTML = '<div class="adm-table-wrap"><table class="adm-table"><thead><tr>' + heads + '<th>Acciones</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-function editManualRecord(row) {
-  const record = currentManualRecords.find(item => Number(item.row) === Number(row));
-  if (!record) return;
-  document.getElementById('manualRow').value = record.row;
-  document.getElementById('manualFormTitle').textContent = 'Editando fila ' + record.row;
-  renderManualForm(currentManualColumns, record);
-  window.scrollTo({ top: document.getElementById('manualFormGrid').getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' });
-}
-
-function resetManualForm() {
-  document.getElementById('manualRow').value = '';
-  document.getElementById('manualFormTitle').textContent = 'Nuevo registro';
-  renderManualForm(currentManualColumns.length ? currentManualColumns : getFrontendManualSchema(currentManualGame));
-}
-
-function updateQuizAIPanel() {
-  const panel = document.getElementById('quizAiPanel');
-  if (!panel) return;
-  panel.classList.toggle('show', currentManualGame === 'quiz');
-}
-
-function handleManualQuizFile(input) {
-  const status = document.getElementById('quizAiStatus');
-  manualQuizFile = input.files && input.files[0] ? input.files[0] : null;
-  manualQuizFileBase64 = null;
-  if (!manualQuizFile) {
-    status.textContent = 'Sin archivo cargado. También puedes generar usando solo texto.';
-    return;
-  }
-  status.textContent = 'Leyendo archivo...';
-  const reader = new FileReader();
-  reader.onload = function() {
-    manualQuizFileBase64 = reader.result.split(',')[1];
-    status.textContent = 'Archivo listo: ' + manualQuizFile.name;
-  };
-  reader.onerror = function() {
-    manualQuizFile = null;
-    manualQuizFileBase64 = null;
-    input.value = '';
-    status.textContent = 'No se pudo leer el archivo. Intenta de nuevo.';
-  };
-  reader.readAsDataURL(manualQuizFile);
-}
-
-function setQuizAiBusy(isBusy, message) {
-  const btn = document.getElementById('btnQuizAiGenerate');
-  const status = document.getElementById('quizAiStatus');
-  btn.disabled = isBusy;
-  btn.textContent = isBusy ? 'Generando...' : 'Generar y guardar';
-  if (message) status.textContent = message;
-}
-
-function generateManualQuizAI() {
-  const textBase = document.getElementById('quizAiText').value.trim();
-  const questionCount = parseInt(document.getElementById('quizAiCount').value, 10);
-  const replaceExisting = document.getElementById('quizAiReplace').checked;
-
-  if (!questionCount || questionCount < 1) {
-    showManualCrudResult(false, 'Cantidad inválida', 'Indica cuántas preguntas quieres generar.');
-    return;
-  }
-  if (!textBase && !manualQuizFile) {
-    showManualCrudResult(false, 'Falta contenido base', 'Escribe un texto o sube un archivo antes de generar.');
-    return;
-  }
-
-  setQuizAiBusy(true, 'Generando preguntas con IA...');
-
-  const onSuccess = function(resp) {
-    setQuizAiBusy(false, resp && resp.success ? 'Preguntas generadas y guardadas.' : 'La generación no se completó.');
-    if (resp && resp.success) {
-      showManualCrudResult(true, 'Quiz actualizado', resp.message || 'Las preguntas se guardaron correctamente.');
-      loadManualRecords();
-    } else {
-      showManualCrudResult(false, 'No se pudo generar', resp && resp.error ? resp.error : 'Respuesta inválida del servidor.');
-    }
-  };
-
-  const onFailure = function(err) {
-    setQuizAiBusy(false, 'Ocurrió un error al generar las preguntas.');
-    showManualCrudResult(false, 'Error de conexión', err ? (err.message || String(err)) : 'No se pudo generar el quiz.');
-  };
-
-  try {
-    if (manualQuizFile) {
-      if (!manualQuizFileBase64) {
-        setQuizAiBusy(false, 'El archivo todavía se está leyendo.');
-        showManualCrudResult(false, 'Archivo no listo', 'Espera un momento y vuelve a intentarlo.');
-        return;
-      }
-
-      if (manualQuizFileBase64.length > 200000) {
-        const CHUNK_SIZE = 180000;
-        const uploadId = Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
-        const chunks = [];
-        for (let i = 0; i < manualQuizFileBase64.length; i += CHUNK_SIZE) {
-          chunks.push(manualQuizFileBase64.substring(i, i + CHUNK_SIZE));
-        }
-        sendManualQuizChunks(uploadId, chunks, manualQuizFile, questionCount, textBase, replaceExisting, onSuccess, onFailure);
-        return;
-      }
-
-      google.script.run
-        .withSuccessHandler(onSuccess)
-        .withFailureHandler(onFailure)
-        .generateManualQuizWithAI(
-          questionCount,
-          textBase || null,
-          manualQuizFileBase64,
-          manualQuizFile.name,
-          manualQuizFile.type || 'application/octet-stream',
-          replaceExisting
-        );
-      return;
-    }
-
-    google.script.run
-      .withSuccessHandler(onSuccess)
-      .withFailureHandler(onFailure)
-      .generateManualQuizWithAI(questionCount, textBase, null, null, null, replaceExisting);
-  } catch(e) {
-    onFailure(e);
-  }
-}
-
-function sendManualQuizChunks(uploadId, chunks, file, questionCount, textBase, replaceExisting, onSuccess, onFailure) {
-  let index = 0;
-  const totalChunks = chunks.length;
-
-  function next() {
-    if (index >= totalChunks) {
-      google.script.run
-        .withSuccessHandler(onSuccess)
-        .withFailureHandler(onFailure)
-        .generateManualQuizWithAIChunked(
-          uploadId,
-          totalChunks,
-          file.name,
-          file.type || 'application/octet-stream',
-          questionCount,
-          textBase || null,
-          replaceExisting
-        );
-      return;
-    }
-
-    setQuizAiBusy(true, 'Subiendo archivo... ' + (index + 1) + ' / ' + totalChunks);
-    google.script.run
-      .withSuccessHandler(function() {
-        index += 1;
-        next();
-      })
-      .withFailureHandler(onFailure)
-      .uploadFileChunk(uploadId, index, chunks[index]);
-  }
-
-  next();
-}
-
-function saveManualRecord() {
-  const payload = { row: document.getElementById('manualRow').value || '' };
+function saveGameRecord(game) {
+  const cols = gameSchemas[game] || [];
+  const payload = { row: document.getElementById(game + 'Row') ? document.getElementById(game + 'Row').value || '' : '' };
   let hasContent = false;
-  currentManualColumns.forEach(col => {
-    const el = document.getElementById('manual_' + col.key);
-    const value = el ? el.value.trim() : '';
-    payload[col.key] = value;
-    if (value) hasContent = true;
+  cols.forEach(c => {
+    const el = document.getElementById(game + '_' + c);
+    const v = el ? el.value.trim() : '';
+    payload[c] = v;
+    if (v) hasContent = true;
   });
-  if (!hasContent) {
-    showManualCrudResult(false, 'Faltan datos', 'Completa al menos un campo antes de guardar.');
-    return;
-  }
+  if (!hasContent) { showAlert(game + 'Alert', false, 'Faltan datos', 'Completa al menos un campo.'); return; }
   try {
     google.script.run
       .withSuccessHandler(function(resp) {
         if (resp && resp.success) {
-          showManualCrudResult(true, 'Registro guardado', resp.message || 'Los cambios se guardaron correctamente.');
-          resetManualForm();
-          loadManualRecords();
-        } else {
-          showManualCrudResult(false, 'No se pudo guardar', resp && resp.error ? resp.error : 'Respuesta inválida del servidor.');
-        }
+          showAlert(game + 'Alert', true, 'Guardado', resp.message || 'Registro guardado correctamente.');
+          resetGameForm(game); loadGameRecords(game);
+        } else { showAlert(game + 'Alert', false, 'Error', resp && resp.error ? resp.error : 'No se pudo guardar.'); }
       })
-      .withFailureHandler(function(err) {
-        showManualCrudResult(false, 'Error de conexión', err ? (err.message || String(err)) : 'No se pudo guardar el registro.');
-      })
-      .saveManualSheetRecord(currentManualGame, payload);
-  } catch(e) {
-    showManualCrudResult(false, 'Apps Script requerido', 'Esta función necesita ejecutarse desde tu Web App de Apps Script.');
-  }
+      .withFailureHandler(function(err) { showAlert(game + 'Alert', false, 'Error', err ? err.message || String(err) : 'desconocido'); })
+      .saveManualSheetRecord(game, payload);
+  } catch(e) { showAlert(game + 'Alert', false, 'Sin conexión', 'Requiere Apps Script desplegado.'); }
 }
 
-function removeManualRecord(row) {
-  if (!confirm('¿Eliminar este registro manual?')) return;
+function editGameRecord(game, row) {
+  const r = (gameRecords[game] || []).find(x => Number(x.row) === Number(row));
+  if (!r) return;
+  const rowEl = document.getElementById(game + 'Row');
+  if (rowEl) rowEl.value = r.row;
+  const cols = gameSchemas[game] || [];
+  cols.forEach(c => { const el = document.getElementById(game + '_' + c); if (el) el.value = r[c] || ''; });
+  const formEl = document.getElementById(game + 'Form');
+  if (formEl) formEl.classList.add('open');
+  const card = document.getElementById('sec-' + game);
+  if (card) card.scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetGameForm(game) {
+  const rowEl = document.getElementById(game + 'Row');
+  if (rowEl) rowEl.value = '';
+  const cols = gameSchemas[game] || [];
+  cols.forEach(c => { const el = document.getElementById(game + '_' + c); if (el) el.value = ''; });
+}
+
+function deleteGameRecord(game, row) {
+  if (!confirm('¿Eliminar este registro?')) return;
   try {
     google.script.run
       .withSuccessHandler(function(resp) {
-        if (resp && resp.success) {
-          showManualCrudResult(true, 'Registro eliminado', resp.message || 'El registro fue eliminado.');
-          resetManualForm();
-          loadManualRecords();
-        } else {
-          showManualCrudResult(false, 'No se pudo eliminar', resp && resp.error ? resp.error : 'Respuesta inválida del servidor.');
-        }
+        if (resp && resp.success) { showAlert(game + 'Alert', true, 'Eliminado', 'Registro eliminado.'); loadGameRecords(game); }
+        else { showAlert(game + 'Alert', false, 'Error', resp && resp.error ? resp.error : 'No se pudo eliminar.'); }
       })
-      .withFailureHandler(function(err) {
-        showManualCrudResult(false, 'Error de conexión', err ? (err.message || String(err)) : 'No se pudo eliminar el registro.');
-      })
-      .deleteManualSheetRecord(currentManualGame, row);
-  } catch(e) {
-    showManualCrudResult(false, 'Apps Script requerido', 'Esta función necesita ejecutarse desde tu Web App de Apps Script.');
-  }
+      .withFailureHandler(function(err) { showAlert(game + 'Alert', false, 'Error', err ? err.message || String(err) : 'desconocido'); })
+      .deleteManualSheetRecord(game, row);
+  } catch(e) { showAlert(game + 'Alert', false, 'Sin conexión', 'Requiere Apps Script.'); }
 }
 
-function showManualCrudResult(ok, title, message) {
-  const card = document.getElementById('manualCrudResult');
-  card.className = 'result-card show' + (ok ? '' : ' error');
-  document.getElementById('manualCrudTitle').textContent = ok ? '✅ ' + title : '❌ ' + title;
-  document.getElementById('manualCrudMsg').textContent = message;
-}
+function esc(v) { return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function hideManualCrudResult() {
-  const card = document.getElementById('manualCrudResult');
-  card.classList.remove('show', 'error');
-}
-
-function escapeHtml(value) {
-  return String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function saveConfig() {
-  var apiKey = document.getElementById('apiKeyInput').value.trim();
-  var sheetId = document.getElementById('sheetIdInput').value.trim();
-  var openaiKey = document.getElementById('openaiKeyInput').value.trim();
-  var aiProvider = document.getElementById('aiProviderSelect').value;
-
-  if (!apiKey && !sheetId && !openaiKey) {
-    alert('Ingresa al menos una API Key o el ID de la hoja de cálculo');
-    return;
-  }
-
-  var btn = document.querySelector('.config-card .btn-generate');
-  btn.disabled = true;
-  btn.textContent = '⏳ Guardando y probando conexión...';
-
-  var resultEl = document.getElementById('configResult');
-  resultEl.classList.remove('show', 'error');
-
+/* ── DASHBOARD STATS ── */
+function loadDashStats() {
   try {
-    google.script.run
-      .withSuccessHandler(function(status) {
-        btn.disabled = false;
-        btn.textContent = '💾 Guardar Configuración';
-        resultEl.classList.add('show');
-
-        if (status && status.success) {
-          var msgs = [];
-          if (status.sheetConnected) msgs.push('✅ Google Sheet conectado correctamente');
-          else if (status.sheetError) msgs.push('❌ Sheet: ' + status.sheetError);
-
-          if (status.geminiConnected) {
-            msgs.push('✅ Gemini AI conectado y funcionando');
-          } else if (status.geminiError) {
-            msgs.push('❌ Gemini: ' + status.geminiError);
-          }
-
-          if (status.openaiConnected) {
-            msgs.push('✅ OpenAI (ChatGPT) conectado y funcionando');
-          } else if (status.openaiError) {
-            msgs.push('❌ OpenAI: ' + status.openaiError);
-          }
-
-          var anyAI = status.geminiConnected || status.openaiConnected;
-          if (anyAI) {
-            var providerNames = [];
-            if (status.geminiConnected) providerNames.push('Gemini');
-            if (status.openaiConnected) providerNames.push('OpenAI');
-            document.getElementById('apiStatus').className = 'status-badge connected';
-            document.getElementById('apiStatus').textContent = '🟢 ' + providerNames.join(' + ');
-          }
-
-          if (!anyAI && !apiKey && !openaiKey) {
-            msgs.push('⚪ IA: sin cambios');
-          }
-
-          var allOk = status.sheetConnected && anyAI;
-          resultEl.className = 'result-card show' + (allOk ? '' : ' error');
-          document.getElementById('cfgResultTitle').textContent = allOk ? '✅ ¡Todo conectado!' : '⚠️ Resultado de la configuración';
-          document.getElementById('cfgResultMsg').innerHTML = msgs.join('<br>');
-          if (allOk) {
-            document.getElementById('cfgResultMsg').innerHTML += '<br><br><strong>¡Ahora sube un documento y genera contenido personalizado!</strong>';
-          }
-        } else {
-          resultEl.className = 'result-card show error';
-          document.getElementById('cfgResultTitle').textContent = '❌ Error';
-          document.getElementById('cfgResultMsg').textContent = (status && status.error) ? status.error : 'Respuesta inválida del servidor al guardar';
-        }
-      })
-      .withFailureHandler(function(err) {
-        btn.disabled = false;
-        btn.textContent = '💾 Guardar Configuración';
-        resultEl.classList.add('show', 'error');
-        document.getElementById('cfgResultTitle').textContent = '❌ Error de conexión';
-        document.getElementById('cfgResultMsg').textContent = 'No se pudo guardar. Asegúrate de estar ejecutando desde Apps Script.';
-      })
-      .saveConfigFromAdmin(apiKey || null, sheetId || null, openaiKey || null, aiProvider);
-  } catch(e) {
-    btn.disabled = false;
-    btn.textContent = '💾 Guardar Configuración';
-    alert('Esta función requiere estar desplegada en Google Apps Script.');
-  }
-}
-
-function testConnection() {
-  var btn = document.getElementById('btnTest');
-  var resultEl = document.getElementById('configResult');
-  btn.disabled = true;
-  btn.textContent = '⏳ Probando...';
-  resultEl.classList.remove('show', 'error');
-
+    google.script.run.withSuccessHandler(function(ts) {
+      const active = ts ? ts.filter(t => t.estado === 'ACTIVO' || t.estado === 'DISPONIBLE').length : 0;
+      document.getElementById('dashArenas').textContent = active;
+    }).adminObtenerTemas();
+  } catch(e) {}
   try {
-    google.script.run
-      .withSuccessHandler(function(r) {
-        btn.disabled = false;
-        btn.textContent = '🧪 Probar Conexión Gemini';
-        resultEl.classList.add('show');
-        if (r && r.success) {
-          resultEl.className = 'result-card show';
-          document.getElementById('cfgResultTitle').textContent = '✅ ¡Gemini AI funciona!';
-          document.getElementById('cfgResultMsg').textContent = r.message + '\n\nTu API Key es válida. Ahora sube un archivo en "Generar Contenido" para crear preguntas personalizadas.';
-          document.getElementById('apiStatus').className = 'status-badge connected';
-          document.getElementById('apiStatus').textContent = '🟢 Gemini Conectado';
-        } else {
-          resultEl.className = 'result-card show error';
-          document.getElementById('cfgResultTitle').textContent = '❌ Gemini no responde';
-          document.getElementById('cfgResultMsg').textContent = (r && r.message) ? r.message : 'Respuesta inválida del servidor';
-        }
-      })
-      .withFailureHandler(function(err) {
-        btn.disabled = false;
-        btn.textContent = '🧪 Probar Conexión Gemini';
-        resultEl.classList.add('show', 'error');
-        document.getElementById('cfgResultTitle').textContent = '❌ Error';
-        document.getElementById('cfgResultMsg').textContent = 'No se pudo conectar: ' + (err ? err.message || err : 'desconocido');
-      })
-      .testGeminiConnection();
-  } catch(e) {
-    btn.disabled = false;
-    btn.textContent = '🧪 Probar Conexión Gemini';
-    alert('Requiere estar desplegada en Google Apps Script.');
-  }
+    google.script.run.withSuccessHandler(function(resp) {
+      if (resp && resp.success) document.getElementById('dashMemoria').textContent = (resp.records || []).length;
+    }).getManualSheetRecords('memoria');
+  } catch(e) {}
+  loadRanking(); loadActivity();
 }
 
-function crearHojasManuales() {
-  var btn = document.getElementById('btnCrearHojas');
-  var result = document.getElementById('manualResult');
-  btn.disabled = true;
-  btn.textContent = '⏳ Creando hojas...';
-  result.classList.remove('show', 'error');
-
+function loadRanking() {
+  const el = document.getElementById('dashRanking');
   try {
-    google.script.run
-      .withSuccessHandler(function(r) {
-        btn.disabled = false;
-        btn.textContent = '📊 Crear Hojas en mi Google Sheet';
-        result.classList.add('show');
-        if (r && r.success) {
-          document.getElementById('manualResultTitle').textContent = '✅ ¡Listo!';
-          document.getElementById('manualResultMsg').innerHTML = r.message + '<br><br>Abre tu Google Sheet y verás las nuevas hojas con ejemplos. Solo llena las filas y los juegos usarán tus datos.';
-          loadManualRecords();
-        } else {
-          result.classList.add('error');
-          document.getElementById('manualResultTitle').textContent = '❌ Error';
-          document.getElementById('manualResultMsg').textContent = r ? r.error : 'Error desconocido';
-        }
-      })
-      .withFailureHandler(function(err) {
-        btn.disabled = false;
-        btn.textContent = '📊 Crear Hojas en mi Google Sheet';
-        result.classList.add('show', 'error');
-        document.getElementById('manualResultTitle').textContent = '❌ Error de conexión';
-        document.getElementById('manualResultMsg').textContent = err ? (err.message || String(err)) : 'No se pudo conectar.';
-      })
-      .crearHojasManuales();
-  } catch(e) {
-    btn.disabled = false;
-    btn.textContent = '📊 Crear Hojas en mi Google Sheet';
-    alert('Requiere estar desplegada en Google Apps Script.');
-  }
+    google.script.run.withSuccessHandler(function(rows) {
+      if (!rows || !rows.length) { el.innerHTML = '<div class="adm-empty">Sin partidas registradas aún.</div>'; return; }
+      const top = rows.slice(0, 8);
+      const medals = ['🥇','🥈','🥉'];
+      el.innerHTML = top.map((r, i) => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+          <span style="font-size:1.1rem;width:24px;text-align:center">${medals[i]||'#'+(i+1)}</span>
+          <div style="flex:1">
+            <div style="color:#fff;font-size:.85rem;font-weight:600">${esc(r.nombre||'?')}</div>
+            <div style="color:rgba(255,255,255,.35);font-size:.72rem">${esc(r.juego||'')} · ${esc(r.fecha||'')}</div>
+          </div>
+          <span style="color:var(--cyan,#3bdcff);font-weight:800;font-size:.9rem">${esc(String(r.puntaje||0))}</span>
+        </div>`).join('');
+    }).getTopScores(8);
+  } catch(e) { el.innerHTML = '<div class="adm-empty">Conecta Apps Script para ver el ranking.</div>'; }
 }
 
-function goBack() {
+function loadActivity() {
+  const el = document.getElementById('dashActivity');
+  const gameIcons = { 'Kahoot':'🚀','Memoria':'🧠','Mahjong':'🀄','Drag & Drop':'🎯','Simulación':'🏗️','Simulacion SST':'🏗️' };
   try {
-    google.script.run.withSuccessHandler(function(url) {
-      window.top.location.href = url + '?page=Portal';
-    }).withFailureHandler(function() {
-      window.top.location.href = 'kahoot.html';
-    }).getWebAppUrl();
-  } catch(e) { window.top.location.href = 'kahoot.html'; }
+    google.script.run.withSuccessHandler(function(rows) {
+      if (!rows || !rows.length) { el.innerHTML = '<div class="adm-empty">Sin actividad reciente.</div>'; return; }
+      el.innerHTML = rows.slice(0, 8).map(r => {
+        const icon = Object.keys(gameIcons).find(k => (r.juego||'').includes(k));
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+          <span style="font-size:1.1rem">${gameIcons[icon]||'🎮'}</span>
+          <div style="flex:1"><div style="color:#fff;font-size:.82rem">${esc(r.nombre||'?')}</div>
+          <div style="color:rgba(255,255,255,.3);font-size:.72rem">${esc(r.juego||'')} · ${esc(r.tiempo||'')}s</div></div>
+          <span style="color:#4ade80;font-size:.85rem;font-weight:700">+${esc(String(r.puntaje||0))}</span>
+        </div>`;
+      }).join('');
+    }).getRecentScores(8);
+  } catch(e) { el.innerHTML = '<div class="adm-empty">Conecta Apps Script para ver actividad.</div>'; }
 }
 
-// ── KAHOOT ARENA MANAGEMENT ──
+/* ── TOAST ── */
+function admToast(msg, type) {
+  const t = document.getElementById('admToast');
+  t.textContent = msg;
+  t.style.borderColor = type === 'ok' ? 'rgba(34,197,94,.4)' : type === 'err' ? 'rgba(239,68,68,.4)' : 'rgba(59,220,255,.3)';
+  t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 3200);
+}
+function showAlert(id, ok, title, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'adm-alert show ' + (ok ? 'adm-alert-ok' : 'adm-alert-err');
+  el.innerHTML = '<strong>' + (ok ? '✅ ' : '❌ ') + title + '</strong><br>' + (msg || '');
+  setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+/* ── KAHOOT MANAGEMENT ── */
 function loadKahootArenas() {
-  document.getElementById('kahootArenasList').innerHTML = '<div class="epic-loader" style="margin:30px auto"></div>';
+  document.getElementById('kahootArenasList').innerHTML = '<div class="adm-empty"><div class="adm-spinner"></div></div>';
   try {
     google.script.run.withSuccessHandler(function(ts) {
       const sel = document.getElementById('kahootArenaSelect');
-      sel.innerHTML = '<option value="">— Selecciona —</option>';
+      sel.innerHTML = '<option value="">— Elige una arena —</option>';
       if (!ts || !ts.length) {
-        document.getElementById('kahootArenasList').innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:30px">No hay arenas. Crea una con "Nueva arena".</p>';
+        document.getElementById('kahootArenasList').innerHTML = '<div class="adm-empty">Sin arenas. Crea la primera.</div>';
         return;
       }
       let h = '';
       ts.forEach(function(t) {
         const isActive = t.estado === 'ACTIVO' || t.estado === 'DISPONIBLE';
-        h += '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg-card);border-radius:12px;margin-bottom:8px;border:1px solid var(--line)">';
-        h += '<div style="flex:1"><div style="font-weight:700;color:var(--text-base)">🎯 ' + t.titulo + '</div>';
-        if (t.desc) h += '<div style="font-size:.8rem;color:var(--text-muted);margin-top:2px">' + t.desc + '</div></div>';
-        h += '<span style="font-size:.75rem;font-weight:800;padding:4px 10px;border-radius:999px;background:' + (isActive ? 'var(--success-soft)' : 'var(--danger-soft)') + ';color:' + (isActive ? 'var(--green)' : 'var(--red)') + '">' + (isActive ? '🟢 ACTIVO' : '🔴 INACTIVO') + '</span>';
-        h += '<button class="manual-mini-btn ' + (isActive ? 'secondary' : 'primary') + '" onclick="toggleArena(' + t.fila + ',\'' + (isActive ? 'INACTIVO' : 'ACTIVO') + '\')">' + (isActive ? 'Desactivar' : 'Activar') + '</button></div>';
-        sel.innerHTML += '<option value="' + t.titulo + '">' + t.titulo + '</option>';
+        h += '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px;border:1px solid rgba(255,255,255,.07)">';
+        h += '<div style="flex:1"><div style="font-weight:700;color:#fff">🎯 ' + esc(t.titulo) + '</div>';
+        if (t.desc) h += '<div style="font-size:.78rem;color:rgba(255,255,255,.4);margin-top:2px">' + esc(t.desc) + '</div>';
+        h += '</div><span class="adm-badge ' + (isActive ? 'adm-badge-active' : 'adm-badge-inactive') + '">' + (isActive ? '🟢 ACTIVO' : '🔴 INACTIVO') + '</span>';
+        h += '<button class="adm-btn adm-btn-secondary adm-btn-sm" onclick="toggleArena(' + t.fila + ',\'' + (isActive ? 'INACTIVO' : 'ACTIVO') + '\')">' + (isActive ? 'Desactivar' : 'Activar') + '</button></div>';
+        sel.innerHTML += '<option value="' + esc(t.titulo) + '">' + esc(t.titulo) + '</option>';
       });
       document.getElementById('kahootArenasList').innerHTML = h;
     }).withFailureHandler(function() {
-      document.getElementById('kahootArenasList').innerHTML = '<p style="color:var(--red);text-align:center;padding:20px">Error al cargar. Verifica tu configuración.</p>';
+      document.getElementById('kahootArenasList').innerHTML = '<div class="adm-empty" style="color:#f87171">Error al cargar. Verifica la configuración.</div>';
     }).adminObtenerTemas();
   } catch(e) {
-    document.getElementById('kahootArenasList').innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">Conecta el Admin primero.</p>';
+    document.getElementById('kahootArenasList').innerHTML = '<div class="adm-empty">Requiere Apps Script desplegado.</div>';
   }
 }
 
 function toggleArena(fila, nuevoEstado) {
   try {
     google.script.run.withSuccessHandler(function() {
-      showKAR('success', 'Estado actualizado', 'La arena fue ' + (nuevoEstado === 'ACTIVO' ? 'activada' : 'desactivada') + '.');
+      showAlert('kahootArenaAlert', true, 'Estado actualizado', 'Arena ' + (nuevoEstado === 'ACTIVO' ? 'activada' : 'desactivada') + '.');
       loadKahootArenas();
     }).adminCambiarEstado(fila, nuevoEstado);
-  } catch(e) { showKAR('error', 'Error', 'No se pudo actualizar.'); }
-}
-
-function showNewArena() {
-  document.getElementById('newArenaForm').style.display = 'block';
-  document.getElementById('arTitulo').focus();
+  } catch(e) { showAlert('kahootArenaAlert', false, 'Error', 'No se pudo actualizar.'); }
 }
 
 function saveNewArena() {
   const titulo = document.getElementById('arTitulo').value.trim();
-  if (!titulo) { showKAR('error', 'Falta el título', 'El título es obligatorio.'); return; }
+  if (!titulo) { showAlert('kahootArenaAlert', false, 'Falta el título', 'El título es obligatorio.'); return; }
   try {
     google.script.run.withSuccessHandler(function() {
-      showKAR('success', '¡Arena creada!', '"' + titulo + '" ya está disponible.');
-      document.getElementById('newArenaForm').style.display = 'none';
-      document.getElementById('arTitulo').value = '';
-      loadKahootArenas();
-    }).adminCrearTema({
-      titulo: titulo,
-      desc: document.getElementById('arDesc').value.trim(),
-      estado: document.getElementById('arEstado').value,
-      img: document.getElementById('arImg').value.trim()
-    });
-  } catch(e) { showKAR('error', 'Error', 'Verifica la configuración del Admin.'); }
+      showAlert('kahootArenaAlert', true, 'Arena creada', '"' + titulo + '" ya está disponible.');
+      document.getElementById('arTitulo').value = ''; document.getElementById('arDesc').value = '';
+      toggleForm('newArenaForm'); loadKahootArenas();
+    }).adminCrearTema({ titulo, desc: document.getElementById('arDesc').value.trim(), estado: document.getElementById('arEstado').value, img: document.getElementById('arImg').value.trim() });
+  } catch(e) { showAlert('kahootArenaAlert', false, 'Error', 'Verifica la configuración.'); }
 }
 
 function showNewKahootQ() {
   const arena = document.getElementById('kahootArenaSelect').value;
-  if (!arena) { alert('Selecciona una arena primero.'); return; }
-  document.getElementById('newKahootQForm').style.display = 'block';
+  if (!arena) { admToast('Selecciona una arena primero.', 'err'); return; }
+  const f = document.getElementById('newKahootQForm');
+  if (f) f.classList.add('open');
 }
 
 function saveKahootQuestion() {
   const arena = document.getElementById('kahootArenaSelect').value;
   const pregunta = document.getElementById('kqPregunta').value.trim();
-  if (!arena || !pregunta) { alert('Arena y pregunta son obligatorios.'); return; }
-  const q = {
-    titulo: arena,
-    pregunta: pregunta,
-    opA: document.getElementById('kqA').value.trim(),
-    opB: document.getElementById('kqB').value.trim(),
-    opC: document.getElementById('kqC').value.trim(),
-    opD: document.getElementById('kqD').value.trim(),
-    correcta: document.getElementById('kqCorrecta').value,
-    gifOk: document.getElementById('kqGifOk').value.trim(),
-    gifFail: document.getElementById('kqGifFail').value.trim(),
-    imagenUrl: document.getElementById('kqImg').value.trim()
-  };
+  if (!arena || !pregunta) { admToast('Arena y pregunta son obligatorios.', 'err'); return; }
+  const q = { titulo: arena, pregunta, opA: document.getElementById('kqA').value.trim(), opB: document.getElementById('kqB').value.trim(), opC: document.getElementById('kqC').value.trim(), opD: document.getElementById('kqD').value.trim(), correcta: document.getElementById('kqCorrecta').value, gifOk: document.getElementById('kqGifOk').value.trim(), gifFail: document.getElementById('kqGifFail').value.trim(), imagenUrl: document.getElementById('kqImg').value.trim() };
   try {
     google.script.run.withSuccessHandler(function() {
-      showKAR('success', '¡Pregunta guardada!', 'La pregunta fue agregada a "' + arena + '".');
-      document.getElementById('newKahootQForm').style.display = 'none';
-      document.getElementById('kqPregunta').value = '';
-      loadKahootQuestions();
+      admToast('¡Pregunta guardada en "' + arena + '"!', 'ok');
+      document.getElementById('kqPregunta').value = ''; document.getElementById('kqA').value = ''; document.getElementById('kqB').value = ''; document.getElementById('kqC').value = ''; document.getElementById('kqD').value = '';
+      toggleForm('newKahootQForm'); loadKahootQuestions();
     }).adminGuardarPregunta(q);
-  } catch(e) { showKAR('error', 'Error', 'No se pudo guardar. Verifica tu configuración.'); }
+  } catch(e) { admToast('Error al guardar. Verifica configuración.', 'err'); }
 }
 
 function loadKahootQuestions() {
   const arena = document.getElementById('kahootArenaSelect').value;
-  if (!arena) return;
-  document.getElementById('kahootQList').innerHTML = '<div class="epic-loader" style="margin:20px auto"></div>';
+  const ql = document.getElementById('kahootQList');
+  if (!arena) { ql.innerHTML = '<div class="adm-empty">Selecciona una arena para ver sus preguntas.</div>'; return; }
+  ql.innerHTML = '<div class="adm-empty"><div class="adm-spinner"></div></div>';
   try {
     google.script.run.withSuccessHandler(function(qs) {
-      if (!qs || !qs.length) {
-        document.getElementById('kahootQList').innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">Sin preguntas. Agrega la primera.</p>';
-        return;
-      }
-      let h = '<div style="overflow-x:auto"><table class="manual-table"><thead><tr><th>#</th><th>Pregunta</th><th>A</th><th>B</th><th>C</th><th>D</th><th>✓</th><th>Img</th></tr></thead><tbody>';
+      if (!qs || !qs.length) { ql.innerHTML = '<div class="adm-empty">Sin preguntas. Agrega la primera.</div>'; return; }
+      let h = '<div class="adm-table-wrap"><table class="adm-table"><thead><tr><th>#</th><th>Pregunta</th><th>A</th><th>B</th><th>C</th><th>D</th><th>✓</th><th>Img</th></tr></thead><tbody>';
       qs.forEach(function(q, i) {
-        h += '<tr><td>' + (i + 1) + '</td><td>' + q.pregunta + '</td><td>' + (q.opciones[0]||'') + '</td><td>' + (q.opciones[1]||'') + '</td><td>' + (q.opciones[2]||'') + '</td><td>' + (q.opciones[3]||'') + '</td><td style="color:var(--green);font-weight:800">' + (q.respuesta + 1) + '</td><td>' + (q.imagenUrl ? '<a href="' + q.imagenUrl + '" target="_blank" style="color:var(--cyan)">Ver</a>' : '—') + '</td></tr>';
+        h += '<tr><td>' + (i + 1) + '</td><td style="max-width:200px">' + esc(q.pregunta) + '</td><td>' + esc(q.opciones[0]||'') + '</td><td>' + esc(q.opciones[1]||'') + '</td><td>' + esc(q.opciones[2]||'') + '</td><td>' + esc(q.opciones[3]||'') + '</td><td style="color:#4ade80;font-weight:800">' + (q.respuesta + 1) + '</td><td>' + (q.imagenUrl ? '<a href="' + esc(q.imagenUrl) + '" target="_blank" style="color:var(--cyan,#3bdcff)">Ver</a>' : '—') + '</td></tr>';
       });
       h += '</tbody></table></div>';
-      document.getElementById('kahootQList').innerHTML = h;
+      ql.innerHTML = h;
     }).obtenerPreguntasJuego(arena);
-  } catch(e) {}
+  } catch(e) { ql.innerHTML = '<div class="adm-empty">Error al cargar preguntas.</div>'; }
 }
 
-function showKAR(type, title, msg) {
-  const r = document.getElementById('kahootArenaResult');
-  r.className = 'result-card mb-20 ' + type; r.style.display = 'block';
-  document.getElementById('karTitle').textContent = title;
-  document.getElementById('karMsg').textContent = msg;
-  setTimeout(function() { r.style.display = 'none'; }, 4000);
-}
-
-// ── CONVERSOR URL DRIVE ──
+/* ── HELP SYSTEM ── */
+const helpContexts = {
+  dashboard: { title: '📊 Dashboard', html: '<h4>¿Qué es el Centro de Mando?</h4><p>Desde aquí controlas TODO el contenido de los juegos sin tocar Google Sheets. Haz clic en cualquier módulo para administrar su contenido.</p><h4>Flujo recomendado</h4><ol><li>Agrega registros en cada módulo (Memoria, Mahjong, etc.)</li><li>Los juegos leen esos datos automáticamente como primera prioridad</li><li>Usa la sección IA &amp; Config para generar contenido adicional con Gemini</li></ol>' },
+  kahoot: { title: '🚀 Kahoot Arena', html: '<h4>¿Cómo funciona?</h4><p>Kahoot tiene <strong>Arenas</strong> (temas) con <strong>Preguntas</strong>. El jugador elige una arena y responde sus preguntas contra el reloj.</p><h4>Pasos</h4><ol><li>Crea una arena con un título (ej: "Trabajo en Altura")</li><li>Selecciona esa arena en el selector de preguntas</li><li>Agrega las preguntas con sus 4 opciones e indica la correcta (1-4)</li><li>Opcional: agrega una imagen URL y GIFs de retroalimentación</li></ol><h4>Imagen en preguntas</h4><p>Ve a la sección <strong>🖼️ Imágenes</strong>, convierte tu URL de Drive y pégala en el campo "Imagen URL" de la pregunta.</p>' },
+  memoria: { title: '🧠 Memoria SST', html: '<h4>¿Cómo funciona?</h4><p>Juego de memoria tipo flip-card. El jugador voltea tarjetas y debe encontrar los pares emoji-concepto.</p><h4>Campos</h4><ul><li><strong>Emoji:</strong> Un emoji que representa el concepto (ej: 🪖)</li><li><strong>Concepto:</strong> En MAYÚSCULAS (ej: CASCO DE SEGURIDAD)</li><li><strong>Explicación:</strong> Se muestra cuando el jugador encuentra el par</li><li><strong>Imagen URL:</strong> Imagen de Google Drive (opcional)</li></ul><p>Mínimo 4 pares. El juego toma hasta 8 al azar.</p>' },
+  mahjong: { title: '🀄 Mahjong SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador conecta fichas de concepto con sus definiciones. Se revelan por pares.</p><h4>Campos</h4><ul><li><strong>Concepto:</strong> Incluye un emoji al inicio (ej: 🪖 Casco)</li><li><strong>Definición:</strong> La explicación del concepto</li></ul><p>Mínimo 6 pares. El juego toma hasta 12 al azar.</p>' },
+  dragdrop: { title: '🎯 Drag &amp; Drop SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador arrastra elementos y los suelta en la categoría correcta.</p><h4>Campos</h4><ul><li><strong>Categoría:</strong> El grupo al que pertenece (ej: EPP Obligatorio)</li><li><strong>Color Hex:</strong> Color visual de la categoría (ej: #e74c3c)</li><li><strong>Elemento:</strong> El ítem a clasificar</li><li><strong>Explicación:</strong> Por qué pertenece ahí</li></ul><p>Usa el mismo nombre de categoría para agrupar varios elementos. Mínimo 2 categorías.</p>' },
+  simulacion: { title: '🏗️ Simulación SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador inspecciona una escena buscando zonas peligrosas clickeables.</p><h4>Campos clave</h4><ul><li><strong>Escenario ID:</strong> Todos los peligros del mismo escenario comparten este ID (ej: ESC1)</li><li><strong>Ambiente:</strong> Define el visual del fondo (<code>construccion</code>, <code>taller</code>, <code>oficina</code>)</li><li><strong>X, Y, Ancho, Alto:</strong> Porcentajes (0-100) que posicionan la zona clickeable</li><li><strong>Severidad:</strong> alta (+200pts), media (+150pts), baja (+100pts)</li></ul>' },
+  imagenes: { title: '🖼️ Imágenes', html: '<h4>¿Cómo subir imágenes?</h4><ol><li>Sube la imagen a <strong>Google Drive</strong></li><li>Click derecho → Compartir → Cualquiera con enlace → Copiar URL</li><li>Pega esa URL en el <strong>Conversor de URL</strong> de esta sección</li><li>Copia la URL directa resultante</li><li>Pégala en el campo "Imagen URL" del módulo deseado</li></ol><h4>Formatos soportados</h4><p>JPG, PNG, GIF, WEBP. Tamaño recomendado: menos de 2MB para carga rápida.</p>' },
+  ia: { title: '🤖 IA &amp; Config', html: '<h4>Configuración de Gemini AI</h4><ol><li>Ve a <strong>aistudio.google.com</strong> y crea una API Key gratuita</li><li>Pégala en el campo "Gemini API Key"</li><li>Agrega el ID de tu Google Sheet</li><li>Haz clic en "Guardar configuración"</li></ol><h4>Generar contenido</h4><p>Sube un documento PDF/imagen sobre SST, elige el juego destino y haz clic en "Generar con IA". Gemini analizará el documento y creará el contenido automáticamente.</p><h4>Sin API Key</h4><p>Los juegos funcionan con el contenido manual que ingresas en cada módulo.</p>' }
+};
+let currentHelpContext = 'dashboard';
+/* ── DRIVE URL CONVERTER ── */
 function convertDriveUrl() {
   const raw = document.getElementById('driveUrlIn').value.trim();
   const match = raw.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (!match) { alert('No se reconoce la URL de Google Drive. Asegúrate de copiar el enlace completo.'); return; }
-  const id = match[1];
-  const direct = 'https://drive.google.com/uc?export=view&id=' + id;
+  if (!match) { admToast('URL no reconocida. Copia el enlace completo de Drive.', 'err'); return; }
+  const direct = 'https://drive.google.com/uc?export=view&id=' + match[1];
   document.getElementById('driveUrlResult').value = direct;
   document.getElementById('driveUrlOut').style.display = 'block';
 }
-
 function copyDriveUrl() {
   const el = document.getElementById('driveUrlResult');
   el.select(); document.execCommand('copy');
-  alert('¡URL copiada! Ahora pégala en el campo Imagen URL del juego correspondiente.');
+  admToast('URL copiada. Pégala en el campo Imagen URL del juego.', 'ok');
+}
+
+/* ── FILE UPLOAD ── */
+function handleFile(input) { if (input.files.length) processFile(input.files[0]); }
+function processFile(file) {
+  if (file.size > 10 * 1024 * 1024) { admToast('Archivo muy grande. Máximo 10MB.', 'err'); return; }
+  selectedFile = file; selectedFileBase64 = null;
+  const icons = { pdf:'📕', jpg:'🖼️', jpeg:'🖼️', png:'🖼️', doc:'📄', docx:'📄', txt:'📝' };
+  const ext = file.name.split('.').pop().toLowerCase();
+  document.getElementById('fpIcon').textContent = icons[ext] || '📄';
+  document.getElementById('fpName').textContent = file.name;
+  document.getElementById('fpSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+  document.getElementById('filePreview').classList.add('show');
+  document.getElementById('btnGenerate').disabled = true;
+  const reader = new FileReader();
+  reader.onload = () => { selectedFileBase64 = reader.result.split(',')[1]; document.getElementById('btnGenerate').disabled = false; };
+  reader.onerror = () => { admToast('Error al leer el archivo.', 'err'); selectedFile = null; document.getElementById('btnGenerate').disabled = false; };
+  reader.readAsDataURL(file);
+}
+function removeFile() {
+  selectedFile = null; selectedFileBase64 = null;
+  document.getElementById('filePreview').classList.remove('show');
+  document.getElementById('fileInput').value = '';
+}
+function selectGame(el, game) {
+  document.querySelectorAll('.game-pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected'); selectedGame = game;
+}
+function generateContent() {
+  if (!selectedFile || !selectedFileBase64) { admToast('Primero sube un archivo.', 'err'); return; }
+  if (!selectedGame) { admToast('Selecciona el juego destino.', 'err'); return; }
+  const btn = document.getElementById('btnGenerate');
+  const proc = document.getElementById('iaProcessing');
+  const alert = document.getElementById('iaResultAlert');
+  btn.disabled = true; proc.style.display = 'block'; alert.classList.remove('show');
+  const base64 = selectedFileBase64;
+  if (base64.length > 200000 && selectedFile.type.startsWith('image/')) {
+    compressAndSend(); return;
+  }
+  sendToServer(base64, selectedFile.name, selectedFile.type || 'application/octet-stream');
+}
+function compressAndSend() {
+  document.getElementById('iaProcText').textContent = 'Comprimiendo imagen...';
+  const img = new Image();
+  img.onload = function() {
+    const canvas = document.createElement('canvas');
+    let w = img.width, h = img.height, maxDim = 1200;
+    if (w > maxDim || h > maxDim) { if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; } else { w = Math.round(w * maxDim / h); h = maxDim; } }
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    let compressed = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+    if (compressed.length > 200000) { canvas.width = Math.round(w*.6); canvas.height = Math.round(h*.6); canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height); compressed = canvas.toDataURL('image/jpeg', 0.5).split(',')[1]; }
+    document.getElementById('iaProcText').textContent = 'Gemini AI procesando...';
+    sendToServer(compressed, selectedFile.name, 'image/jpeg');
+  };
+  img.onerror = () => { document.getElementById('iaProcessing').style.display = 'none'; document.getElementById('btnGenerate').disabled = false; admToast('No se pudo comprimir la imagen.', 'err'); };
+  img.src = 'data:' + selectedFile.type + ';base64,' + selectedFileBase64;
+}
+function sendToServer(base64Data, fileName, mimeType) {
+  document.getElementById('iaProcText').textContent = 'Gemini AI procesando... (' + (base64Data.length/1024).toFixed(0) + ' KB)';
+  try {
+    google.script.run
+      .withSuccessHandler(function(r) {
+        document.getElementById('iaProcessing').style.display = 'none';
+        document.getElementById('btnGenerate').disabled = false;
+        if (r && r.success) { showAlert('iaResultAlert', true, '¡Contenido generado!', 'Gemini analizó "' + fileName + '" y generó contenido para ' + selectedGame + '.'); }
+        else { showAlert('iaResultAlert', false, 'Error de IA', r && r.error ? r.error : 'Respuesta inválida del servidor.'); }
+      })
+      .withFailureHandler(function(err) {
+        document.getElementById('iaProcessing').style.display = 'none';
+        document.getElementById('btnGenerate').disabled = false;
+        showAlert('iaResultAlert', false, 'Error de conexión', err ? err.message || String(err) : 'No se pudo conectar.');
+      })
+      .processUploadedFile(base64Data, fileName, mimeType, selectedGame);
+  } catch(e) {
+    document.getElementById('iaProcessing').style.display = 'none';
+    document.getElementById('btnGenerate').disabled = false;
+    showAlert('iaResultAlert', false, 'Apps Script requerido', 'Despliega el proyecto como Web App primero.');
+  }
+}
+
+/* ── CONFIG ── */
+function saveConfig() {
+  const apiKey = document.getElementById('apiKeyInput').value.trim();
+  const sheetId = document.getElementById('sheetIdInput').value.trim();
+  const openaiKey = document.getElementById('openaiKeyInput').value.trim();
+  const aiProvider = document.getElementById('aiProviderSelect').value;
+  if (!apiKey && !sheetId && !openaiKey) { admToast('Ingresa al menos una API Key o el ID del Sheet.', 'err'); return; }
+  try {
+    google.script.run
+      .withSuccessHandler(function(status) {
+        if (status && status.success) {
+          const parts = [];
+          if (status.geminiConnected) parts.push('Gemini');
+          if (status.openaiConnected) parts.push('OpenAI');
+          if (parts.length) { document.getElementById('apiStatus').className = 'adm-badge adm-badge-active'; document.getElementById('apiStatus').textContent = '🟢 ' + parts.join(' + '); }
+          showAlert('configAlert', status.sheetConnected || parts.length > 0, '¡Configuración guardada!', [status.sheetConnected ? '✅ Google Sheet conectado' : (status.sheetError ? '❌ Sheet: ' + status.sheetError : ''), status.geminiConnected ? '✅ Gemini conectado' : (status.geminiError ? '❌ Gemini: ' + status.geminiError : ''), status.openaiConnected ? '✅ OpenAI conectado' : (status.openaiError ? '❌ OpenAI: ' + status.openaiError : '')].filter(Boolean).join('<br>'));
+        } else { showAlert('configAlert', false, 'Error', status && status.error ? status.error : 'Respuesta inválida.'); }
+      })
+      .withFailureHandler(function(err) { showAlert('configAlert', false, 'Error de conexión', err ? err.message || String(err) : 'No se pudo guardar.'); })
+      .saveConfigFromAdmin(apiKey || null, sheetId || null, openaiKey || null, aiProvider);
+  } catch(e) { showAlert('configAlert', false, 'Apps Script requerido', 'Ejecuta desde tu Web App.'); }
+}
+function testConnection() {
+  const btn = document.getElementById('btnTest');
+  btn.disabled = true; btn.textContent = '⏳ Probando...';
+  try {
+    google.script.run
+      .withSuccessHandler(function(r) {
+        btn.disabled = false; btn.textContent = '🧪 Probar Gemini';
+        if (r && r.success) { showAlert('configAlert', true, 'Gemini funciona', r.message); document.getElementById('apiStatus').className = 'adm-badge adm-badge-active'; document.getElementById('apiStatus').textContent = '🟢 Gemini'; }
+        else { showAlert('configAlert', false, 'Gemini no responde', r && r.message ? r.message : 'Verifica tu API Key.'); }
+      })
+      .withFailureHandler(function(err) { btn.disabled = false; btn.textContent = '🧪 Probar Gemini'; showAlert('configAlert', false, 'Error', err ? err.message || String(err) : 'desconocido'); })
+      .testGeminiConnection();
+  } catch(e) { btn.disabled = false; btn.textContent = '🧪 Probar Gemini'; }
+}
+function crearHojasManuales() {
+  const btn = document.getElementById('btnCrearHojas');
+  btn.disabled = true; btn.textContent = '⏳ Creando...';
+  try {
+    google.script.run
+      .withSuccessHandler(function(r) {
+        btn.disabled = false; btn.textContent = '📊 Crear hojas manuales';
+        if (r && r.success) showAlert('hojasAlert', true, '¡Hojas creadas!', r.message);
+        else showAlert('hojasAlert', false, 'Error', r ? r.error : 'No se pudieron crear.');
+      })
+      .withFailureHandler(function(err) { btn.disabled = false; btn.textContent = '📊 Crear hojas manuales'; showAlert('hojasAlert', false, 'Error', err ? err.message || String(err) : ''); })
+      .crearHojasManuales();
+  } catch(e) { btn.disabled = false; btn.textContent = '📊 Crear hojas manuales'; }
+}
+
+/* ── DRAG & DROP UPLOAD ZONE ── */
+document.addEventListener('DOMContentLoaded', function() {
+  const dz = document.getElementById('dropZone');
+  if (dz) {
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+    dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); if (e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]); });
+  }
+  loadDashStats();
+  try {
+    google.script.run.withSuccessHandler(function(cfg) {
+      if (!cfg) return;
+      const parts = [];
+      if (cfg.hasGeminiKey) { parts.push('Gemini'); document.getElementById('apiKeyInput').placeholder = 'Guardada: ' + cfg.apiKeyPreview; }
+      if (cfg.hasOpenAIKey) { parts.push('OpenAI'); document.getElementById('openaiKeyInput').placeholder = 'Guardada: ' + cfg.openaiKeyPreview; }
+      if (parts.length) { document.getElementById('apiStatus').className = 'adm-badge adm-badge-active'; document.getElementById('apiStatus').textContent = '🟢 ' + parts.join(' + '); }
+      if (cfg.hasSheetId) document.getElementById('sheetIdInput').placeholder = 'Guardado: ' + cfg.sheetIdPreview;
+      if (cfg.aiProvider) document.getElementById('aiProviderSelect').value = cfg.aiProvider;
+    }).getConfigStatus();
+  } catch(e) {}
+});
+
+function toggleHelp() {
+  const ov = document.getElementById('helpOverlay');
+  ov.classList.toggle('show');
+  if (ov.classList.contains('show')) {
+    const ctx = helpContexts[currentHelpContext] || helpContexts['dashboard'];
+    document.getElementById('helpContent').innerHTML = '<h3>' + ctx.title + '</h3>' + ctx.html;
+  }
 }
 </script>
 </body>

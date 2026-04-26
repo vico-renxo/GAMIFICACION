@@ -599,6 +599,44 @@ function getLeaderboardGlobal() {
   } catch(err) { return { success: false, players: [], error: err.message }; }
 }
 
+// ===== ADMIN: TOP SCORES PARA DASHBOARD =====
+function getTopScores(limit) {
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    const sh = ss.getSheetByName(CONFIG.SHEET_RESULTADOS);
+    if (!sh || sh.getLastRow() < 2) return [];
+    const data = sh.getDataRange().getValues();
+    const rows = [];
+    for (let i = 1; i < data.length; i++) {
+      const nombre = String(data[i][2] || '').trim();
+      const juego  = String(data[i][3] || '').trim();
+      const pts    = Number(data[i][4]) || 0;
+      const fecha  = data[i][0] ? Utilities.formatDate(new Date(data[i][0]), Session.getScriptTimeZone(), 'dd/MM') : '';
+      if (nombre) rows.push({ nombre, juego, puntaje: pts, fecha });
+    }
+    rows.sort((a, b) => b.puntaje - a.puntaje);
+    return rows.slice(0, limit || 8);
+  } catch(e) { return []; }
+}
+
+function getRecentScores(limit) {
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    const sh = ss.getSheetByName(CONFIG.SHEET_RESULTADOS);
+    if (!sh || sh.getLastRow() < 2) return [];
+    const data = sh.getDataRange().getValues();
+    const rows = [];
+    for (let i = 1; i < data.length; i++) {
+      const nombre = String(data[i][2] || '').trim();
+      const juego  = String(data[i][3] || '').trim();
+      const pts    = Number(data[i][4]) || 0;
+      const tiempo = String(data[i][5] || '').replace('s','');
+      if (nombre) rows.push({ nombre, juego, puntaje: pts, tiempo });
+    }
+    return rows.slice(-(limit || 8)).reverse();
+  } catch(e) { return []; }
+}
+
 // ===== GAMIFICATION: PERFIL COMPLETO DE USUARIO =====
 function getUserProfileFull(dni) {
   try {
