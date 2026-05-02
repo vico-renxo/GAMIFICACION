@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SST GameHub - Crucigrama</title>
+<?!= include('css'); ?>
+<style>
+.cw-layout{display:flex;gap:18px;padding:16px;height:calc(100vh - 70px);overflow:hidden}
+.cw-left{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:10px;overflow:auto}
+.cw-grid{display:inline-grid;border-radius:8px;overflow:hidden;gap:2px;background:transparent}
+.cw-cell-wrap{position:relative}
+.cw-cell{width:38px;height:38px;border:2px solid var(--line-strong);border-radius:4px;background:var(--bg-800);font-family:'Fredoka',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text-base);text-align:center;text-transform:uppercase;outline:none;caret-color:var(--cyan);transition:border-color .15s,background .15s;-webkit-appearance:none}
+.cw-cell:focus{border-color:var(--cyan);background:rgba(59,220,255,.1);box-shadow:0 0 8px rgba(59,220,255,.2)}
+.cw-cell.correct{border-color:var(--green);background:rgba(57,217,138,.12);color:var(--green)}
+.cw-cell.wrong{border-color:var(--red);background:rgba(255,111,125,.12);color:var(--red)}
+.cw-cell.active-word{border-color:rgba(59,220,255,.4);background:rgba(59,220,255,.06)}
+.cw-cell.blocked{background:var(--bg-950);border-color:transparent;pointer-events:none}
+.cw-num{position:absolute;top:1px;left:3px;font-size:.55rem;font-weight:800;color:var(--cyan);pointer-events:none;line-height:1}
+.cw-right{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;min-width:180px}
+.cw-clue-section h3{font-family:'Fredoka',sans-serif;font-size:1rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.cw-clue-section.h h3{color:var(--cyan)}
+.cw-clue-section.v h3{color:var(--violet)}
+.cw-clue{display:flex;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .15s;border:1px solid transparent;margin-bottom:4px}
+.cw-clue:hover{background:var(--panel-soft)}
+.cw-clue.active{background:rgba(59,220,255,.08);border-color:rgba(59,220,255,.2)}
+.cw-clue.solved{opacity:.5;text-decoration:line-through}
+.cw-clue-num{font-family:'Fredoka',sans-serif;font-weight:700;color:var(--cyan);min-width:22px;font-size:.85rem}
+.cw-clue-text{font-size:.82rem;color:var(--text-soft);line-height:1.4}
+.cw-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.cw-btn{padding:8px 16px;border-radius:8px;border:none;font-family:'Fredoka',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.cw-btn-check{background:linear-gradient(135deg,var(--green),#2baa6b);color:#fff}
+.cw-btn-reveal{background:rgba(247,184,75,.15);color:var(--amber);border:1px solid rgba(247,184,75,.3)}
+.cw-btn-check:hover{opacity:.85}
+.cw-btn-reveal:hover{background:rgba(247,184,75,.25)}
+@media(max-width:700px){.cw-layout{flex-direction:column;height:auto;overflow:auto}.cw-cell{width:30px;height:30px;font-size:.9rem}.cw-num{font-size:.45rem}}
+</style>
+</head>
+<body class="sst-shell page-crucigrama game-epic">
+<div class="animated-bg"><div class="floating-shapes"><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div></div></div>
+<div class="ge-particles" id="geParticles"></div>
+<canvas class="ge-confetti" id="geConfetti"></canvas>
+<div class="loading" id="loadingScreen"><div class="ld-spinner"></div><div class="ld-text">Generando crucigrama... ✏️</div></div>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="btn-back" onclick="goBack()">← Volver</button>
+    <h1>✏️ Crucigrama SSOMA</h1>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="v tone-success" id="score">0</div><div class="l">Puntaje</div></div>
+    <div class="stat"><div class="v tone-primary" id="solved">0/0</div><div class="l">Resueltas</div></div>
+    <div class="stat"><div class="v tone-warning" id="timer">0:00</div><div class="l">Tiempo</div></div>
+  </div>
+  <button class="btn-new" onclick="startGame()">🔄 Nuevo</button>
+</div>
+
+<div class="cw-layout" id="cwLayout">
+  <div class="cw-left">
+    <div class="cw-actions">
+      <button class="cw-btn cw-btn-check" onclick="checkAnswers()">✅ Verificar</button>
+      <button class="cw-btn cw-btn-reveal" onclick="revealCurrent()">💡 Revelar pista</button>
+    </div>
+    <div class="cw-grid" id="cwGrid"></div>
+  </div>
+  <div class="cw-right" id="cwRight">
+    <div class="cw-clue-section h" id="cluesH"><h3>→ Horizontales</h3></div>
+    <div class="cw-clue-section v" id="cluesV"><h3>↓ Verticales</h3></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="winModal">
+  <div class="modal">
+    <div class="trophy">✏️</div>
+    <h2>¡Crucigrama completado!</h2>
+    <div class="info" id="winInfo"></div>
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="goBack()">← Menú</button>
+      <button class="btn-primary" onclick="startGame();document.getElementById('winModal').classList.remove('show')">Jugar de nuevo ▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MAX_CW = 23;
+let cwGrid=[], cwWords=[], cwRows=0, cwCols=0, score=0, solvedCount=0, timerVal=0, timerInt=null;
+let activeWordIdx=null, currentUser=null;
+
+function norm(w){return String(w||'').toUpperCase().replace(/[ÁÀÄÂ]/g,'A').replace(/[ÉÈËÊ]/g,'E').replace(/[ÍÌÏÎ]/g,'I').replace(/[ÓÒÖÔ]/g,'O').replace(/[ÚÙÜÛ]/g,'U').replace(/Ñ/g,'N').replace(/[^A-Z]/g,'');}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const s=sessionStorage.getItem('sst_user')||sessionStorage.getItem('sst_u');
+  if(s) try{currentUser=JSON.parse(s)}catch(e){}
+  if(typeof createGameParticles==='function') createGameParticles('geParticles');
+  startGame();
+});
+
+async function startGame(){
+  document.getElementById('loadingScreen').style.display='flex';
+  clearInterval(timerInt); timerVal=0; score=0; solvedCount=0; activeWordIdx=null;
+  updateStats();
+  const data=await fetchWords();
+  buildCrossword(data.palabras||[]);
+  renderGrid();
+  renderClues();
+  startTimer();
+  document.getElementById('loadingScreen').style.display='none';
+}
+
+function fetchWords(){
+  return new Promise(r=>{
+    try{
+      google.script.run.withSuccessHandler(d=>{if(d&&d.palabras&&d.palabras.length>=4)r(d);else r(simWords());}).withFailureHandler(()=>r(simWords())).getAIContent('crucigrama',{});
+    }catch(e){r(simWords());}
+  });
+}
+
+function simWords(){
+  return {palabras:[
+    {palabra:'CASCO',pista:'EPP de protección craneal en obra'},
+    {palabra:'ARNES',pista:'EPP anticaídas para altura'},
+    {palabra:'IPERC',pista:'Matriz de identificación de peligros'},
+    {palabra:'RIESGO',pista:'Probabilidad de daño por un peligro'},
+    {palabra:'PELIGRO',pista:'Fuente con potencial de causar daño'},
+    {palabra:'LOTO',pista:'Bloqueo y etiquetado de energías'},
+    {palabra:'PETS',pista:'Procedimiento Escrito de Trabajo Seguro'},
+    {palabra:'EPP',pista:'Equipo de Protección Personal'},
+    {palabra:'INCIDENTE',pista:'Evento sin daño a personas'},
+    {palabra:'ACCIDENTE',pista:'Evento con daño laboral'}
+  ]};
+}
+
+/* ── CROSSWORD GENERATOR ── */
+function buildCrossword(wordList){
+  cwGrid=Array.from({length:MAX_CW},()=>Array(MAX_CW).fill(null));
+  cwWords=[];
+
+  const sorted=[...wordList].sort((a,b)=>norm(b.palabra).length-norm(a.palabra).length);
+
+  function canPlace(w,dir,r,c){
+    if(dir==='H'){
+      if(c+w.length>MAX_CW) return false;
+      if(c>0&&cwGrid[r][c-1]) return false;
+      if(c+w.length<MAX_CW&&cwGrid[r][c+w.length]) return false;
+      let intersections=0;
+      for(let i=0;i<w.length;i++){
+        const cell=cwGrid[r][c+i];
+        if(cell){
+          if(cell.letter!==w[i]) return false;
+          intersections++;
+        } else {
+          if(r>0&&cwGrid[r-1][c+i]&&!(cell&&cell.wordIds.some(id=>cwWords[id]&&cwWords[id].direction==='V'))) return false;
+          if(r<MAX_CW-1&&cwGrid[r+1][c+i]) return false;
+        }
+      }
+      return cwWords.length===0||intersections>0;
+    } else {
+      if(r+w.length>MAX_CW) return false;
+      if(r>0&&cwGrid[r-1][c]) return false;
+      if(r+w.length<MAX_CW&&cwGrid[r+w.length][c]) return false;
+      let intersections=0;
+      for(let i=0;i<w.length;i++){
+        const cell=cwGrid[r+i][c];
+        if(cell){
+          if(cell.letter!==w[i]) return false;
+          intersections++;
+        } else {
+          if(c>0&&cwGrid[r+i][c-1]) return false;
+          if(c<MAX_CW-1&&cwGrid[r+i][c+1]) return false;
+        }
+      }
+      return cwWords.length===0||intersections>0;
+    }
+  }
+
+  function doPlace(wordObj,dir,r,c){
+    const w=norm(wordObj.palabra);
+    const idx=cwWords.length;
+    const cells=[];
+    if(dir==='H'){
+      for(let i=0;i<w.length;i++){
+        if(!cwGrid[r][c+i]) cwGrid[r][c+i]={letter:w[i],wordIds:[]};
+        cwGrid[r][c+i].wordIds.push(idx);
+        cells.push({r,c:c+i});
+      }
+    } else {
+      for(let i=0;i<w.length;i++){
+        if(!cwGrid[r+i][c]) cwGrid[r+i][c]={letter:w[i],wordIds:[]};
+        cwGrid[r+i][c].wordIds.push(idx);
+        cells.push({r:r+i,c});
+      }
+    }
+    cwWords.push({...wordObj,word:w,direction:dir,row:r,col:c,cells,num:0,solved:false,userInput:Array(w.length).fill('')});
+  }
+
+  // Place first word horizontally at center
+  if(!sorted.length) return;
+  const fw=norm(sorted[0].palabra);
+  const fc=Math.floor((MAX_CW-fw.length)/2);
+  doPlace(sorted[0],'H',Math.floor(MAX_CW/2),fc);
+
+  // Place remaining words
+  for(let wi=1;wi<sorted.length;wi++){
+    const wo=sorted[wi];
+    const w=norm(wo.palabra);
+    if(w.length<3) continue;
+    let bestR=-1,bestC=-1,bestDir=null;
+
+    for(const pw of cwWords){
+      const opp=pw.direction==='H'?'V':'H';
+      for(let pi=0;pi<w.length;pi++){
+        for(let pj=0;pj<pw.word.length;pj++){
+          if(w[pi]!==pw.word[pj]) continue;
+          let nr,nc;
+          if(pw.direction==='H'){ nc=pw.col+pj; nr=pw.row-pi; }
+          else { nr=pw.row+pj; nc=pw.col-pi; }
+          if(nr<0||nc<0) continue;
+          if(canPlace(w,opp,nr,nc)){ bestR=nr; bestC=nc; bestDir=opp; break; }
+        }
+        if(bestDir) break;
+      }
+      if(bestDir) break;
+    }
+    if(bestDir) doPlace(wo,bestDir,bestR,bestC);
+  }
+
+  // Assign clue numbers by reading order
+  const starts=cwWords.map((pw,i)=>({i,r:pw.row,c:pw.col})).sort((a,b)=>a.r!==b.r?a.r-b.r:a.c-b.c);
+  let num=1; const numMap={};
+  for(const s of starts){const k=s.r+','+s.c; if(!numMap[k]) numMap[k]=num++; cwWords[s.i].num=numMap[k];}
+
+  // Trim to bounding box
+  let minR=MAX_CW,maxR=0,minC=MAX_CW,maxC=0;
+  for(let r=0;r<MAX_CW;r++) for(let c=0;c<MAX_CW;c++) if(cwGrid[r][c]){minR=Math.min(minR,r);maxR=Math.max(maxR,r);minC=Math.min(minC,c);maxC=Math.max(maxC,c);}
+  minR=Math.max(0,minR-1); maxR=Math.min(MAX_CW-1,maxR+1);
+  minC=Math.max(0,minC-1); maxC=Math.min(MAX_CW-1,maxC+1);
+  cwRows=maxR-minR+1; cwCols=maxC-minC+1;
+  const trimmed=[];
+  for(let r=minR;r<=maxR;r++) trimmed.push(cwGrid[r].slice(minC,maxC+1));
+  cwGrid=trimmed;
+  cwWords.forEach(pw=>{pw.row-=minR;pw.col-=minC;pw.cells=pw.cells.map(({r,c})=>({r:r-minR,c:c-minC}));});
+}
+
+/* ── RENDER ── */
+function renderGrid(){
+  const g=document.getElementById('cwGrid');
+  g.style.gridTemplateColumns=`repeat(${cwCols},40px)`;
+  g.style.gridTemplateRows=`repeat(${cwRows},40px)`;
+  g.innerHTML='';
+
+  // Build number map
+  const numMap={};
+  cwWords.forEach(pw=>numMap[pw.row+','+pw.col]=(numMap[pw.row+','+pw.col]||[]).concat(pw.num));
+
+  for(let r=0;r<cwRows;r++){
+    for(let c=0;c<cwCols;c++){
+      const wrap=document.createElement('div');
+      wrap.className='cw-cell-wrap';
+      wrap.style.position='relative';
+      wrap.style.width='40px'; wrap.style.height='40px';
+
+      if(!cwGrid[r]||!cwGrid[r][c]){
+        wrap.innerHTML='<div class="cw-cell blocked"></div>';
+      } else {
+        const nums=numMap[r+','+c];
+        if(nums) {
+          const nEl=document.createElement('div');
+          nEl.className='cw-num';
+          nEl.textContent=nums[0];
+          wrap.appendChild(nEl);
+        }
+        const inp=document.createElement('input');
+        inp.className='cw-cell';
+        inp.maxLength=1;
+        inp.dataset.r=r; inp.dataset.c=c;
+        inp.autocomplete='off'; inp.spellcheck=false;
+        inp.addEventListener('input',e=>onCellInput(e,r,c));
+        inp.addEventListener('keydown',e=>onCellKey(e,r,c));
+        inp.addEventListener('focus',()=>onCellFocus(r,c));
+        wrap.appendChild(inp);
+      }
+      g.appendChild(wrap);
+    }
+  }
+}
+
+function renderClues(){
+  const hEl=document.getElementById('cluesH');
+  const vEl=document.getElementById('cluesV');
+  hEl.innerHTML='<h3>→ Horizontales</h3>';
+  vEl.innerHTML='<h3>↓ Verticales</h3>';
+  const hWords=cwWords.filter(w=>w.direction==='H').sort((a,b)=>a.num-b.num);
+  const vWords=cwWords.filter(w=>w.direction==='V').sort((a,b)=>a.num-b.num);
+  hWords.forEach((pw,i)=>{
+    const div=document.createElement('div');
+    div.className='cw-clue';
+    div.id='clue-'+cwWords.indexOf(pw);
+    div.innerHTML=`<span class="cw-clue-num">${pw.num}.</span><span class="cw-clue-text">${pw.pista||pw.palabra}</span>`;
+    div.addEventListener('click',()=>focusWord(cwWords.indexOf(pw)));
+    hEl.appendChild(div);
+  });
+  vWords.forEach((pw,i)=>{
+    const div=document.createElement('div');
+    div.className='cw-clue';
+    div.id='clue-'+cwWords.indexOf(pw);
+    div.innerHTML=`<span class="cw-clue-num">${pw.num}.</span><span class="cw-clue-text">${pw.pista||pw.palabra}</span>`;
+    div.addEventListener('click',()=>focusWord(cwWords.indexOf(pw)));
+    vEl.appendChild(div);
+  });
+  updateStats();
+}
+
+function getInp(r,c){return document.querySelector(`.cw-cell[data-r="${r}"][data-c="${c}"]`);}
+
+function onCellInput(e,r,c){
+  const inp=e.target;
+  let v=norm(inp.value).slice(-1);
+  inp.value=v;
+  // Update userInput for all words containing this cell
+  cwWords.forEach(pw=>{
+    pw.cells.forEach((cell,i)=>{if(cell.r===r&&cell.c===c) pw.userInput[i]=v;});
+  });
+  if(v) moveNext(r,c);
+  checkWordsSolved();
+}
+
+function onCellKey(e,r,c){
+  if(e.key==='Backspace'){const inp=getInp(r,c);if(!inp||inp.value==='') movePrev(r,c);}
+  if(e.key==='ArrowRight') moveToNeighbor(r,c,0,1);
+  if(e.key==='ArrowLeft') moveToNeighbor(r,c,0,-1);
+  if(e.key==='ArrowDown') moveToNeighbor(r,c,1,0);
+  if(e.key==='ArrowUp') moveToNeighbor(r,c,-1,0);
+}
+
+function moveToNeighbor(r,c,dr,dc){
+  const nr=r+dr,nc=c+dc;
+  if(nr>=0&&nr<cwRows&&nc>=0&&nc<cwCols&&cwGrid[nr]&&cwGrid[nr][nc]){
+    const inp=getInp(nr,nc); if(inp) inp.focus();
+  }
+}
+
+function moveNext(r,c){
+  if(activeWordIdx===null) return;
+  const pw=cwWords[activeWordIdx];
+  const idx=pw.cells.findIndex(cell=>cell.r===r&&cell.c===c);
+  if(idx<pw.cells.length-1){const next=pw.cells[idx+1];const inp=getInp(next.r,next.c);if(inp)inp.focus();}
+}
+
+function movePrev(r,c){
+  if(activeWordIdx===null) return;
+  const pw=cwWords[activeWordIdx];
+  const idx=pw.cells.findIndex(cell=>cell.r===r&&cell.c===c);
+  if(idx>0){const prev=pw.cells[idx-1];const inp=getInp(prev.r,prev.c);if(inp){inp.value='';inp.focus();cwWords.forEach(w=>{w.cells.forEach((cl,i)=>{if(cl.r===prev.r&&cl.c===prev.c)w.userInput[i]='';});});}}
+}
+
+function onCellFocus(r,c){
+  // Find the best word for this cell
+  const wordsHere=cwWords.filter(pw=>pw.cells.some(cl=>cl.r===r&&cl.c===c));
+  if(!wordsHere.length) return;
+  // Prefer current direction if possible
+  let target=wordsHere[0];
+  if(activeWordIdx!==null){
+    const cur=cwWords[activeWordIdx];
+    const same=wordsHere.find(pw=>pw===cur);
+    if(same) target=same;
+    else { const opp=wordsHere.find(pw=>pw.direction!==cur.direction); if(opp) target=opp; }
+  }
+  activateWord(cwWords.indexOf(target));
+}
+
+function activateWord(idx){
+  // Clear previous active styling
+  document.querySelectorAll('.cw-cell.active-word').forEach(el=>el.classList.remove('active-word'));
+  document.querySelectorAll('.cw-clue.active').forEach(el=>el.classList.remove('active'));
+  if(idx<0||idx>=cwWords.length) return;
+  activeWordIdx=idx;
+  const pw=cwWords[idx];
+  pw.cells.forEach(({r,c})=>{const inp=getInp(r,c);if(inp&&!inp.classList.contains('correct'))inp.classList.add('active-word');});
+  const clueEl=document.getElementById('clue-'+idx);
+  if(clueEl){clueEl.classList.add('active');clueEl.scrollIntoView({block:'nearest',behavior:'smooth'});}
+}
+
+function focusWord(idx){
+  activateWord(idx);
+  const pw=cwWords[idx];
+  const inp=getInp(pw.cells[0].r,pw.cells[0].c);
+  if(inp) inp.focus();
+}
+
+function checkWordsSolved(){
+  let newSolved=0;
+  cwWords.forEach((pw,idx)=>{
+    const correct=pw.userInput.join('')===pw.word;
+    if(correct&&!pw.solved){
+      pw.solved=true;
+      const pts=150+pw.word.length*10;
+      score+=pts;
+      pw.cells.forEach(({r,c})=>{const inp=getInp(r,c);if(inp){inp.classList.remove('active-word','wrong');inp.classList.add('correct');inp.readOnly=true;}});
+      const clueEl=document.getElementById('clue-'+idx);
+      if(clueEl) clueEl.classList.add('solved');
+    }
+    if(pw.solved) newSolved++;
+  });
+  solvedCount=newSolved;
+  updateStats();
+  if(solvedCount===cwWords.length) setTimeout(endGame,500);
+}
+
+function checkAnswers(){
+  cwWords.forEach((pw,idx)=>{
+    if(pw.solved) return;
+    pw.cells.forEach(({r,c},i)=>{
+      const inp=getInp(r,c);
+      if(!inp) return;
+      if(pw.userInput[i]==='') return;
+      const correct=pw.userInput[i]===pw.word[i];
+      inp.classList.toggle('correct',correct&&pw.userInput.join('')===pw.word);
+      inp.classList.toggle('wrong',!correct&&pw.userInput[i]!=='');
+    });
+  });
+  checkWordsSolved();
+}
+
+function revealCurrent(){
+  if(activeWordIdx===null) return;
+  const pw=cwWords[activeWordIdx];
+  pw.cells.forEach(({r,c},i)=>{
+    const inp=getInp(r,c);
+    if(inp&&!pw.solved){
+      inp.value=pw.word[i];
+      pw.userInput[i]=pw.word[i];
+    }
+  });
+  score=Math.max(0,score-50);
+  updateStats();
+  checkWordsSolved();
+}
+
+function updateStats(){
+  document.getElementById('score').textContent=score;
+  document.getElementById('solved').textContent=solvedCount+'/'+(cwWords.length||'?');
+}
+
+function startTimer(){
+  clearInterval(timerInt); timerVal=0;
+  timerInt=setInterval(()=>{
+    timerVal++;
+    const m=Math.floor(timerVal/60),s=timerVal%60;
+    document.getElementById('timer').textContent=m+':'+(s<10?'0':'')+s;
+  },1000);
+}
+
+function endGame(){
+  clearInterval(timerInt);
+  const bonus=Math.max(0,600-timerVal*2);
+  score+=bonus;
+  const m=Math.floor(timerVal/60),s=timerVal%60;
+  document.getElementById('winInfo').innerHTML=`
+    <div>⏱️ Tiempo: <strong>${m}:${s<10?'0':''}${s}</strong></div>
+    <div>✏️ Palabras: <strong>${solvedCount}/${cwWords.length}</strong></div>
+    <div>⭐ Bono tiempo: <strong>+${bonus}</strong></div>
+    <div style="margin-top:8px;font-size:1.2rem;font-weight:800;color:var(--cyan)">🏆 Puntaje total: ${score}</div>`;
+  document.getElementById('winModal').classList.add('show');
+  if(typeof triggerConfetti==='function') triggerConfetti();
+  saveResult();
+}
+
+function saveResult(){
+  if(!currentUser) return;
+  try{
+    google.script.run.saveScore({
+      dni:currentUser.dni||'',
+      nombre:(currentUser.nombre||'')+(currentUser.apellido?' '+currentUser.apellido:''),
+      juego:'Crucigrama SSOMA',
+      puntaje:score,
+      tiempo:timerVal+'s',
+      detalles:'Palabras:'+solvedCount+'/'+cwWords.length
+    });
+  }catch(e){}
+  try{window.parent.postMessage({sst_action:'gameFinished'},'*');}catch(e){}
+}
+
+function goBack(){
+  clearInterval(timerInt);
+  try{window.parent.postMessage({sst_action:'goHome'},'*');}catch(e){history.back();}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SST GameHub - Pupiletras</title>
+<?!= include('css'); ?>
+<style>
+.pup-layout{display:flex;gap:18px;padding:16px;height:calc(100vh - 70px);overflow:hidden}
+.pup-grid-wrap{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+.pup-grid{display:grid;border:2px solid var(--line-strong);border-radius:12px;overflow:hidden;user-select:none;cursor:pointer;box-shadow:0 0 32px rgba(59,220,255,.08)}
+.pup-cell{width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-size:1.1rem;font-weight:600;color:var(--text-soft);background:var(--bg-850);border:1px solid rgba(150,190,255,.06);transition:background .12s,color .12s;position:relative}
+.pup-cell.selecting{background:rgba(59,220,255,.25);color:var(--cyan)}
+.pup-cell.found{background:rgba(57,217,138,.18);color:var(--green);border-color:rgba(57,217,138,.22)}
+.pup-cell.found-multi{background:rgba(139,123,255,.18);color:var(--violet)}
+.pup-cell.found.selecting{background:rgba(57,217,138,.35)}
+.pup-words{flex:1;min-width:200px;max-width:280px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.pup-words h3{font-family:'Fredoka',sans-serif;font-size:1.1rem;color:var(--cyan);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px}
+.pup-word-item{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:default;transition:all .2s}
+.pup-word-item.found{background:rgba(57,217,138,.1);border-color:rgba(57,217,138,.3);text-decoration:line-through}
+.pup-word-item .wname{font-family:'Fredoka',sans-serif;font-size:.98rem;font-weight:600;color:var(--text-base)}
+.pup-word-item.found .wname{color:var(--green)}
+.pup-word-item .wcat{font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.pup-word-item .wdesc{font-size:.78rem;color:var(--text-soft);margin-top:4px;display:none;line-height:1.4}
+.pup-word-item.found .wdesc{display:block}
+.pup-timer{font-family:'Fredoka',sans-serif;font-size:1.5rem;font-weight:700;color:var(--amber)}
+.pup-found-flash{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;color:var(--green);pointer-events:none;animation:flashIn .5s ease forwards;z-index:2}
+@keyframes flashIn{0%{opacity:1;transform:scale(1.4)}100%{opacity:0;transform:scale(1)}}
+@media(max-width:700px){.pup-layout{flex-direction:column;height:auto;overflow:auto}.pup-cell{width:26px;height:26px;font-size:.8rem}.pup-words{max-width:100%}}
+</style>
+</head>
+<body class="sst-shell page-pupiletras game-epic">
+<div class="animated-bg"><div class="floating-shapes"><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div></div></div>
+<div class="ge-particles" id="geParticles"></div>
+<canvas class="ge-confetti" id="geConfetti"></canvas>
+<div class="loading" id="loadingScreen"><div class="ld-spinner"></div><div class="ld-text">Generando sopa de letras... 🔤</div></div>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="btn-back" onclick="goBack()">← Volver</button>
+    <h1>🔤 Pupiletras SSOMA</h1>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="v tone-success" id="score">0</div><div class="l">Puntaje</div></div>
+    <div class="stat"><div class="v tone-primary" id="found">0/0</div><div class="l">Encontradas</div></div>
+    <div class="stat"><div class="v tone-warning" id="timer">0:00</div><div class="l">Tiempo</div></div>
+  </div>
+  <button class="btn-new" onclick="startGame()">🔄 Nuevo</button>
+</div>
+
+<div class="pup-layout" id="pupLayout">
+  <div class="pup-grid-wrap">
+    <div class="pup-grid" id="pupGrid"></div>
+  </div>
+  <div class="pup-words">
+    <h3>🔍 Palabras a buscar</h3>
+    <div id="wordList"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="winModal">
+  <div class="modal">
+    <div class="trophy">🔤</div>
+    <h2>¡Sopa de letras completada!</h2>
+    <div class="info" id="winInfo"></div>
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="goBack()">← Menú</button>
+      <button class="btn-primary" onclick="startGame();document.getElementById('winModal').classList.remove('show')">Jugar de nuevo ▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const GRID_SIZE = 15;
+const DIRS = [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+let gameData=null, gridLetters=[], placedWords=[], foundCount=0, score=0, timerVal=0, timerInt=null;
+let selecting=false, selStart=null, selCells=[], selDir=null;
+let currentUser=null;
+
+function norm(w){ return String(w||'').toUpperCase().replace(/[ÁÀÄÂ]/g,'A').replace(/[ÉÈËÊ]/g,'E').replace(/[ÍÌÏÎ]/g,'I').replace(/[ÓÒÖÔ]/g,'O').replace(/[ÚÙÜÛ]/g,'U').replace(/Ñ/g,'N').replace(/[^A-Z]/g,''); }
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const s=sessionStorage.getItem('sst_user')||sessionStorage.getItem('sst_u');
+  if(s) try{currentUser=JSON.parse(s)}catch(e){}
+  if(typeof createGameParticles==='function') createGameParticles('geParticles');
+  startGame();
+});
+
+async function startGame(){
+  document.getElementById('loadingScreen').style.display='flex';
+  clearInterval(timerInt);
+  timerVal=0; score=0; foundCount=0;
+  updateStats();
+  gameData = await fetchWords();
+  buildGrid(gameData.palabras||[]);
+  renderGrid();
+  renderWordList();
+  startTimer();
+  document.getElementById('loadingScreen').style.display='none';
+}
+
+function fetchWords(){
+  return new Promise(r=>{
+    try{
+      google.script.run.withSuccessHandler(d=>{ if(d&&d.palabras&&d.palabras.length>=4) r(d); else r(simWords()); }).withFailureHandler(()=>r(simWords())).getAIContent('pupiletras',{});
+    }catch(e){r(simWords());}
+  });
+}
+
+function simWords(){
+  return {palabras:[
+    {palabra:'CASCO',categoria:'EPP',descripcion:'Protección craneal obligatoria en toda obra.'},
+    {palabra:'ARNES',categoria:'EPP',descripcion:'Equipo anticaídas para trabajos en altura.'},
+    {palabra:'IPERC',categoria:'Normativa',descripcion:'Identificación de Peligros y Evaluación de Riesgos.'},
+    {palabra:'RIESGO',categoria:'Concepto',descripcion:'Probabilidad de que un peligro cause daño.'},
+    {palabra:'PELIGRO',categoria:'Concepto',descripcion:'Condición con potencial de causar daño.'},
+    {palabra:'LOTO',categoria:'Procedimiento',descripcion:'Bloqueo y Etiquetado de energías peligrosas.'},
+    {palabra:'PETS',categoria:'Procedimiento',descripcion:'Procedimiento Escrito de Trabajo Seguro.'},
+    {palabra:'EPP',categoria:'General',descripcion:'Equipo de Protección Personal.'},
+    {palabra:'INCIDENTE',categoria:'Evento',descripcion:'Evento no deseado sin daño a personas.'},
+    {palabra:'ACCIDENTE',categoria:'Evento',descripcion:'Evento con daño a personas o bienes.'},
+    {palabra:'BRIGADISTA',categoria:'Roles',descripcion:'Persona entrenada para respuesta a emergencias.'},
+    {palabra:'SEÑAL',categoria:'Señalización',descripcion:'Indicador visual de seguridad.'}
+  ]};
+}
+
+function buildGrid(wordList){
+  gridLetters = Array.from({length:GRID_SIZE},()=>Array(GRID_SIZE).fill(''));
+  placedWords = [];
+
+  const sorted = [...wordList].sort((a,b)=>norm(b.palabra).length-norm(a.palabra).length);
+  for(const wordObj of sorted){
+    const w = norm(wordObj.palabra);
+    if(w.length<3||w.length>GRID_SIZE) continue;
+    let placed=false;
+    for(let attempt=0;attempt<300&&!placed;attempt++){
+      const [dr,dc]=DIRS[Math.floor(Math.random()*DIRS.length)];
+      const r=Math.floor(Math.random()*GRID_SIZE);
+      const c=Math.floor(Math.random()*GRID_SIZE);
+      const cells=[];
+      let ok=true;
+      for(let i=0;i<w.length;i++){
+        const nr=r+dr*i, nc=c+dc*i;
+        if(nr<0||nr>=GRID_SIZE||nc<0||nc>=GRID_SIZE){ok=false;break;}
+        if(gridLetters[nr][nc]!==''&&gridLetters[nr][nc]!==w[i]){ok=false;break;}
+        cells.push({r:nr,c:nc});
+      }
+      if(ok){
+        cells.forEach(({r,c},i)=>gridLetters[r][c]=w[i]);
+        placedWords.push({...wordObj,word:w,cells,found:false});
+        placed=true;
+      }
+    }
+  }
+  for(let r=0;r<GRID_SIZE;r++) for(let c=0;c<GRID_SIZE;c++) if(!gridLetters[r][c]) gridLetters[r][c]=LETTERS[Math.floor(Math.random()*26)];
+  document.getElementById('found').textContent='0/'+placedWords.length;
+}
+
+function renderGrid(){
+  const grid=document.getElementById('pupGrid');
+  grid.style.gridTemplateColumns=`repeat(${GRID_SIZE},38px)`;
+  grid.innerHTML='';
+  for(let r=0;r<GRID_SIZE;r++) for(let c=0;c<GRID_SIZE;c++){
+    const cell=document.createElement('div');
+    cell.className='pup-cell';
+    cell.textContent=gridLetters[r][c];
+    cell.dataset.r=r; cell.dataset.c=c;
+    cell.addEventListener('mousedown',e=>{e.preventDefault();startSel(r,c)});
+    cell.addEventListener('mouseover',e=>{if(selecting)extendSel(r,c)});
+    cell.addEventListener('touchstart',e=>{e.preventDefault();startSel(r,c)},{passive:false});
+    cell.addEventListener('touchmove',e=>{
+      e.preventDefault();
+      const t=e.touches[0];
+      const el=document.elementFromPoint(t.clientX,t.clientY);
+      if(el&&el.classList.contains('pup-cell')) extendSel(+el.dataset.r,+el.dataset.c);
+    },{passive:false});
+    grid.appendChild(cell);
+  }
+  document.addEventListener('mouseup',()=>{if(selecting)endSel()},{once:false});
+  document.addEventListener('touchend',()=>{if(selecting)endSel()},{once:false});
+}
+
+function getCell(r,c){return document.querySelector(`.pup-cell[data-r="${r}"][data-c="${c}"]`);}
+
+function startSel(r,c){
+  selecting=true; selStart={r,c}; selDir=null; selCells=[];
+  clearSelecting();
+  const cell=getCell(r,c);
+  if(cell){cell.classList.add('selecting');selCells=[{r,c}];}
+}
+
+function extendSel(r,c){
+  if(!selecting||!selStart) return;
+  const dr=r-selStart.r, dc=c-selStart.c;
+  const len=Math.max(Math.abs(dr),Math.abs(dc));
+  if(len===0) return;
+  // Determine direction
+  let ndr=0,ndc=0;
+  if(Math.abs(dr)===0) ndc=dc>0?1:-1;
+  else if(Math.abs(dc)===0) ndr=dr>0?1:-1;
+  else if(Math.abs(dr)===Math.abs(dc)){ndr=dr>0?1:-1;ndc=dc>0?1:-1;}
+  else{
+    // snap to 8 directions
+    const angle=Math.atan2(dr,dc)*180/Math.PI;
+    const dirs8=[[0,1,0],[1,45,1],[2,90,1],[3,135,1],[4,180,0],[5,-135,1],[6,-90,1],[7,-45,1]];
+    let best=0,bestD=999;
+    for(const [di,ang,_] of [[0,0],[1,45],[2,90],[3,135],[4,180],[5,-135],[6,-90],[7,-45]]){
+      const d=Math.abs(angle-ang); if(d<bestD){bestD=d;best=di;}}
+    const dirs=[[0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]];
+    [ndr,ndc]=dirs[best];
+  }
+  clearSelecting();
+  selCells=[];
+  for(let i=0;i<=len;i++){
+    const nr=selStart.r+ndr*i, nc=selStart.c+ndc*i;
+    if(nr<0||nr>=GRID_SIZE||nc<0||nc>=GRID_SIZE) break;
+    selCells.push({r:nr,c:nc});
+    const cell=getCell(nr,nc);
+    if(cell) cell.classList.add('selecting');
+  }
+}
+
+function clearSelecting(){document.querySelectorAll('.pup-cell.selecting').forEach(c=>c.classList.remove('selecting'));}
+
+function endSel(){
+  selecting=false;
+  const sel=selCells.map(({r,c})=>gridLetters[r][c]).join('');
+  const selRev=sel.split('').reverse().join('');
+  let found=placedWords.find(pw=>!pw.found&&(pw.word===sel||pw.word===selRev));
+  if(found){
+    found.found=true;
+    foundCount++;
+    const pts=100+Math.max(0,30-timerVal)*2;
+    score+=pts;
+    selCells.forEach(({r,c})=>{
+      const cell=getCell(r,c);
+      if(cell){cell.classList.remove('selecting');cell.classList.add('found');}
+    });
+    showFoundFlash(selCells[0],found.palabra||found.word);
+    updateStats();
+    updateWordList(found.word);
+    if(foundCount===placedWords.length) setTimeout(endGame,600);
+  }else{
+    clearSelecting();
+  }
+  selCells=[];
+}
+
+function showFoundFlash(cell,word){
+  const el=getCell(cell.r,cell.c);
+  if(!el) return;
+  const flash=document.createElement('div');
+  flash.className='pup-found-flash';
+  flash.textContent='✓ '+word;
+  el.appendChild(flash);
+  setTimeout(()=>flash.remove(),600);
+}
+
+function renderWordList(){
+  const wl=document.getElementById('wordList');
+  wl.innerHTML='';
+  placedWords.forEach(pw=>{
+    const div=document.createElement('div');
+    div.className='pup-word-item'+(pw.found?' found':'');
+    div.id='wi-'+pw.word;
+    div.innerHTML=`<div class="wname">${pw.found?'✅ ':''} ${pw.palabra||pw.word}</div><div class="wcat">${pw.categoria||''}</div>${pw.found&&pw.descripcion?'<div class="wdesc">'+pw.descripcion+'</div>':''}`;
+    wl.appendChild(div);
+  });
+}
+
+function updateWordList(foundWord){
+  const pw=placedWords.find(p=>p.word===foundWord||p.word===foundWord.split('').reverse().join(''));
+  if(!pw) return;
+  const el=document.getElementById('wi-'+pw.word);
+  if(!el) return;
+  el.className='pup-word-item found';
+  el.innerHTML=`<div class="wname">✅ ${pw.palabra||pw.word}</div><div class="wcat">${pw.categoria||''}</div>${pw.descripcion?'<div class="wdesc">'+pw.descripcion+'</div>':''}`;
+}
+
+function updateStats(){
+  document.getElementById('score').textContent=score;
+  document.getElementById('found').textContent=foundCount+'/'+(placedWords.length||'?');
+}
+
+function startTimer(){
+  clearInterval(timerInt);
+  timerVal=0;
+  timerInt=setInterval(()=>{
+    timerVal++;
+    const m=Math.floor(timerVal/60), s=timerVal%60;
+    document.getElementById('timer').textContent=m+':'+(s<10?'0':'')+s;
+  },1000);
+}
+
+function endGame(){
+  clearInterval(timerInt);
+  const bonus=Math.max(0,500-timerVal*2);
+  score+=bonus;
+  const m=Math.floor(timerVal/60), s=timerVal%60;
+  document.getElementById('winInfo').innerHTML=`
+    <div>⏱️ Tiempo: <strong>${m}:${s<10?'0':''}${s}</strong></div>
+    <div>🔤 Palabras: <strong>${foundCount}/${placedWords.length}</strong></div>
+    <div>⭐ Bono tiempo: <strong>+${bonus}</strong></div>
+    <div style="margin-top:8px;font-size:1.2rem;font-weight:800;color:var(--cyan)">🏆 Puntaje total: ${score}</div>`;
+  document.getElementById('winModal').classList.add('show');
+  if(typeof triggerConfetti==='function') triggerConfetti();
+  saveResult();
+}
+
+function saveResult(){
+  if(!currentUser) return;
+  try{
+    google.script.run.saveScore({
+      dni:currentUser.dni||'',
+      nombre:(currentUser.nombre||'')+(currentUser.apellido?' '+currentUser.apellido:''),
+      juego:'Pupiletras SSOMA',
+      puntaje:score,
+      tiempo:timerVal+'s',
+      detalles:'Palabras:'+foundCount+'/'+placedWords.length
+    });
+  }catch(e){}
+  try{ window.parent.postMessage({sst_action:'gameFinished'},'*'); }catch(e){}
+}
+
+function goBack(){
+  clearInterval(timerInt);
+  try{ window.parent.postMessage({sst_action:'goHome'},'*'); }catch(e){ history.back(); }
+}
+</script>
+</body>
+</html>

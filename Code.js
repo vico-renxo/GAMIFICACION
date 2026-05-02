@@ -64,7 +64,9 @@ const PAGE_FILES = {
   Memoria: 'Memoria',
   DragDrop: 'DragDrop',
   Quiz: 'Quiz',
-  Simulacion: 'Simulacion'
+  Simulacion: 'Simulacion',
+  Pupiletras: 'Pupiletras',
+  Crucigrama: 'Crucigrama'
 };
 
 function include(filename) {
@@ -1300,6 +1302,7 @@ function processUploadedFile(fileBase64, fileName, mimeType, gameType) {
     if ((gameType === 'mahjong' || gameType === 'memoria') && geminiResult.pairs && geminiResult.pairs.length > 0) isValid = true;
     if (gameType === 'dragdrop' && geminiResult.categories && geminiResult.items) isValid = true;
     if (gameType === 'simulacion' && geminiResult.scenario && geminiResult.hazards) isValid = true;
+    if ((gameType === 'pupiletras' || gameType === 'crucigrama') && geminiResult.palabras && geminiResult.palabras.length > 0) isValid = true;
 
     if (isValid) {
       saveGeneratedContent(gameType, geminiResult, fileName);
@@ -1393,7 +1396,36 @@ Reglas:
 - Entre 4 y 8 objetos en "hazards"
 - "severity" puede ser: "baja", "media", "alta" o "critica"
 - x, y, width, height son porcentajes (0-100) para posicionar en pantalla
-- Los peligros deben basarse en el contenido del documento`
+- Los peligros deben basarse en el contenido del documento`,
+
+    'pupiletras': `${baseInstructions}
+
+Genera entre 12 y 15 palabras de SST/SSOMA para un sopa de letras educativo.
+
+Estructura JSON requerida:
+{"palabras":[{"palabra":"CASCO","categoria":"EPP","descripcion":"Proteccion craneal obligatoria en obra"}]}
+
+Reglas CRITICAS para "palabra":
+- SOLO letras A-Z en MAYUSCULAS sin tildes ni espacios (ARNES no ARNÉS, PREVENCION no PREVENCIÓN)
+- Longitud entre 4 y 12 caracteres
+- Sin guiones ni caracteres especiales
+- Minimo 12, maximo 15 palabras
+- Basadas en el documento adjunto de SST/SSOMA`,
+
+    'crucigrama': `${baseInstructions}
+
+Genera entre 8 y 12 palabras de SST/SSOMA para un crucigrama educativo.
+
+Estructura JSON requerida:
+{"palabras":[{"palabra":"CASCO","pista":"EPP de proteccion craneal obligatorio en obra"}]}
+
+Reglas CRITICAS para "palabra":
+- SOLO letras A-Z en MAYUSCULAS sin tildes ni espacios (ARNES no ARNÉS)
+- Longitud entre 4 y 12 caracteres
+- Sin guiones ni caracteres especiales
+- Las palabras deben poder cruzarse entre si (compartir letras comunes)
+- Las pistas deben ser claras y educativas sobre SST/SSOMA
+- Basadas en el documento adjunto`
   };
 
   var prompt = prompts[gameType] || prompts['quiz'];
@@ -1512,6 +1544,8 @@ function simulateAIResponse(gameType, params) {
     case 'dragdrop': return { categories: [{name:"Sin datos",color:"#999"}], items: [{id:1, text:"Llena la hoja DragDrop_Manual", category:"Sin datos", explanation:"Abre tu Google Sheet y completa la hoja DragDrop_Manual."}] };
     case 'quiz': return { questions: [{id:1, question:"No hay preguntas configuradas. Llena la hoja Quiz_Manual.", options:["Ir al Admin","Abrir Google Sheet","Agregar preguntas","Todas las anteriores"], correct:3, explanation:"Ve a tu Google Sheet y llena la hoja Quiz_Manual con tus propias preguntas."}] };
     case 'simulacion': return { scenario: {title:"Sin escenario", description:"Llena la hoja Simulacion_Manual en tu Google Sheet.", environment:"vacio"}, hazards: [{id:1, name:"Sin datos", description:"Configura tus escenarios", severity:"baja", x:50, y:50, width:20, height:20, solution:"Abre Simulacion_Manual y agrega filas."}] };
+    case 'pupiletras': return { palabras: [{palabra:"CASCO",categoria:"EPP",descripcion:"Proteccion craneal. Llena Pupiletras_Manual."},{palabra:"EPP",categoria:"General",descripcion:"Equipo de Proteccion Personal."},{palabra:"RIESGO",categoria:"Peligro",descripcion:"Probabilidad de daño."},{palabra:"PELIGRO",categoria:"Peligro",descripcion:"Condicion con potencial de daño."},{palabra:"ARNES",categoria:"EPP",descripcion:"Proteccion contra caidas en altura."},{palabra:"IPERC",categoria:"Normativa",descripcion:"Identificacion de peligros y evaluacion de riesgos."}] };
+    case 'crucigrama': return { palabras: [{palabra:"CASCO",pista:"EPP de proteccion craneal"},{palabra:"EPP",pista:"Equipo de Proteccion Personal"},{palabra:"RIESGO",pista:"Probabilidad de que un peligro cause daño"},{palabra:"ARNES",pista:"EPP para trabajo en altura"},{palabra:"IPERC",pista:"Matriz de identificacion de peligros"},{palabra:"PETS",pista:"Procedimiento Escrito de Trabajo Seguro"},{palabra:"LOTO",pista:"Bloqueo y etiquetado de energias"}] };
     default: return { questions: [{id:1, question:"Sin datos. Configura las hojas manuales.", options:["OpciÃ³n A","OpciÃ³n B","OpciÃ³n C","OpciÃ³n D"], correct:0, explanation:"Usa el panel Admin para crear las hojas manuales."}] };
   }
 }
@@ -1572,6 +1606,21 @@ const MANUAL_SHEETS = {
       { key: 'ancho', label: 'Ancho', required: false },
       { key: 'alto', label: 'Alto', required: false },
       { key: 'solucion', label: 'SoluciÃ³n', required: false }
+    ]
+  },
+  pupiletras: {
+    sheetName: 'Pupiletras_Manual',
+    columns: [
+      { key: 'palabra', label: 'Palabra (sin tildes, mayúsculas)', required: true },
+      { key: 'categoria', label: 'Categoría', required: false },
+      { key: 'descripcion', label: 'Descripción (se muestra al encontrar)', required: false }
+    ]
+  },
+  crucigrama: {
+    sheetName: 'Crucigrama_Manual',
+    columns: [
+      { key: 'palabra', label: 'Palabra (sin tildes, mayúsculas)', required: true },
+      { key: 'pista', label: 'Pista / Definición', required: true }
     ]
   }
 };
@@ -1775,6 +1824,46 @@ function crearHojasManuales() {
       creadas.push('Simulacion_Manual');
     }
 
+    // --- PUPILETRAS ---
+    if (!ss.getSheetByName('Pupiletras_Manual')) {
+      var sh = ss.insertSheet('Pupiletras_Manual');
+      sh.appendRow(['PALABRA (MAYUSCULAS SIN TILDES)','CATEGORIA','DESCRIPCION']);
+      sh.getRange(1,1,1,3).setFontWeight('bold').setBackground('#9c27b0').setFontColor('#fff');
+      sh.setColumnWidth(1, 200); sh.setColumnWidth(2, 150); sh.setColumnWidth(3, 400);
+      sh.appendRow(['CASCO','EPP','Proteccion craneal obligatoria en toda obra de construccion.']);
+      sh.appendRow(['GUANTES','EPP','Proteccion de manos contra cortes, quimicos y abrasion.']);
+      sh.appendRow(['ARNES','EPP','Equipo anticaidas obligatorio en trabajos sobre 1.80m.']);
+      sh.appendRow(['IPERC','Normativa','Identificacion de Peligros y Evaluacion de Riesgos y Controles.']);
+      sh.appendRow(['RIESGO','Concepto','Probabilidad de que un peligro cause daño a una persona.']);
+      sh.appendRow(['PELIGRO','Concepto','Condicion o acto con potencial de causar daño.']);
+      sh.appendRow(['LOTO','Procedimiento','Bloqueo y Etiquetado de energias en mantenimiento.']);
+      sh.appendRow(['PETS','Procedimiento','Procedimiento Escrito de Trabajo Seguro.']);
+      sh.appendRow(['INCIDENTE','Evento','Evento no deseado que pudo haber causado daño.']);
+      sh.appendRow(['ACCIDENTE','Evento','Evento no deseado que causa daño a personas o bienes.']);
+      sh.appendRow(['EPP','General','Equipo de Proteccion Personal.']);
+      sh.appendRow(['BRIGADISTA','Roles','Persona entrenada para respuesta a emergencias.']);
+      creadas.push('Pupiletras_Manual');
+    }
+
+    // --- CRUCIGRAMA ---
+    if (!ss.getSheetByName('Crucigrama_Manual')) {
+      var sh = ss.insertSheet('Crucigrama_Manual');
+      sh.appendRow(['PALABRA (MAYUSCULAS SIN TILDES)','PISTA / DEFINICION']);
+      sh.getRange(1,1,1,2).setFontWeight('bold').setBackground('#00838f').setFontColor('#fff');
+      sh.setColumnWidth(1, 220); sh.setColumnWidth(2, 450);
+      sh.appendRow(['CASCO','EPP de proteccion craneal obligatorio en obra']);
+      sh.appendRow(['ARNES','EPP para trabajos en altura mayor a 1.80m']);
+      sh.appendRow(['IPERC','Matriz de Identificacion de Peligros y Evaluacion de Riesgos']);
+      sh.appendRow(['RIESGO','Probabilidad de que un peligro cause daño']);
+      sh.appendRow(['PELIGRO','Fuente o condicion con potencial de daño']);
+      sh.appendRow(['LOTO','Bloqueo y etiquetado de energias en mantenimiento']);
+      sh.appendRow(['PETS','Procedimiento Escrito de Trabajo Seguro']);
+      sh.appendRow(['INCIDENTE','Evento no deseado que pudo haber causado daño']);
+      sh.appendRow(['EPP','Equipo de Proteccion Personal']);
+      sh.appendRow(['BRIGADISTA','Persona entrenada para emergencias']);
+      creadas.push('Crucigrama_Manual');
+    }
+
     if (creadas.length === 0) {
       return { success: true, message: 'Las hojas ya existÃ­an. No se crearon nuevas.' };
     }
@@ -1926,6 +2015,47 @@ function leerDatosManualSimulacion() {
   } catch(e) { Logger.log('Manual simulacion error: ' + e.message); return null; }
 }
 
+function leerDatosManualPupiletras() {
+  try {
+    var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    var sh = ss.getSheetByName('Pupiletras_Manual');
+    if (!sh || sh.getLastRow() < 2) return null;
+    var data = sh.getDataRange().getValues();
+    var palabras = [];
+    for (var i = 1; i < data.length; i++) {
+      var raw = String(data[i][0] || '').trim().toUpperCase().replace(/[^A-Z]/g, '');
+      if (!raw || raw.length < 3) continue;
+      palabras.push({
+        palabra: raw,
+        categoria: String(data[i][1] || '').trim() || 'SST',
+        descripcion: String(data[i][2] || '').trim()
+      });
+    }
+    if (palabras.length < 4) return null;
+    palabras.sort(function() { return Math.random() - 0.5; });
+    return { palabras: palabras.slice(0, 15) };
+  } catch(e) { Logger.log('Manual pupiletras error: ' + e.message); return null; }
+}
+
+function leerDatosManualCrucigrama() {
+  try {
+    var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    var sh = ss.getSheetByName('Crucigrama_Manual');
+    if (!sh || sh.getLastRow() < 2) return null;
+    var data = sh.getDataRange().getValues();
+    var palabras = [];
+    for (var i = 1; i < data.length; i++) {
+      var raw = String(data[i][0] || '').trim().toUpperCase().replace(/[^A-Z]/g, '');
+      var pista = String(data[i][1] || '').trim();
+      if (!raw || raw.length < 3 || !pista) continue;
+      palabras.push({ palabra: raw, pista: pista });
+    }
+    if (palabras.length < 4) return null;
+    palabras.sort(function() { return Math.random() - 0.5; });
+    return { palabras: palabras.slice(0, 12) };
+  } catch(e) { Logger.log('Manual crucigrama error: ' + e.message); return null; }
+}
+
 // ===== FunciÃ³n unificada: leer manual por tipo =====
 function leerDatosManual(gameType) {
   switch(gameType) {
@@ -1934,6 +2064,8 @@ function leerDatosManual(gameType) {
     case 'memoria': return leerDatosManualMemoria();
     case 'dragdrop': return leerDatosManualDragDrop();
     case 'simulacion': return leerDatosManualSimulacion();
+    case 'pupiletras': return leerDatosManualPupiletras();
+    case 'crucigrama': return leerDatosManualCrucigrama();
     default: return null;
   }
 }

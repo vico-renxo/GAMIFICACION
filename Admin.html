@@ -123,6 +123,8 @@ body.admin-epic{display:flex;min-height:100vh;background:var(--bg,#0d1117)}
     <button class="adm-nav-item" onclick="switchSection('mahjong',this)"><span class="ni">🀄</span>Mahjong</button>
     <button class="adm-nav-item" onclick="switchSection('dragdrop',this)"><span class="ni">🎯</span>Drag &amp; Drop</button>
     <button class="adm-nav-item" onclick="switchSection('simulacion',this)"><span class="ni">🏗️</span>Simulación</button>
+    <button class="adm-nav-item" onclick="switchSection('pupiletras',this)"><span class="ni">🔤</span>Pupiletras</button>
+    <button class="adm-nav-item" onclick="switchSection('crucigrama',this)"><span class="ni">✏️</span>Crucigrama</button>
     <div class="adm-nav-sep"></div>
     <button class="adm-nav-item" onclick="switchSection('imagenes',this)"><span class="ni">🖼️</span>Imágenes</button>
     <button class="adm-nav-item" onclick="switchSection('ia',this)"><span class="ni">🤖</span>IA &amp; Config</button>
@@ -160,6 +162,12 @@ body.admin-epic{display:flex;min-height:100vh;background:var(--bg,#0d1117)}
     </div>
     <div class="dash-game-card" onclick="switchSection('simulacion',document.querySelector('[onclick*=simulacion]'))">
       <div class="dash-game-icon">🏗️</div><div class="dash-game-name">Simulación</div><div class="dash-game-count">Escenarios de riesgo</div>
+    </div>
+    <div class="dash-game-card" onclick="switchSection('pupiletras',document.querySelector('[onclick*=pupiletras]'))">
+      <div class="dash-game-icon">🔤</div><div class="dash-game-name">Pupiletras</div><div class="dash-game-count">Sopa de letras SST</div>
+    </div>
+    <div class="dash-game-card" onclick="switchSection('crucigrama',document.querySelector('[onclick*=crucigrama]'))">
+      <div class="dash-game-icon">✏️</div><div class="dash-game-name">Crucigrama</div><div class="dash-game-count">Crucigramas SSOMA</div>
     </div>
     <div class="dash-game-card" onclick="switchSection('imagenes',document.querySelector('[onclick*=imagenes]'))">
       <div class="dash-game-icon">🖼️</div><div class="dash-game-name">Imágenes</div><div class="dash-game-count">Conversor Drive URL</div>
@@ -415,6 +423,65 @@ body.admin-epic{display:flex;min-height:100vh;background:var(--bg,#0d1117)}
 </div>
 </div>
 
+<!-- ═══ SECTION: PUPILETRAS ═══ -->
+<div class="adm-section" id="sec-pupiletras">
+<div class="adm-section-hdr">
+  <div class="adm-section-title">🔤 <span>Pupiletras SSOMA</span></div>
+  <div class="adm-section-sub">Gestiona las palabras ocultas en la sopa de letras. Todas deben ir en MAYÚSCULAS sin tildes.</div>
+</div>
+<div class="adm-card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <h4>Palabras registradas</h4>
+    <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="toggleForm('pupiletrasForm')">+ Agregar palabra</button>
+  </div>
+  <div class="adm-collapsible" id="pupiletrasForm">
+    <form onsubmit="saveGameRecord(event,'pupiletras')">
+      <input type="hidden" id="pupiletrasRow">
+      <div class="adm-form-grid">
+        <div class="adm-field"><label>Palabra * (MAYÚSCULAS, sin tildes)</label><input id="pupiletras_palabra" placeholder="CASCO" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z]/g,'')"></div>
+        <div class="adm-field"><label>Categoría</label><input id="pupiletras_categoria" placeholder="EPP, Normativa, Peligro..."></div>
+        <div class="adm-field span-full"><label>Descripción (aparece al encontrar la palabra)</label><textarea id="pupiletras_descripcion" rows="2" placeholder="Protección craneal obligatoria en obra de construcción"></textarea></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px">
+        <button type="submit" class="adm-btn adm-btn-primary">💾 Guardar</button>
+        <button type="button" class="adm-btn adm-btn-secondary" onclick="cancelEdit('pupiletras')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+  <div class="adm-alert" id="pupiletrasAlert"></div>
+  <div class="adm-table-wrap"><div id="pupiletrasTable"><div class="adm-empty">Cargando...</div></div></div>
+</div>
+</div>
+
+<!-- ═══ SECTION: CRUCIGRAMA ═══ -->
+<div class="adm-section" id="sec-crucigrama">
+<div class="adm-section-hdr">
+  <div class="adm-section-title">✏️ <span>Crucigrama SSOMA</span></div>
+  <div class="adm-section-sub">Gestiona las palabras y pistas del crucigrama. El motor de layout las ordena automáticamente.</div>
+</div>
+<div class="adm-card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <h4>Palabras y pistas</h4>
+    <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="toggleForm('crucigramaForm')">+ Agregar palabra</button>
+  </div>
+  <div class="adm-collapsible" id="crucigramaForm">
+    <form onsubmit="saveGameRecord(event,'crucigrama')">
+      <input type="hidden" id="crucigramaRow">
+      <div class="adm-form-grid">
+        <div class="adm-field"><label>Palabra * (MAYÚSCULAS, sin tildes)</label><input id="crucigrama_palabra" placeholder="ARNES" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z]/g,'')"></div>
+        <div class="adm-field span-full"><label>Pista / Definición *</label><textarea id="crucigrama_pista" rows="2" placeholder="EPP anticaídas para trabajos sobre 1.80m de altura"></textarea></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px">
+        <button type="submit" class="adm-btn adm-btn-primary">💾 Guardar</button>
+        <button type="button" class="adm-btn adm-btn-secondary" onclick="cancelEdit('crucigrama')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+  <div class="adm-alert" id="crucigramaAlert"></div>
+  <div class="adm-table-wrap"><div id="crucigramaTable"><div class="adm-empty">Cargando...</div></div></div>
+</div>
+</div>
+
 <!-- ═══ SECTION: IMÁGENES ═══ -->
 <div class="adm-section" id="sec-imagenes">
 <div class="adm-section-hdr">
@@ -521,6 +588,8 @@ body.admin-epic{display:flex;min-height:100vh;background:var(--bg,#0d1117)}
       <button class="game-pill" onclick="selectGame(this,'memoria')">🧠 Memoria</button>
       <button class="game-pill" onclick="selectGame(this,'dragdrop')">🎯 Drag &amp; Drop</button>
       <button class="game-pill" onclick="selectGame(this,'simulacion')">🏗️ Simulación</button>
+      <button class="game-pill" onclick="selectGame(this,'pupiletras')">🔤 Pupiletras</button>
+      <button class="game-pill" onclick="selectGame(this,'crucigrama')">✏️ Crucigrama</button>
     </div>
   </div>
   <div class="adm-btn-row" style="margin-top:16px">
@@ -572,6 +641,8 @@ function switchSection(sec, btn) {
   else if (sec === 'mahjong') loadGameRecords('mahjong');
   else if (sec === 'dragdrop') loadGameRecords('dragdrop');
   else if (sec === 'simulacion') loadGameRecords('simulacion');
+  else if (sec === 'pupiletras') loadGameRecords('pupiletras');
+  else if (sec === 'crucigrama') loadGameRecords('crucigrama');
   else if (sec === 'dashboard') loadDashStats();
   helpContexts[sec] && (currentHelpContext = sec);
 }
@@ -586,13 +657,17 @@ const gameSchemas = {
   memoria: ['emoji','concepto','explicacion','imagen_url'],
   mahjong: ['concepto','definicion'],
   dragdrop: ['categoria','color_hex','elemento','explicacion'],
-  simulacion: ['escenario_id','titulo','descripcion_escenario','ambiente','nombre_peligro','desc_peligro','severidad','x','y','ancho','alto','solucion']
+  simulacion: ['escenario_id','titulo','descripcion_escenario','ambiente','nombre_peligro','desc_peligro','severidad','x','y','ancho','alto','solucion'],
+  pupiletras: ['palabra','categoria','descripcion'],
+  crucigrama: ['palabra','pista']
 };
 const gameLabels = {
   memoria: { emoji:'Emoji', concepto:'Concepto', explicacion:'Explicación', imagen_url:'Imagen URL' },
   mahjong: { concepto:'Concepto', definicion:'Definición' },
   dragdrop: { categoria:'Categoría', color_hex:'Color', elemento:'Elemento', explicacion:'Explicación' },
-  simulacion: { escenario_id:'ESC ID', titulo:'Título', descripcion_escenario:'Descripción', ambiente:'Ambiente', nombre_peligro:'Peligro', desc_peligro:'Desc.Peligro', severidad:'Severidad', x:'X%', y:'Y%', ancho:'Ancho%', alto:'Alto%', solucion:'Solución' }
+  simulacion: { escenario_id:'ESC ID', titulo:'Título', descripcion_escenario:'Descripción', ambiente:'Ambiente', nombre_peligro:'Peligro', desc_peligro:'Desc.Peligro', severidad:'Severidad', x:'X%', y:'Y%', ancho:'Ancho%', alto:'Alto%', solucion:'Solución' },
+  pupiletras: { palabra:'Palabra', categoria:'Categoría', descripcion:'Descripción' },
+  crucigrama: { palabra:'Palabra', pista:'Pista / Definición' }
 };
 
 /* ── CRUD ── */
@@ -857,6 +932,8 @@ const helpContexts = {
   mahjong: { title: '🀄 Mahjong SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador conecta fichas de concepto con sus definiciones. Se revelan por pares.</p><h4>Campos</h4><ul><li><strong>Concepto:</strong> Incluye un emoji al inicio (ej: 🪖 Casco)</li><li><strong>Definición:</strong> La explicación del concepto</li></ul><p>Mínimo 6 pares. El juego toma hasta 12 al azar.</p>' },
   dragdrop: { title: '🎯 Drag &amp; Drop SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador arrastra elementos y los suelta en la categoría correcta.</p><h4>Campos</h4><ul><li><strong>Categoría:</strong> El grupo al que pertenece (ej: EPP Obligatorio)</li><li><strong>Color Hex:</strong> Color visual de la categoría (ej: #e74c3c)</li><li><strong>Elemento:</strong> El ítem a clasificar</li><li><strong>Explicación:</strong> Por qué pertenece ahí</li></ul><p>Usa el mismo nombre de categoría para agrupar varios elementos. Mínimo 2 categorías.</p>' },
   simulacion: { title: '🏗️ Simulación SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador inspecciona una escena buscando zonas peligrosas clickeables.</p><h4>Campos clave</h4><ul><li><strong>Escenario ID:</strong> Todos los peligros del mismo escenario comparten este ID (ej: ESC1)</li><li><strong>Ambiente:</strong> Define el visual del fondo (<code>construccion</code>, <code>taller</code>, <code>oficina</code>)</li><li><strong>X, Y, Ancho, Alto:</strong> Porcentajes (0-100) que posicionan la zona clickeable</li><li><strong>Severidad:</strong> alta (+200pts), media (+150pts), baja (+100pts)</li></ul>' },
+  pupiletras: { title: '🔤 Pupiletras SSOMA', html: '<h4>¿Cómo funciona?</h4><p>El jugador busca palabras de SST/SSOMA ocultas en una grilla 15×15 de letras, arrastrando o haciendo clic.</p><h4>Reglas para las palabras</h4><ul><li><strong>Solo letras A-Z</strong> en MAYÚSCULAS, sin tildes ni espacios</li><li>Ejemplos: CASCO ✅ · ARNÉS ❌ → ARNES ✅</li><li>Longitud: entre 3 y 15 caracteres</li><li>Mínimo 6 palabras, máximo 15</li></ul><h4>Puntuación</h4><p>100 pts por palabra + bono por velocidad. El bono de tiempo se agrega al completar todas las palabras.</p>' },
+  crucigrama: { title: '✏️ Crucigrama SSOMA', html: '<h4>¿Cómo funciona?</h4><p>El motor genera automáticamente el layout del crucigrama cruzando las palabras. El jugador lee la pista y escribe la palabra en las celdas.</p><h4>Reglas para las palabras</h4><ul><li><strong>Solo letras A-Z</strong> en MAYÚSCULAS, sin tildes ni espacios</li><li>Ejemplos: ARNES ✅ · ARNÉS ❌</li><li>Las palabras deben poder cruzarse (compartir letras comunes)</li><li>Longitud recomendada: 4-12 caracteres</li><li>Mínimo 6 palabras</li></ul><h4>Puntuación</h4><p>150 pts por palabra + 10 pts por cada letra. Bono de tiempo al completar todo.</p>' },
   imagenes: { title: '🖼️ Imágenes', html: '<h4>¿Cómo subir imágenes?</h4><ol><li>Sube la imagen a <strong>Google Drive</strong></li><li>Click derecho → Compartir → Cualquiera con enlace → Copiar URL</li><li>Pega esa URL en el <strong>Conversor de URL</strong> de esta sección</li><li>Copia la URL directa resultante</li><li>Pégala en el campo "Imagen URL" del módulo deseado</li></ol><h4>Formatos soportados</h4><p>JPG, PNG, GIF, WEBP. Tamaño recomendado: menos de 2MB para carga rápida.</p>' },
   ia: { title: '🤖 IA &amp; Config', html: '<h4>Configuración de Gemini AI</h4><ol><li>Ve a <strong>aistudio.google.com</strong> y crea una API Key gratuita</li><li>Pégala en el campo "Gemini API Key"</li><li>Agrega el ID de tu Google Sheet</li><li>Haz clic en "Guardar configuración"</li></ol><h4>Generar contenido</h4><p>Sube un documento PDF/imagen sobre SST, elige el juego destino y haz clic en "Generar con IA". Gemini analizará el documento y creará el contenido automáticamente.</p><h4>Sin API Key</h4><p>Los juegos funcionan con el contenido manual que ingresas en cada módulo.</p>' }
 };
