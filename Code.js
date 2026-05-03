@@ -1630,6 +1630,7 @@ function getManualSheetDefinition_(gameType) {
 }
 
 function openSpreadsheet_() {
+  loadConfig_();
   return SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
 }
 
