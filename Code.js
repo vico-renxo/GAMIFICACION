@@ -1577,7 +1577,7 @@ const MANUAL_SHEETS = {
   memoria: {
     sheetName: 'Memoria_Manual',
     columns: [
-      { key: 'emoji', label: 'Emoji', required: true },
+      { key: 'imagen_url', label: 'Imagen URL (o emoji fallback)', required: true },
       { key: 'concepto', label: 'Concepto', required: true },
       { key: 'explicacion', label: 'ExplicaciÃ³n', required: false }
     ]
@@ -1773,12 +1773,14 @@ function crearHojasManuales() {
     // --- MEMORIA ---
     if (!ss.getSheetByName('Memoria_Manual')) {
       var sh = ss.insertSheet('Memoria_Manual');
-      sh.appendRow(['EMOJI','CONCEPTO (MAYÃšSCULAS)','EXPLICACION']);
+      sh.appendRow(['IMAGEN_URL (o emoji)','CONCEPTO (MAYÃšSCULAS)','EXPLICACION']);
       sh.getRange(1,1,1,3).setFontWeight('bold').setBackground('#1e88e5').setFontColor('#fff');
-      sh.setColumnWidth(1, 80); sh.setColumnWidth(2, 220); sh.setColumnWidth(3, 400);
+      sh.setColumnWidth(1, 300); sh.setColumnWidth(2, 220); sh.setColumnWidth(3, 400);
       sh.appendRow(['ðŸª–','CASCO','El casco protege la cabeza contra impactos. Obligatorio en obra.']);
       sh.appendRow(['ðŸ¥½','GAFAS','Protegen los ojos contra partÃ­culas y salpicaduras.']);
       sh.appendRow(['ðŸ§¤','GUANTES','Protegen manos contra cortes y productos quÃ­micos.']);
+      sh.getRange('D1').setValue('TIP: Pega aqui la URL directa de Google Drive: https://drive.google.com/uc?export=view&id=TU_ID');
+      sh.getRange('D1').setFontColor('#e74c3c').setFontWeight('bold');
       creadas.push('Memoria_Manual');
     }
 
@@ -2071,3 +2073,88 @@ function leerDatosManual(gameType) {
 }
 
 // genSimulacion eliminado â€” los datos ahora vienen de Simulacion_Manual
+
+// ============================================================
+// 🖼️ MEMORIA: UPLOAD A DRIVE + BATCH SAVE + GEMINI VISION
+// ============================================================
+
+function uploadImageToDrive(base64, fileName, mimeType) {
+  try {
+    var safeType = mimeType || 'image/jpeg';
+    var safeName = fileName || ('sst_img_' + new Date().getTime() + '.jpg');
+    var blob = Utilities.newBlob(Utilities.base64Decode(base64), safeType, safeName);
+    var folderName = 'SST_GameHub_Images';
+    var folder;
+    var folders = DriveApp.getFoldersByName(folderName);
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder(folderName);
+    }
+    var file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return {
+      success: true,
+      url: 'https://drive.google.com/uc?export=view&id=' + file.getId(),
+      fileId: file.getId()
+    };
+  } catch(e) {
+    return { success: false, error: e.message };
+  }
+}
+
+function analizarImagenesMemoria(imagesData) {
+  loadConfig_();
+  var results = (imagesData || []).map(function() { return { concepto: '', explicacion: '' }; });
+  if (!CONFIG.USE_REAL_API) {
+    return { success: false, error: 'API Key no configurada. Ve a la sección IA & Config.', results: results };
+  }
+  var errors = [];
+  for (var i = 0; i < imagesData.length; i++) {
+    var img = imagesData[i];
+    if (!img.base64) continue;
+    var prompt = 'Analiza esta imagen relacionada con Seguridad y Salud en el Trabajo (SST/SSOMA). ' +
+      'Responde UNICAMENTE con JSON valido:\n' +
+      '{"concepto":"NOMBRE EN MAYUSCULAS MAX 4 PALABRAS","explicacion":"Una oracion educativa sobre esta herramienta o EPP en seguridad laboral (max 20 palabras)"}';
+    var result = callGeminiAI(prompt, { base64: img.base64, mimeType: img.mimeType || 'image/jpeg' });
+    if (result.data && result.data.concepto) {
+      results[i] = {
+        concepto: String(result.data.concepto || '').toUpperCase().trim(),
+        explicacion: String(result.data.explicacion || '').trim()
+      };
+    } else {
+      errors.push('Imagen ' + (i + 1) + ': ' + (result.error || 'Sin respuesta'));
+    }
+  }
+  return { success: true, results: results, errors: errors };
+}
+
+function guardarBatchMemoria(rows) {
+  try {
+    crearHojasManuales();
+    var ss = openSpreadsheet_();
+    var sh = ss.getSheetByName('Memoria_Manual');
+    if (!sh) return { success: false, error: 'Hoja Memoria_Manual no encontrada.' };
+    var saved = 0;
+    var uploadErrors = [];
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      if (!row.concepto && !row.base64 && !row.imageUrl) continue;
+      var imageUrl = row.imageUrl || '';
+      if (row.base64) {
+        var upResult = uploadImageToDrive(row.base64, row.fileName || ('mem_' + i + '.jpg'), row.mimeType || 'image/jpeg');
+        if (upResult.success) {
+          imageUrl = upResult.url;
+        } else {
+          uploadErrors.push('Fila ' + (i + 1) + ': ' + upResult.error);
+          imageUrl = row.imageUrl || '🖼️';
+        }
+      }
+      sh.appendRow([imageUrl, String(row.concepto || '').trim(), String(row.explicacion || '').trim()]);
+      saved++;
+    }
+    return { success: true, saved: saved, uploadErrors: uploadErrors };
+  } catch(e) {
+    return { success: false, error: e.message };
+  }
+}

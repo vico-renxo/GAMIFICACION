@@ -106,6 +106,27 @@ body.admin-epic{display:flex;min-height:100vh;background:var(--bg,#0d1117)}
 .dash-game-name{font-size:.85rem;font-weight:700;color:#fff}
 .dash-game-count{font-size:.75rem;color:rgba(255,255,255,.35);margin-top:4px}
 @media(max-width:768px){.adm-sidebar{transform:translateX(-100%);transition:transform .3s}.adm-main{margin-left:0;padding:20px 16px}.adm-form-grid{grid-template-columns:1fr}.adm-grid2{grid-template-columns:1fr}.adm-grid3{grid-template-columns:1fr 1fr}}
+
+/* ── MEMORIA BATCH FORM ── */
+.mem-batch-header{display:grid;grid-template-columns:28px 120px 1fr 1fr 32px;gap:8px;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px;font-size:.72rem;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.mem-batch-row{display:grid;grid-template-columns:28px 120px 1fr 1fr 32px;gap:8px;align-items:start;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid rgba(150,190,255,.06);margin-bottom:6px;transition:border-color .15s}
+.mem-batch-row:hover{border-color:rgba(59,220,255,.15)}
+.mem-row-num{font-size:.78rem;font-weight:700;color:rgba(255,255,255,.3);padding-top:38px;text-align:center}
+.mem-img-zone{width:110px;height:110px;border:2px dashed rgba(59,220,255,.3);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:rgba(59,220,255,.04);overflow:hidden;position:relative;flex-shrink:0}
+.mem-img-zone:hover,.mem-img-zone.dragover{border-color:var(--cyan,#3bdcff);background:rgba(59,220,255,.1)}
+.mem-img-zone img{width:100%;height:100%;object-fit:cover;border-radius:8px;display:block}
+.mem-img-zone .mem-img-ph{font-size:.7rem;color:rgba(255,255,255,.3);text-align:center;pointer-events:none;padding:8px}
+.mem-img-zone .mem-img-ph span{font-size:1.8rem;display:block;margin-bottom:4px}
+.mem-img-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.mem-field{display:flex;flex-direction:column;gap:4px}
+.mem-field label{font-size:.7rem;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.4px}
+.mem-field input,.mem-field textarea{background:rgba(255,255,255,.06);border:1px solid rgba(150,190,255,.12);border-radius:8px;color:#f4f8ff;font-family:inherit;font-size:.82rem;padding:8px 10px;resize:vertical;outline:none;transition:border-color .15s}
+.mem-field input:focus,.mem-field textarea:focus{border-color:rgba(59,220,255,.4)}
+.mem-field textarea{min-height:72px}
+.mem-del-btn{padding:4px 6px;background:rgba(255,111,125,.12);border:1px solid rgba(255,111,125,.2);border-radius:6px;color:rgba(255,111,125,.7);cursor:pointer;font-size:.85rem;transition:all .15s;margin-top:34px}
+.mem-del-btn:hover{background:rgba(255,111,125,.25);color:#ff6f7d}
+.mem-ai-badge{display:inline-block;padding:2px 6px;background:rgba(139,123,255,.2);border-radius:4px;font-size:.68rem;color:var(--violet,#8b7bff);font-weight:700}
+@media(max-width:900px){.mem-batch-header{display:none}.mem-batch-row{grid-template-columns:1fr;gap:6px}.mem-row-num,.mem-del-btn{margin-top:0}}
 </style>
 </head>
 <body class="sst-shell page-admin admin-epic">
@@ -263,38 +284,41 @@ body.admin-epic{display:flex;min-height:100vh;background:var(--bg,#0d1117)}
 <!-- ═══ SECTION: MEMORIA ═══ -->
 <div class="adm-section" id="sec-memoria">
 <div class="adm-section-hdr">
-  <div class="adm-section-title">🧠 <span>Memoria SST</span></div>
-  <div class="adm-section-sub">Pares de tarjetas: emoji + concepto. El juego toma hasta 8 pares al azar.</div>
+  <div class="adm-section-title">🧠 <span>Memoria SST — Imágenes</span></div>
+  <div class="adm-section-sub">Carga imágenes de EPP/SST en grupos de 10. La IA rellena Concepto y Explicación automáticamente con Gemini Vision.</div>
 </div>
+
+<!-- BATCH UPLOAD CARD -->
 <div class="adm-card adm-card-accent-blue">
-  <h4>➕ Agregar par de tarjetas
-    <button class="adm-btn adm-btn-primary adm-btn-sm" style="margin-left:auto" onclick="toggleForm('memoriaForm')">Nuevo par</button>
-  </h4>
-  <div class="adm-collapsible" id="memoriaForm">
-    <div style="background:rgba(255,255,255,.03);border-radius:14px;padding:20px;margin-bottom:16px">
-      <input type="hidden" id="memoriaRow">
-      <div class="adm-form-grid">
-        <div class="adm-field"><label>Emoji *</label><input id="memoria_emoji" placeholder="🪖"></div>
-        <div class="adm-field"><label>Concepto *</label><input id="memoria_concepto" placeholder="CASCO DE SEGURIDAD"></div>
-        <div class="adm-field span-full"><label>Explicación</label><textarea id="memoria_explicacion" rows="2" placeholder="Descripción que aparece al hacer match"></textarea></div>
-        <div class="adm-field span-full"><label>🖼️ Imagen URL (opcional)</label><input id="memoria_imagen_url" placeholder="https://drive.google.com/uc?export=view&id=..."></div>
-      </div>
-      <div class="adm-btn-row">
-        <button class="adm-btn adm-btn-primary" onclick="saveGameRecord('memoria')">💾 Guardar</button>
-        <button class="adm-btn adm-btn-secondary" onclick="resetGameForm('memoria')">Limpiar</button>
-      </div>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+    <h4 style="margin:0">📦 Carga masiva por imágenes</h4>
+    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="adm-btn adm-btn-secondary adm-btn-sm" onclick="addMemRows(10)">+ 10 filas</button>
+      <button id="btnAIMemoria" class="adm-btn adm-btn-primary adm-btn-sm" onclick="aiCompleteMemoria()">🤖 IA: Completar vacíos</button>
+      <button class="adm-btn adm-btn-primary adm-btn-sm" style="background:linear-gradient(135deg,#39d98a,#2baa6b)" onclick="saveBatchMemoria()">💾 Guardar lote</button>
     </div>
   </div>
   <div class="adm-alert" id="memoriaAlert"></div>
-  <div class="adm-table-wrap"><div id="memoriaTable"><div class="adm-empty">Cargando...</div></div></div>
-</div>
-<div class="adm-card" style="border-left:3px solid rgba(59,130,246,.5)">
-  <h4>📋 Formato de columnas en Google Sheet</h4>
-  <div class="adm-table-wrap">
-    <table class="adm-table"><thead><tr><th>EMOJI</th><th>CONCEPTO</th><th>EXPLICACION</th><th>IMAGEN_URL</th></tr></thead>
-    <tbody><tr><td>🪖</td><td>CASCO</td><td>El casco protege la cabeza...</td><td>(opcional)</td></tr></tbody></table>
+
+  <!-- COLUMN HEADERS -->
+  <div class="mem-batch-header">
+    <div>#</div>
+    <div>🖼️ Imagen (arrastra o click)</div>
+    <div>CONCEPTO (MAYÚSCULAS)</div>
+    <div>Explicación educativa</div>
+    <div></div>
   </div>
-  <p style="color:rgba(255,255,255,.4);font-size:.8rem;margin-top:10px">Mínimo 4 pares. El juego toma hasta 8 al azar. Concepto en MAYÚSCULAS.</p>
+  <div id="memBatchRows"></div>
+  <button class="adm-btn adm-btn-secondary" style="width:100%;margin-top:10px;border-style:dashed" onclick="addMemRows(10)">+ Agregar 10 filas más</button>
+</div>
+
+<!-- EXISTING RECORDS TABLE -->
+<div class="adm-card">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <h4>📋 Pares guardados en Google Sheet</h4>
+    <button class="adm-btn adm-btn-secondary adm-btn-sm" style="margin-left:auto" onclick="loadGameRecords('memoria')">🔄 Recargar</button>
+  </div>
+  <div class="adm-table-wrap"><div id="memoriaTable"><div class="adm-empty">Cargando...</div></div></div>
 </div>
 </div>
 
@@ -637,7 +661,7 @@ function switchSection(sec, btn) {
   else { const nb = document.querySelector('.adm-nav-item[onclick*="' + sec + '"]'); if (nb) nb.classList.add('active'); }
   currentSection = sec;
   if (sec === 'kahoot') loadKahootArenas();
-  else if (sec === 'memoria') loadGameRecords('memoria');
+  else if (sec === 'memoria') { loadGameRecords('memoria'); if (!memRows.length) initMemBatch(); }
   else if (sec === 'mahjong') loadGameRecords('mahjong');
   else if (sec === 'dragdrop') loadGameRecords('dragdrop');
   else if (sec === 'simulacion') loadGameRecords('simulacion');
@@ -654,7 +678,7 @@ function goBack(){try{google.script.run.withSuccessHandler(function(u){window.to
 
 /* ── GAME SCHEMAS ── */
 const gameSchemas = {
-  memoria: ['emoji','concepto','explicacion','imagen_url'],
+  memoria: ['imagen_url','concepto','explicacion'],
   mahjong: ['concepto','definicion'],
   dragdrop: ['categoria','color_hex','elemento','explicacion'],
   simulacion: ['escenario_id','titulo','descripcion_escenario','ambiente','nombre_peligro','desc_peligro','severidad','x','y','ancho','alto','solucion'],
@@ -662,7 +686,7 @@ const gameSchemas = {
   crucigrama: ['palabra','pista']
 };
 const gameLabels = {
-  memoria: { emoji:'Emoji', concepto:'Concepto', explicacion:'Explicación', imagen_url:'Imagen URL' },
+  memoria: { imagen_url:'Imagen', concepto:'Concepto', explicacion:'Explicación' },
   mahjong: { concepto:'Concepto', definicion:'Definición' },
   dragdrop: { categoria:'Categoría', color_hex:'Color', elemento:'Elemento', explicacion:'Explicación' },
   simulacion: { escenario_id:'ESC ID', titulo:'Título', descripcion_escenario:'Descripción', ambiente:'Ambiente', nombre_peligro:'Peligro', desc_peligro:'Desc.Peligro', severidad:'Severidad', x:'X%', y:'Y%', ancho:'Ancho%', alto:'Alto%', solucion:'Solución' },
@@ -762,6 +786,161 @@ function deleteGameRecord(game, row) {
 }
 
 function esc(v) { return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ── MEMORIA BATCH UPLOAD ── */
+let memRows = [];
+let _memNextIdx = 0;
+
+function initMemBatch() {
+  memRows = [];
+  _memNextIdx = 0;
+  document.getElementById('memBatchRows').innerHTML = '';
+  addMemRows(10);
+}
+
+function addMemRows(n) {
+  const container = document.getElementById('memBatchRows');
+  for (let i = 0; i < n; i++) {
+    const idx = _memNextIdx++;
+    memRows.push({ base64: null, mimeType: null, fileName: null, preview: null, concepto: '', explicacion: '' });
+    const row = document.createElement('div');
+    row.className = 'mem-batch-row';
+    row.id = 'mbr-' + idx;
+    row.innerHTML = `
+      <div class="mem-row-num">${idx + 1}</div>
+      <div class="mem-img-zone" id="miz-${idx}"
+           ondragover="event.preventDefault();this.classList.add('dragover')"
+           ondragleave="this.classList.remove('dragover')"
+           ondrop="onMemDrop(event,${idx})">
+        <div class="mem-img-ph" id="miph-${idx}"><span>🖼️</span>Arrastra o click</div>
+        <img id="miprev-${idx}" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:8px">
+        <input type="file" accept="image/*" onchange="onMemFile(event,${idx})">
+      </div>
+      <div class="mem-field">
+        <label>Concepto <span class="mem-ai-badge" id="maib-${idx}" style="display:none">🤖 IA</span></label>
+        <input id="mc-${idx}" placeholder="CASCO DE SEGURIDAD" oninput="memRows[${idx}].concepto=this.value.toUpperCase();this.value=this.value.toUpperCase()" onchange="memRows[${idx}].concepto=this.value">
+      </div>
+      <div class="mem-field">
+        <label>Explicación <span class="mem-ai-badge" id="meaib-${idx}" style="display:none">🤖 IA</span></label>
+        <textarea id="me-${idx}" placeholder="Descripción educativa que aparece al encontrar el par..." oninput="memRows[${idx}].explicacion=this.value"></textarea>
+      </div>
+      <button class="mem-del-btn" onclick="clearMemRow(${idx})" title="Limpiar fila">✕</button>`;
+    container.appendChild(row);
+  }
+}
+
+function onMemFile(event, idx) {
+  const file = event.target.files[0];
+  if (!file) return;
+  loadMemImage(file, idx);
+}
+
+function onMemDrop(event, idx) {
+  event.preventDefault();
+  document.getElementById('miz-' + idx).classList.remove('dragover');
+  const file = event.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) { admToast('Solo se aceptan imágenes.', 'err'); return; }
+  loadMemImage(file, idx);
+}
+
+function loadMemImage(file, idx) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    const base64 = dataUrl.split(',')[1];
+    memRows[idx].base64 = base64;
+    memRows[idx].mimeType = file.type;
+    memRows[idx].fileName = file.name;
+    memRows[idx].preview = dataUrl;
+    const ph = document.getElementById('miph-' + idx);
+    const prev = document.getElementById('miprev-' + idx);
+    if (ph) ph.style.display = 'none';
+    if (prev) { prev.src = dataUrl; prev.style.display = 'block'; }
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearMemRow(idx) {
+  memRows[idx] = { base64: null, mimeType: null, fileName: null, preview: null, concepto: '', explicacion: '' };
+  const ph = document.getElementById('miph-' + idx);
+  const prev = document.getElementById('miprev-' + idx);
+  if (ph) ph.style.display = 'flex';
+  if (prev) { prev.src = ''; prev.style.display = 'none'; }
+  const mc = document.getElementById('mc-' + idx);
+  const me = document.getElementById('me-' + idx);
+  if (mc) mc.value = '';
+  if (me) me.value = '';
+  const aib = document.getElementById('maib-' + idx);
+  const meaib = document.getElementById('meaib-' + idx);
+  if (aib) aib.style.display = 'none';
+  if (meaib) meaib.style.display = 'none';
+}
+
+function aiCompleteMemoria() {
+  const imagesData = [];
+  for (let i = 0; i < memRows.length; i++) {
+    const r = memRows[i];
+    if (r.base64 && (!r.concepto || !r.explicacion)) {
+      imagesData.push({ base64: r.base64, mimeType: r.mimeType || 'image/jpeg', index: i });
+    }
+  }
+  if (!imagesData.length) { admToast('No hay imágenes sin concepto para analizar. Arrastra imágenes primero.', 'warn'); return; }
+  const btn = document.getElementById('btnAIMemoria');
+  btn.disabled = true;
+  btn.textContent = '⏳ Analizando ' + imagesData.length + ' imagen(es)...';
+  try {
+    google.script.run
+      .withSuccessHandler(function(resp) {
+        btn.disabled = false; btn.textContent = '🤖 IA: Completar vacíos';
+        if (!resp || !resp.success) { admToast((resp && resp.error) || 'Error de IA. Verifica tu API Key en Configuración.', 'err'); return; }
+        const results = resp.results || [];
+        let filled = 0;
+        results.forEach(function(r, j) {
+          if (!r.concepto) return;
+          const realIdx = imagesData[j].index;
+          if (!memRows[realIdx].concepto) { memRows[realIdx].concepto = r.concepto; document.getElementById('mc-' + realIdx).value = r.concepto; const b = document.getElementById('maib-' + realIdx); if (b) b.style.display = ''; }
+          if (!memRows[realIdx].explicacion) { memRows[realIdx].explicacion = r.explicacion; document.getElementById('me-' + realIdx).value = r.explicacion; const b = document.getElementById('meaib-' + realIdx); if (b) b.style.display = ''; }
+          filled++;
+        });
+        if (resp.errors && resp.errors.length) admToast(filled + ' rellenados. Algunos errores: ' + resp.errors.slice(0,2).join(' | '), 'warn');
+        else admToast('✅ ' + filled + ' pares completados por Gemini Vision.', 'ok');
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false; btn.textContent = '🤖 IA: Completar vacíos';
+        admToast('Error: ' + (err.message || String(err)), 'err');
+      })
+      .analizarImagenesMemoria(imagesData);
+  } catch(e) { btn.disabled = false; btn.textContent = '🤖 IA: Completar vacíos'; admToast('Requiere Apps Script desplegado.', 'err'); }
+}
+
+function saveBatchMemoria() {
+  const toSave = [];
+  for (let i = 0; i < memRows.length; i++) {
+    const r = memRows[i];
+    if (!r.base64 && !r.concepto) continue;
+    if (!r.concepto) { admToast('Fila ' + (i+1) + ' tiene imagen pero falta el concepto. Usa IA o escríbelo manualmente.', 'warn'); return; }
+    toSave.push({ base64: r.base64, mimeType: r.mimeType, fileName: r.fileName, concepto: r.concepto, explicacion: r.explicacion });
+  }
+  if (!toSave.length) { admToast('No hay datos para guardar. Agrega imágenes y conceptos primero.', 'warn'); return; }
+  const alertEl = document.getElementById('memoriaAlert');
+  if (alertEl) { alertEl.className = 'adm-alert warn'; alertEl.textContent = '⏳ Subiendo ' + toSave.length + ' imagen(es) a Google Drive...'; alertEl.style.display = 'block'; }
+  try {
+    google.script.run
+      .withSuccessHandler(function(resp) {
+        if (alertEl) alertEl.style.display = 'none';
+        if (!resp || !resp.success) { admToast((resp && resp.error) || 'Error al guardar.', 'err'); return; }
+        admToast('✅ ' + resp.saved + ' pares guardados en Google Sheet.', 'ok');
+        if (resp.uploadErrors && resp.uploadErrors.length) admToast('⚠️ Algunos uploads fallaron: ' + resp.uploadErrors[0], 'warn');
+        initMemBatch();
+        loadGameRecords('memoria');
+      })
+      .withFailureHandler(function(err) {
+        if (alertEl) alertEl.style.display = 'none';
+        admToast('Error: ' + (err.message || String(err)), 'err');
+      })
+      .guardarBatchMemoria(toSave);
+  } catch(e) { if (alertEl) alertEl.style.display = 'none'; admToast('Requiere Apps Script desplegado.', 'err'); }
+}
 
 /* ── DASHBOARD STATS ── */
 function loadDashStats() {
@@ -928,7 +1107,7 @@ function loadKahootQuestions() {
 const helpContexts = {
   dashboard: { title: '📊 Dashboard', html: '<h4>¿Qué es el Centro de Mando?</h4><p>Desde aquí controlas TODO el contenido de los juegos sin tocar Google Sheets. Haz clic en cualquier módulo para administrar su contenido.</p><h4>Flujo recomendado</h4><ol><li>Agrega registros en cada módulo (Memoria, Mahjong, etc.)</li><li>Los juegos leen esos datos automáticamente como primera prioridad</li><li>Usa la sección IA &amp; Config para generar contenido adicional con Gemini</li></ol>' },
   kahoot: { title: '🚀 Kahoot Arena', html: '<h4>¿Cómo funciona?</h4><p>Kahoot tiene <strong>Arenas</strong> (temas) con <strong>Preguntas</strong>. El jugador elige una arena y responde sus preguntas contra el reloj.</p><h4>Pasos</h4><ol><li>Crea una arena con un título (ej: "Trabajo en Altura")</li><li>Selecciona esa arena en el selector de preguntas</li><li>Agrega las preguntas con sus 4 opciones e indica la correcta (1-4)</li><li>Opcional: agrega una imagen URL y GIFs de retroalimentación</li></ol><h4>Imagen en preguntas</h4><p>Ve a la sección <strong>🖼️ Imágenes</strong>, convierte tu URL de Drive y pégala en el campo "Imagen URL" de la pregunta.</p>' },
-  memoria: { title: '🧠 Memoria SST', html: '<h4>¿Cómo funciona?</h4><p>Juego de memoria tipo flip-card. El jugador voltea tarjetas y debe encontrar los pares emoji-concepto.</p><h4>Campos</h4><ul><li><strong>Emoji:</strong> Un emoji que representa el concepto (ej: 🪖)</li><li><strong>Concepto:</strong> En MAYÚSCULAS (ej: CASCO DE SEGURIDAD)</li><li><strong>Explicación:</strong> Se muestra cuando el jugador encuentra el par</li><li><strong>Imagen URL:</strong> Imagen de Google Drive (opcional)</li></ul><p>Mínimo 4 pares. El juego toma hasta 8 al azar.</p>' },
+  memoria: { title: '🧠 Memoria SST', html: '<h4>¿Cómo funciona?</h4><p>Juego de memoria tipo flip-card. El jugador voltea tarjetas y debe encontrar los pares imagen-concepto.</p><h4>Flujo para agregar pares</h4><ol><li>Arrastra o haz clic en cada zona de imagen para cargar una foto SST</li><li>Llena los campos <strong>Concepto</strong> y <strong>Explicación</strong> — o usa el botón <strong>🤖 Completar con IA</strong> para que Gemini Vision los auto-rellene</li><li>Haz clic en <strong>💾 Guardar batch</strong> para subir las imágenes a Drive y guardar en la hoja</li></ol><h4>Campos</h4><ul><li><strong>Imagen:</strong> URL de Drive (sube vía batch) o emoji como fallback</li><li><strong>Concepto:</strong> En MAYÚSCULAS (ej: CASCO DE SEGURIDAD)</li><li><strong>Explicación:</strong> Se muestra cuando el jugador encuentra el par</li></ul><p>Mínimo 4 pares. El juego toma hasta 8 al azar.</p>' },
   mahjong: { title: '🀄 Mahjong SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador conecta fichas de concepto con sus definiciones. Se revelan por pares.</p><h4>Campos</h4><ul><li><strong>Concepto:</strong> Incluye un emoji al inicio (ej: 🪖 Casco)</li><li><strong>Definición:</strong> La explicación del concepto</li></ul><p>Mínimo 6 pares. El juego toma hasta 12 al azar.</p>' },
   dragdrop: { title: '🎯 Drag &amp; Drop SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador arrastra elementos y los suelta en la categoría correcta.</p><h4>Campos</h4><ul><li><strong>Categoría:</strong> El grupo al que pertenece (ej: EPP Obligatorio)</li><li><strong>Color Hex:</strong> Color visual de la categoría (ej: #e74c3c)</li><li><strong>Elemento:</strong> El ítem a clasificar</li><li><strong>Explicación:</strong> Por qué pertenece ahí</li></ul><p>Usa el mismo nombre de categoría para agrupar varios elementos. Mínimo 2 categorías.</p>' },
   simulacion: { title: '🏗️ Simulación SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador inspecciona una escena buscando zonas peligrosas clickeables.</p><h4>Campos clave</h4><ul><li><strong>Escenario ID:</strong> Todos los peligros del mismo escenario comparten este ID (ej: ESC1)</li><li><strong>Ambiente:</strong> Define el visual del fondo (<code>construccion</code>, <code>taller</code>, <code>oficina</code>)</li><li><strong>X, Y, Ancho, Alto:</strong> Porcentajes (0-100) que posicionan la zona clickeable</li><li><strong>Severidad:</strong> alta (+200pts), media (+150pts), baja (+100pts)</li></ul>' },

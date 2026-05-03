@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SST GameHub - Memoria</title>
 <?!= include('css'); ?>
+<style>
+/* ── Tarjetas con imagen ── */
+.card-back .card-img{width:100%;height:72%;object-fit:cover;border-radius:10px;margin-bottom:5px;display:block}
+.card-back .card-txt{font-family:'Fredoka',cursive;font-size:.88rem;font-weight:700;color:var(--text-base);line-height:1.2;text-align:center;padding:0 4px}
+.card-back .card-emoji-lg{font-size:2.2rem;margin-bottom:4px;display:block}
+.card.img-card{aspect-ratio:3/4}
+.card.img-card .card-back{padding:8px}
+</style>
 </head>
 <body class="sst-shell page-memoria game-epic">
 <div class="animated-bg"><div class="floating-shapes"><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div><div class="shape"></div></div></div>
@@ -55,11 +63,27 @@ document.addEventListener('DOMContentLoaded',()=>{
   startGame();
 });
 
+function isImgUrl(s){return typeof s==='string'&&(s.startsWith('http')||s.startsWith('data:'));}
+
+function cardBackHTML(c){
+  if(c.side==='front'&&isImgUrl(c.display)){
+    return `<img class="card-img" src="${c.display}" alt="${c.pair.back}" onerror="this.outerHTML='<span class=card-emoji-lg>🖼️</span>'"><div class="card-txt">${c.pair.back}</div>`;
+  }
+  if(c.side==='front'){
+    return `<span class="card-emoji-lg">${c.display}</span><div class="card-txt">${c.pair.back}</div>`;
+  }
+  return `<div class="card-txt" style="font-size:1rem;font-weight:900">${c.display}</div>`;
+}
+
 async function getDataFromAI(){
-  return new Promise(r=>{try{google.script.run.withSuccessHandler(function(d){if(d&&d.pairs)r(d);else r(simAI())}).withFailureHandler(function(){r(simAI())}).getAIContent('memoria',{pairs:8})}catch(e){r(simAI())}});
+  return new Promise(r=>{
+    const s=sessionStorage.getItem('sst_user')||sessionStorage.getItem('sst_u');
+    if(s&&!currentUser)try{currentUser=JSON.parse(s)}catch(e){}
+    try{google.script.run.withSuccessHandler(function(d){if(d&&d.pairs)r(d);else r(simAI())}).withFailureHandler(function(){r(simAI())}).getAIContent('memoria',{pairs:8})}catch(e){r(simAI())}
+  });
 }
 function simAI(){
-  return{pairs:[{id:1,front:"📊",back:"SIN DATOS",explanation:"Llena la hoja Memoria_Manual en tu Google Sheet."}]};
+  return{pairs:[{id:1,front:"🖼️",back:"SIN DATOS",explanation:"Llena la hoja Memoria_Manual con imágenes SST desde el Admin."}]};
 }
 
 async function startGame(){
@@ -74,8 +98,8 @@ async function startGame(){
 
   cards=[];
   gameData.pairs.forEach(p=>{
-    cards.push({pairId:p.id,side:'front',display:p.front,pair:p});
-    cards.push({pairId:p.id,side:'back',display:p.back,pair:p});
+    cards.push({pairId:p.id,side:'front',display:p.front,pair:p,isImg:isImgUrl(p.front)});
+    cards.push({pairId:p.id,side:'back',display:p.back,pair:p,isImg:false});
   });
   for(let i=cards.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cards[i],cards[j]]=[cards[j],cards[i]]}
   renderBoard();
@@ -85,8 +109,10 @@ async function startGame(){
 function renderBoard(){
   const b=document.getElementById('board');b.innerHTML='';
   cards.forEach((c,i)=>{
-    const el=document.createElement('div');el.className='card';el.dataset.idx=i;
-    el.innerHTML=`<div class="card-inner"><div class="card-face card-front"><div class="icon">🛡️</div><div class="label">SST</div></div><div class="card-face card-back"><div class="emoji">${c.display}</div><div class="text">${c.side==='back'?c.display:''}</div></div></div>`;
+    const el=document.createElement('div');
+    el.className='card'+(c.isImg?' img-card':'');
+    el.dataset.idx=i;
+    el.innerHTML=`<div class="card-inner"><div class="card-face card-front"><div class="icon">🛡️</div><div class="label">SST</div></div><div class="card-face card-back">${cardBackHTML(c)}</div></div>`;
     el.onclick=()=>flipCard(i,el);b.appendChild(el);
     el.style.opacity='0';el.style.transform='translateY(16px)';
     setTimeout(()=>{el.style.transition='all .4s ease';el.style.opacity='1';el.style.transform=''},i*40+150);
@@ -115,7 +141,8 @@ function handleMiss(a,b){
   errors++;score=Math.max(0,score-20);updateStats();
   if(typeof SFX!=='undefined')SFX.play('wrong');
   a.el.classList.add('wrong');b.el.classList.add('wrong');
-  showExp('error','❌ No son pareja',`${a.card.pair.front} = "${a.card.pair.back}". ${a.card.pair.explanation}`);
+  const frontLabel=isImgUrl(a.card.pair.front)?'[imagen] → '+a.card.pair.back:a.card.pair.front;
+  showExp('error','❌ No son pareja',`${frontLabel}. ${a.card.pair.explanation||''}`);
   setTimeout(()=>{a.el.classList.remove('flipped','wrong');b.el.classList.remove('flipped','wrong');flipped=[];processing=false},400);
 }
 
