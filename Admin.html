@@ -722,7 +722,13 @@ function renderGameTable(game, records) {
   const labels = gameLabels[game] || {};
   const heads = cols.map(c => '<th>' + (labels[c] || c) + '</th>').join('');
   const rows = records.map(r => {
-    const cells = cols.map(c => '<td>' + esc(String(r[c] || '')) + '</td>').join('');
+    const cells = cols.map(c => {
+      const val = String(r[c] || '');
+      if (c === 'imagen_url' && (val.startsWith('http') || val.startsWith('data:'))) {
+        return '<td><img src="' + esc(val) + '" style="width:52px;height:52px;object-fit:cover;border-radius:7px;vertical-align:middle" onerror="this.outerHTML=\'🖼️\'"></td>';
+      }
+      return '<td>' + esc(val) + '</td>';
+    }).join('');
     return '<tr>' + cells + '<td style="white-space:nowrap"><button class="adm-btn adm-btn-secondary adm-btn-sm" onclick="editGameRecord(\'' + game + '\',' + r.row + ')">✏️</button> <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteGameRecord(\'' + game + '\',' + r.row + ')">🗑️</button></td></tr>';
   }).join('');
   tableEl.innerHTML = '<div class="adm-table-wrap"><table class="adm-table"><thead><tr>' + heads + '<th>Acciones</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
@@ -818,7 +824,7 @@ function addMemRows(n) {
       </div>
       <div class="mem-field">
         <label>Concepto <span class="mem-ai-badge" id="maib-${idx}" style="display:none">🤖 IA</span></label>
-        <input id="mc-${idx}" placeholder="CASCO DE SEGURIDAD" oninput="memRows[${idx}].concepto=this.value.toUpperCase();this.value=this.value.toUpperCase()" onchange="memRows[${idx}].concepto=this.value">
+        <input id="mc-${idx}" placeholder="CASCO DE SEGURIDAD" oninput="memRows[${idx}].concepto=this.value.toUpperCase();this.value=this.value.toUpperCase()" onchange="memRows[${idx}].concepto=this.value.toUpperCase();this.value=this.value.toUpperCase()">
       </div>
       <div class="mem-field">
         <label>Explicación <span class="mem-ai-badge" id="meaib-${idx}" style="display:none">🤖 IA</span></label>

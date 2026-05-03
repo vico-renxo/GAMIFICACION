@@ -2126,8 +2126,9 @@ function analizarImagenesMemoria(imagesData) {
 
 function guardarBatchMemoria(rows) {
   try {
+    loadConfig_();
     crearHojasManuales();
-    var ss = openSpreadsheet_();
+    var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
     var sh = ss.getSheetByName('Memoria_Manual');
     if (!sh) return { success: false, error: 'Hoja Memoria_Manual no encontrada.' };
     var saved = 0;
