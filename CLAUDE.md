@@ -18,16 +18,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Entry point:** `Code.js` → `doGet(e)` routes to the correct HTML page via `?page=PageName`
 - **Routing table in Code.js (`PAGE_FILES`):**
   ```
-  Portal → Portal.html
-  Admin  → Admin.html
-  Kahoot → kahoot.html
-  Mahjong → Mahjong.html
-  Memoria → Memoria.html
-  DragDrop → DragDrop.html
-  Quiz → Quiz.html
+  Portal     → Portal.html
+  Admin      → Admin.html
+  Kahoot     → kahoot.html
+  Mahjong    → Mahjong.html
+  Memoria    → Memoria.html
+  DragDrop   → DragDrop.html
+  Quiz       → Quiz.html
   Simulacion → Simulación.html
-  Pupiletras → Pupiletras.html   (new)
-  Crucigrama → Crucigrama.html   (new)
+  Pupiletras → Pupiletras.html
+  Crucigrama → Crucigrama.html
   ```
 - **No local run.** To test: copy files into the GAS editor at script.google.com and deploy as Web App.
 - **Shared CSS:** All game pages use `<?!= include('css'); ?>` which injects `css.html` at render time. Portal.html and Admin.html have their own inline `<style>`.
@@ -39,16 +39,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | File | Purpose |
 |------|---------|
-| `Code.js` | Entire GAS backend (~1700 lines). Auth, Sheets CRUD, AI calls, data serving |
+| `Code.js` | Entire GAS backend (~2200 lines). Auth, Sheets CRUD, AI calls, data serving, Drive upload |
 | `css.html` | Shared CSS design system injected into all game pages |
 | `Portal.html` | Dashboard with login (DNI), sidebar nav, XP/badge system, game launcher |
-| `Admin.html` | Admin control panel — neon glass dark theme, self-contained CSS |
+| `Admin.html` | Admin control panel — neon glass dark theme, self-contained CSS, batch Memoria upload |
 | `kahoot.html` | Kahoot-style quiz battle with arenas, timer, GIF reactions |
-| `Memoria.html` | Memory card matching game (emoji ↔ concept pairs) |
+| `Memoria.html` | Memory card flip game — renders Drive image URLs as `<img>` cards, emoji as fallback |
 | `Mahjong.html` | Mahjong-style tile matching (concept ↔ definition pairs) |
 | `DragDrop.html` | Drag-and-drop classification into categories |
 | `Simulación.html` | Hazard inspection simulation — click hotspots on a scene |
 | `Quiz.html` | Classic multiple-choice quiz |
+| `Pupiletras.html` | 15×15 word search — click/drag selection, 8-direction placement, SST vocabulary |
+| `Crucigrama.html` | Crossword puzzle — client-side greedy intersect layout, numbered cells, input navigation |
 
 ---
 
@@ -67,11 +69,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `Acceso` | Kahoot admin password | `[0]=user, [1]=password` |
 | `Quiz_Manual` | Manual quiz questions | pregunta, opA, opB, opC, opD, correcta(1-4), explicacion |
 | `Mahjong_Manual` | Manual mahjong pairs | concepto, definicion |
-| `Memoria_Manual` | Manual memory pairs | emoji, concepto, explicacion, imagen_url |
+| `Memoria_Manual` | Manual memory pairs | **[0]=imagen_url** (Drive URL or emoji fallback), [1]=concepto, [2]=explicacion |
 | `DragDrop_Manual` | Manual drag-drop data | categoria, color_hex, elemento, explicacion |
 | `Simulacion_Manual` | Manual simulation hazards | escenario_id, titulo, descripcion_escenario, ambiente, nombre_peligro, desc_peligro, severidad, x, y, ancho, alto, solucion |
+| `Pupiletras_Manual` | Manual word search words | palabra (A-Z only, no accents), categoria, descripcion |
+| `Crucigrama_Manual` | Manual crossword words | palabra (A-Z only, no accents), pista |
 
 Run `SETUP_CrearHojasManuales()` in GAS to auto-create all manual sheets with example rows.
+
+> **Memoria_Manual column 0** was renamed from `emoji` to `imagen_url`. The game reads it and uses `isImgUrl()` to decide whether to render as `<img>` (Drive URL) or as emoji text. Old emoji data still works.
+
+---
+
+## Google Drive — Images Folder
+
+All images uploaded via the Admin Memoria batch form go to a fixed Drive folder:
+
+```javascript
+var DRIVE_IMAGES_FOLDER_ID = '1s7uxYhyIkLoDFNL0HhkfZGtM9k8fxKx2';
+// https://drive.google.com/drive/folders/1s7uxYhyIkLoDFNL0HhkfZGtM9k8fxKx2
+```
+
+`uploadImageToDrive()` uses `DriveApp.getFolderById(DRIVE_IMAGES_FOLDER_ID)` directly — no name search, no folder creation. The GAS account must have **Editor** access to this folder.
+
+Uploaded files are set to `ANYONE_WITH_LINK VIEW` sharing and the URL returned is:
+`https://drive.google.com/uc?export=view&id=FILE_ID`
 
 ---
 
@@ -98,9 +120,13 @@ Run `SETUP_CrearHojasManuales()` in GAS to auto-create all manual sheets with ex
 **AI JSON schemas by game:**
 - `quiz` → `{ questions: [{id, question, options[4], correct(0-3), explanation}] }`
 - `mahjong` → `{ pairs: [{id, concept, match}] }`
-- `memoria` → `{ pairs: [{id, front(emoji), back(CONCEPT), explanation}] }`
+- `memoria` → `{ pairs: [{id, front(IMAGE_URL_or_emoji), back(CONCEPT_UPPERCASE), explanation}] }`
 - `dragdrop` → `{ categories: [{name, color}], items: [{id, text, category, explanation}] }`
 - `simulacion` → `{ scenario: {title, description, environment}, hazards: [{id, name, description, severity, x, y, width, height, solution}] }`
+- `pupiletras` → `{ palabras: [{palabra(A-Z_NO_ACCENTS), categoria, descripcion}] }`
+- `crucigrama` → `{ palabras: [{palabra(A-Z_NO_ACCENTS), pista}] }`
+
+**Word normalization rule (Pupiletras & Crucigrama):** words must be A-Z uppercase only, no tildes, no spaces, 4-15 chars. The helper `norm(w)` in both game pages strips accents (Á→A, É→E, Í→I, Ó→O, Ú→U, Ñ→N) and removes non-A-Z chars.
 
 ---
 
@@ -135,15 +161,54 @@ Run `SETUP_CrearHojasManuales()` in GAS to auto-create all manual sheets with ex
 
 **Admin.html** has its own inline CSS (does not use css.html). Theme: neon glass dark with cyan/purple accents. Key admin classes: `.adm-section`, `.adm-card`, `.adm-card-accent-*`, `.adm-table`, `.adm-form-grid`, `.adm-collapsible`, `.adm-badge`, `.adm-btn`, `.adm-grid2`, `.adm-grid3`.
 
+**Admin Memoria batch CSS** (also inline in Admin.html):
+- `.mem-batch-row` — grid: 28px | 120px | 1fr | 1fr | 32px
+- `.mem-img-zone` — 110×110px drag/drop image zone, `position:relative; overflow:hidden`
+- `.mem-img-zone input[type=file]` — `position:absolute;inset:0;opacity:0` (invisible but clickable)
+- `.mem-field` — concepto input + explicacion textarea column
+- `.mem-ai-badge` — violet badge shown when field was auto-filled by Gemini Vision
+
 ---
 
 ## Authentication Flow
 
 1. **Portal login:** user enters DNI → `validateLogin(dni)` checks PERSONAL sheet → returns `{success, user:{dni, nombre, apellido}}`
-2. User data stored in `sessionStorage` as `sst_user` JSON
+2. User data stored in `sessionStorage` as `sst_user` JSON (legacy key: `sst_u` — both handled in game pages)
 3. Game pages read `sessionStorage.getItem('sst_user')` to get `currentUser`
 4. Score saved via `saveScore({dni, nombre, juego, puntaje, tiempo, detalles})` → writes to RESULTADOS sheet
 5. **Kahoot** has its own separate login/alias system (`validarUsuarioPorDNI`, `guardarIntento`) that bridges to the same RESULTADOS sheet
+
+---
+
+## Admin.html — Sections & JS State
+
+**Sidebar nav sections:** dashboard, kahoot, memoria, mahjong, dragdrop, simulacion, pupiletras, crucigrama, quiz, imagenes, ia
+
+**`gameSchemas`** — columns array per game type (order = column order in sheet):
+```javascript
+memoria:    ['imagen_url','concepto','explicacion'],
+mahjong:    ['concepto','definicion'],
+dragdrop:   ['categoria','color_hex','elemento','explicacion'],
+simulacion: ['escenario_id','titulo','descripcion_escenario','ambiente','nombre_peligro','desc_peligro','severidad','x','y','ancho','alto','solucion'],
+pupiletras: ['palabra','categoria','descripcion'],
+crucigrama: ['palabra','pista']
+```
+
+**`gameLabels`** — human-readable column labels for table headers:
+```javascript
+memoria: { imagen_url:'Imagen', concepto:'Concepto', explicacion:'Explicación' }
+```
+
+**`renderGameTable(game, records)`** — builds HTML table. For `imagen_url` columns with `http`/`data:` values renders a 52×52px `<img>` thumbnail instead of raw URL text.
+
+**Memoria batch form state (JS):**
+- `let memRows = []` — array of `{base64, mimeType, fileName, preview, concepto, explicacion}`
+- `let _memNextIdx = 0` — monotonic counter for stable DOM IDs
+- `initMemBatch()` — resets state, calls `addMemRows(10)`
+- `addMemRows(n)` — appends n rows; each row: image dropzone (drag+click) | concepto input | explicacion textarea | clear button
+- `loadMemImage(file, idx)` — FileReader → base64, updates `memRows[idx]` and DOM preview
+- `aiCompleteMemoria()` — collects rows with image+empty fields → calls `analizarImagenesMemoria()` → fills concepto/explicacion + shows 🤖 badge
+- `saveBatchMemoria()` — validates (skips empty, blocks if image without concepto) → calls `guardarBatchMemoria(toSave)` → on success: resets form + reloads table
 
 ---
 
@@ -155,8 +220,9 @@ Run `SETUP_CrearHojasManuales()` in GAS to auto-create all manual sheets with ex
 4. In `Code.js`: add to `PAGE_FILES` and to `simulateAIResponse` switch
 5. If the game needs manual data: add entry to `MANUAL_SHEETS` in Code.js and update `leerDatosManual()`
 6. If AI-generated: add a prompt to `buildFilePrompt()` `prompts` object and add validation in `processUploadedFile()`
-7. In `Admin.html`: add a new section (`sec-gamename`) with CRUD form + table, add to sidebar nav and dashboard game cards
+7. In `Admin.html`: add a new section (`sec-gamename`) with CRUD form + table, add to sidebar nav and dashboard game cards; add to `gameSchemas` and `gameLabels`; add to `helpContexts`
 8. Register game scores via `google.script.run.saveScore({...})` at game end
+9. In `Portal.html`: add nav button, add to `GS` object, update badge threshold if needed
 
 ---
 
@@ -181,7 +247,39 @@ Run `SETUP_CrearHojasManuales()` in GAS to auto-create all manual sheets with ex
 | `adminGuardarPregunta(q)` | Appends question to Preguntas sheet |
 | `saveConfigFromAdmin(...)` | Saves API keys to Script Properties + tests connections |
 | `getConfigStatus()` | Returns config state for Admin UI init |
-| `SETUP_CrearHojasManuales()` | One-time setup: creates all *_Manual sheets with examples |
+| `crearHojasManuales()` | Creates all `*_Manual` sheets if missing (safe to call repeatedly) |
+| `SETUP_CrearHojasManuales()` | GAS menu wrapper that calls `crearHojasManuales()` + shows UI alert |
+| `leerDatosManualPupiletras()` | Reads Pupiletras_Manual, normalizes words to A-Z uppercase |
+| `leerDatosManualCrucigrama()` | Reads Crucigrama_Manual, normalizes words to A-Z uppercase |
+| `uploadImageToDrive(base64, fileName, mimeType)` | Uploads image blob to Drive folder `DRIVE_IMAGES_FOLDER_ID`, sets public sharing, returns `{success, url, fileId}` |
+| `analizarImagenesMemoria(imagesData)` | Gemini Vision per image → returns `{success, results:[{concepto, explicacion}], errors[]}` |
+| `guardarBatchMemoria(rows)` | Calls `loadConfig_()` + `crearHojasManuales()`, uploads images to Drive, appends rows to Memoria_Manual |
+
+---
+
+## Memoria.html — Image Card Rendering
+
+Cards now support both Drive image URLs and legacy emoji:
+
+```javascript
+function isImgUrl(s) { return typeof s==='string' && (s.startsWith('http') || s.startsWith('data:')); }
+
+function cardBackHTML(c) {
+  if (c.side==='front' && isImgUrl(c.display)) {
+    // Drive image card: <img> + concepto label below
+    return `<img class="card-img" src="${c.display}" ...><div class="card-txt">${c.pair.back}</div>`;
+  }
+  if (c.side==='front') {
+    // Legacy emoji card
+    return `<span class="card-emoji-lg">${c.display}</span><div class="card-txt">${c.pair.back}</div>`;
+  }
+  // Back of card: shows concepto text
+  return `<div class="card-txt" style="font-size:1rem;font-weight:900">${c.display}</div>`;
+}
+```
+
+Image cards get CSS class `img-card` with `aspect-ratio: 3/4`.
+Error panel on miss: shows `[imagen] → CONCEPTO` when front is a URL.
 
 ---
 
@@ -191,6 +289,7 @@ Defined entirely client-side in `Portal.html`:
 - **XP** — earned per game played (varies by game, typically 50–200 XP)
 - **Levels** — XP thresholds with titles: Aprendiz → Practicante → Especialista → Experto → Maestro → Leyenda SST
 - **Badges** — unlocked by conditions (first game, score > threshold, all games played, etc.)
+- Badge `ag` (Especialista SST) requires `p.uniq >= 7` — all 7 game modules played
 - **Level-up overlay** (`#LUO`) and badge toast (`#BTO`) animate on unlock
 - State persisted in `sessionStorage` (not backend) — resets on new session
 - `getLeaderboardGlobal()` called on portal load for the ranking panel
@@ -202,13 +301,26 @@ Defined entirely client-side in `Portal.html`:
 | Game | Scoring logic |
 |------|--------------|
 | Kahoot | 1000 pts per correct + speed bonus, shown per-question |
-| Memoria | Base points per pair match, penalty per error |
+| Memoria | 100 pts per pair match, -20 per error, +time bonus |
 | Mahjong | Points per pair + timer bonus |
 | DragDrop | Points per correct drop, accuracy multiplier |
 | Simulación | Points per hazard found, bonus for all found |
 | Quiz | Points per correct answer |
-| Pupiletras | Points per word found + time bonus |
-| Crucigrama | Points per word completed + full-board bonus |
+| Pupiletras | 100 pts per word found + time bonus at completion |
+| Crucigrama | 150 pts per word + 10 pts per letter + time bonus |
+
+---
+
+## Known Bugs Fixed — Do Not Repeat
+
+| Bug | Where | Fix applied |
+|-----|-------|-------------|
+| `openSpreadsheet_()` called but never defined | `guardarBatchMemoria` in Code.js | Replaced with `SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID)` |
+| `loadConfig_()` not called before Spreadsheet access | `guardarBatchMemoria` | Added `loadConfig_()` at top of function |
+| `renderGameTable` shows Drive URL as raw text for `imagen_url` column | Admin.html | Special-case renders `<img>` thumbnail when value starts with `http`/`data:` |
+| `onchange` on concepto input didn't uppercase | Admin.html batch form | Added `.toUpperCase()` to `onchange` handler |
+
+> **Pattern:** Every backend function that opens the Spreadsheet must call `loadConfig_()` first so `CONFIG.SPREADSHEET_ID` is loaded from Script Properties. Never assume CONFIG has the right value without loading it.
 
 ---
 
