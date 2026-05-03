@@ -95,6 +95,8 @@ var DRIVE_IMAGES_FOLDER_ID = '1s7uxYhyIkLoDFNL0HhkfZGtM9k8fxKx2';
 Uploaded files are set to `ANYONE_WITH_LINK VIEW` sharing and the URL returned is:
 `https://drive.google.com/uc?export=view&id=FILE_ID`
 
+**To diagnose Drive permission issues:** run `testDriveAccess()` from the GAS editor (Run menu). It creates and deletes a test file and logs the result. If it fails, the GAS account needs Editor access to the folder.
+
 ---
 
 ## Content Priority Chain (for every game)
@@ -319,6 +321,8 @@ Defined entirely client-side in `Portal.html`:
 | `loadConfig_()` not called before Spreadsheet access | `guardarBatchMemoria` | Added `loadConfig_()` at top of function |
 | `renderGameTable` shows Drive URL as raw text for `imagen_url` column | Admin.html | Special-case renders `<img>` thumbnail when value starts with `http`/`data:` |
 | `onchange` on concepto input didn't uppercase | Admin.html batch form | Added `.toUpperCase()` to `onchange` handler |
+| Drive upload failure saved `'🖼️'` emoji silently to sheet | `guardarBatchMemoria` | Now returns the Drive error immediately — never saves emoji fallback |
+| Drive/GAS error shown only as small toast | Admin.html `saveBatchMemoria` | Now renders full error in red `adm-alert-err` panel above the form |
 
 > **Pattern:** Every backend function that opens the Spreadsheet must call `loadConfig_()` first so `CONFIG.SPREADSHEET_ID` is loaded from Script Properties. Never assume CONFIG has the right value without loading it.
 
