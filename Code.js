@@ -2080,18 +2080,26 @@ function leerDatosManual(gameType) {
 
 var DRIVE_IMAGES_FOLDER_ID = '1s7uxYhyIkLoDFNL0HhkfZGtM9k8fxKx2';
 
+function getOrCreateImagesFolder_() {
+  try { return DriveApp.getFolderById(DRIVE_IMAGES_FOLDER_ID); } catch(e) {}
+  var folders = DriveApp.getFoldersByName('SST_GameHub_Images');
+  if (folders.hasNext()) return folders.next();
+  return DriveApp.createFolder('SST_GameHub_Images');
+}
+
 function uploadImageToDrive(base64, fileName, mimeType) {
   try {
     var safeType = mimeType || 'image/jpeg';
     var safeName = fileName || ('sst_img_' + new Date().getTime() + '.jpg');
     var blob = Utilities.newBlob(Utilities.base64Decode(base64), safeType, safeName);
-    var folder = DriveApp.getFolderById(DRIVE_IMAGES_FOLDER_ID);
+    var folder = getOrCreateImagesFolder_();
     var file = folder.createFile(blob);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     return {
       success: true,
       url: 'https://drive.google.com/uc?export=view&id=' + file.getId(),
-      fileId: file.getId()
+      fileId: file.getId(),
+      folderUsed: folder.getId()
     };
   } catch(e) {
     return { success: false, error: e.message };
@@ -2160,17 +2168,19 @@ function guardarBatchMemoria(rows) {
   }
 }
 
-// Call this from GAS editor (Run menu) to diagnose Drive access issues
+// Run from GAS editor (Run menu) to diagnose Drive access
 function testDriveAccess() {
   try {
-    var folder = DriveApp.getFolderById(DRIVE_IMAGES_FOLDER_ID);
-    var name = folder.getName();
+    var user = Session.getActiveUser().getEmail();
+    var folder = getOrCreateImagesFolder_();
+    var folderName = folder.getName();
+    var folderId = folder.getId();
     var blob = Utilities.newBlob('test', 'text/plain', 'sst_test.txt');
     var file = folder.createFile(blob);
-    var fileId = file.getId();
     file.setTrashed(true);
-    Logger.log('✅ Drive OK. Carpeta: "' + name + '" | ID: ' + DRIVE_IMAGES_FOLDER_ID + ' | Archivo de prueba creado y eliminado: ' + fileId);
-    return { success: true, folderName: name, folderId: DRIVE_IMAGES_FOLDER_ID };
+    var msg = '✅ Drive OK | Usuario: ' + user + ' | Carpeta: "' + folderName + '" | ID: ' + folderId;
+    Logger.log(msg);
+    return { success: true, user: user, folderName: folderName, folderId: folderId };
   } catch(e) {
     Logger.log('❌ Drive ERROR: ' + e.message);
     return { success: false, error: e.message };
