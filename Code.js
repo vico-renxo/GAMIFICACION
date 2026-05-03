@@ -2078,19 +2078,14 @@ function leerDatosManual(gameType) {
 // 🖼️ MEMORIA: UPLOAD A DRIVE + BATCH SAVE + GEMINI VISION
 // ============================================================
 
+var DRIVE_IMAGES_FOLDER_ID = '1s7uxYhyIkLoDFNL0HhkfZGtM9k8fxKx2';
+
 function uploadImageToDrive(base64, fileName, mimeType) {
   try {
     var safeType = mimeType || 'image/jpeg';
     var safeName = fileName || ('sst_img_' + new Date().getTime() + '.jpg');
     var blob = Utilities.newBlob(Utilities.base64Decode(base64), safeType, safeName);
-    var folderName = 'SST_GameHub_Images';
-    var folder;
-    var folders = DriveApp.getFoldersByName(folderName);
-    if (folders.hasNext()) {
-      folder = folders.next();
-    } else {
-      folder = DriveApp.createFolder(folderName);
-    }
+    var folder = DriveApp.getFolderById(DRIVE_IMAGES_FOLDER_ID);
     var file = folder.createFile(blob);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     return {
