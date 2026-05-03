@@ -929,20 +929,25 @@ function saveBatchMemoria() {
   }
   if (!toSave.length) { admToast('No hay datos para guardar. Agrega imágenes y conceptos primero.', 'warn'); return; }
   const alertEl = document.getElementById('memoriaAlert');
-  if (alertEl) { alertEl.className = 'adm-alert warn'; alertEl.textContent = '⏳ Subiendo ' + toSave.length + ' imagen(es) a Google Drive...'; alertEl.style.display = 'block'; }
+  if (alertEl) { alertEl.className = 'adm-alert adm-alert-info show'; alertEl.innerHTML = '⏳ Subiendo ' + toSave.length + ' imagen(es) a Google Drive... <small>(puede tardar 10-30 seg)</small>'; }
   try {
     google.script.run
       .withSuccessHandler(function(resp) {
-        if (alertEl) alertEl.style.display = 'none';
-        if (!resp || !resp.success) { admToast((resp && resp.error) || 'Error al guardar.', 'err'); return; }
-        admToast('✅ ' + resp.saved + ' pares guardados en Google Sheet.', 'ok');
-        if (resp.uploadErrors && resp.uploadErrors.length) admToast('⚠️ Algunos uploads fallaron: ' + resp.uploadErrors[0], 'warn');
+        if (!resp || !resp.success) {
+          const msg = (resp && resp.error) || 'Error desconocido al guardar.';
+          if (alertEl) { alertEl.className = 'adm-alert adm-alert-err show'; alertEl.innerHTML = '❌ <strong>Error Drive:</strong> ' + msg; }
+          admToast('❌ Error Drive — revisa el panel rojo arriba.', 'err');
+          return;
+        }
+        if (alertEl) alertEl.className = 'adm-alert';
+        admToast('✅ ' + resp.saved + ' pares guardados con imagen en Drive.', 'ok');
         initMemBatch();
         loadGameRecords('memoria');
       })
       .withFailureHandler(function(err) {
-        if (alertEl) alertEl.style.display = 'none';
-        admToast('Error: ' + (err.message || String(err)), 'err');
+        const msg = err ? (err.message || String(err)) : 'Error GAS desconocido';
+        if (alertEl) { alertEl.className = 'adm-alert adm-alert-err show'; alertEl.innerHTML = '❌ <strong>Error GAS:</strong> ' + msg; }
+        admToast('❌ Error — revisa el panel rojo arriba.', 'err');
       })
       .guardarBatchMemoria(toSave);
   } catch(e) { if (alertEl) alertEl.style.display = 'none'; admToast('Requiere Apps Script desplegado.', 'err'); }

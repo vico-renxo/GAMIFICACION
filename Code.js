@@ -2142,15 +2142,37 @@ function guardarBatchMemoria(rows) {
         if (upResult.success) {
           imageUrl = upResult.url;
         } else {
-          uploadErrors.push('Fila ' + (i + 1) + ': ' + upResult.error);
-          imageUrl = row.imageUrl || '🖼️';
+          // Do NOT save to sheet with emoji fallback — surface the real Drive error
+          return {
+            success: false,
+            error: 'Error subiendo imagen ' + (i + 1) + ' a Google Drive: ' + upResult.error +
+                   '\n\nVerifica: 1) La cuenta de GAS tiene acceso Editor a la carpeta Drive. ' +
+                   '2) El script tiene el scope de Drive autorizado (re-despliega el Web App).'
+          };
         }
       }
       sh.appendRow([imageUrl, String(row.concepto || '').trim(), String(row.explicacion || '').trim()]);
       saved++;
     }
-    return { success: true, saved: saved, uploadErrors: uploadErrors };
+    return { success: true, saved: saved, uploadErrors: [] };
   } catch(e) {
+    return { success: false, error: e.message };
+  }
+}
+
+// Call this from GAS editor (Run menu) to diagnose Drive access issues
+function testDriveAccess() {
+  try {
+    var folder = DriveApp.getFolderById(DRIVE_IMAGES_FOLDER_ID);
+    var name = folder.getName();
+    var blob = Utilities.newBlob('test', 'text/plain', 'sst_test.txt');
+    var file = folder.createFile(blob);
+    var fileId = file.getId();
+    file.setTrashed(true);
+    Logger.log('✅ Drive OK. Carpeta: "' + name + '" | ID: ' + DRIVE_IMAGES_FOLDER_ID + ' | Archivo de prueba creado y eliminado: ' + fileId);
+    return { success: true, folderName: name, folderId: DRIVE_IMAGES_FOLDER_ID };
+  } catch(e) {
+    Logger.log('❌ Drive ERROR: ' + e.message);
     return { success: false, error: e.message };
   }
 }
