@@ -2135,34 +2135,29 @@ function analizarImagenesMemoria(imagesData) {
 function guardarBatchMemoria(rows) {
   try {
     loadConfig_();
-    crearHojasManuales();
     var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    // Ensure Memoria_Manual sheet exists without calling slow crearHojasManuales()
     var sh = ss.getSheetByName('Memoria_Manual');
-    if (!sh) return { success: false, error: 'Hoja Memoria_Manual no encontrada.' };
+    if (!sh) {
+      sh = ss.insertSheet('Memoria_Manual');
+      sh.appendRow(['imagen_url', 'concepto', 'explicacion']);
+    }
     var saved = 0;
-    var uploadErrors = [];
     for (var i = 0; i < rows.length; i++) {
       var row = rows[i];
       if (!row.concepto && !row.base64 && !row.imageUrl) continue;
       var imageUrl = row.imageUrl || '';
       if (row.base64) {
         var upResult = uploadImageToDrive(row.base64, row.fileName || ('mem_' + i + '.jpg'), row.mimeType || 'image/jpeg');
-        if (upResult.success) {
-          imageUrl = upResult.url;
-        } else {
-          // Do NOT save to sheet with emoji fallback — surface the real Drive error
-          return {
-            success: false,
-            error: 'Error subiendo imagen ' + (i + 1) + ' a Google Drive: ' + upResult.error +
-                   '\n\nVerifica: 1) La cuenta de GAS tiene acceso Editor a la carpeta Drive. ' +
-                   '2) El script tiene el scope de Drive autorizado (re-despliega el Web App).'
-          };
+        if (!upResult.success) {
+          return { success: false, error: 'Error subiendo imagen ' + (i + 1) + ' a Drive: ' + upResult.error };
         }
+        imageUrl = upResult.url;
       }
-      sh.appendRow([imageUrl, String(row.concepto || '').trim(), String(row.explicacion || '').trim()]);
+      sh.appendRow([imageUrl, String(row.concepto || '').trim().toUpperCase(), String(row.explicacion || '').trim()]);
       saved++;
     }
-    return { success: true, saved: saved, uploadErrors: [] };
+    return { success: true, saved: saved };
   } catch(e) {
     return { success: false, error: e.message };
   }
