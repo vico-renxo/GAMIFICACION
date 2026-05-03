@@ -95,7 +95,13 @@ var DRIVE_IMAGES_FOLDER_ID = '1s7uxYhyIkLoDFNL0HhkfZGtM9k8fxKx2';
 Uploaded files are set to `ANYONE_WITH_LINK VIEW` sharing and the URL returned is:
 `https://drive.google.com/uc?export=view&id=FILE_ID`
 
-**To diagnose Drive permission issues:** run `testDriveAccess()` from the GAS editor (Run menu). It creates and deletes a test file and logs the result. If it fails, the GAS account needs Editor access to the folder.
+**To diagnose Drive permission issues:** run `testDriveAccess()` from the GAS editor (Run menu). It logs the active user email, folder name and folder ID used.
+
+**Fallback logic in `getOrCreateImagesFolder_()`:**
+1. Tries `DriveApp.getFolderById(DRIVE_IMAGES_FOLDER_ID)` — uses the configured folder
+2. If access denied (folder is on another account or Shared Drive), falls back to find/create `SST_GameHub_Images` in the script account's own root Drive
+
+> "Acceso denegado: DriveApp" on getFolderById = the script account doesn't own that folder. The fallback will auto-create one in the script's own Drive.
 
 ---
 
