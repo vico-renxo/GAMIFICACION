@@ -940,8 +940,9 @@ function saveBatchMemoria() {
           return;
         }
         if (alertEl) alertEl.className = 'adm-alert';
-        const sheetLink = resp.spreadsheetId ? ' — <a href="https://docs.google.com/spreadsheets/d/' + resp.spreadsheetId + '#gid=0" target="_blank" style="color:var(--cyan)">Ver hoja ↗</a>' : '';
-        if (alertEl) { alertEl.className = 'adm-alert adm-alert-ok show'; alertEl.innerHTML = '✅ ' + resp.saved + ' pares guardados correctamente.' + sheetLink; }
+        const sheetUrl = resp.spreadsheetId ? 'https://docs.google.com/spreadsheets/d/' + resp.spreadsheetId : '';
+        const sheetLink = sheetUrl ? ' <a href="' + sheetUrl + '" target="_blank" style="color:#3bdcff">[Ver hoja]</a>' : '';
+        if (alertEl) { alertEl.className = 'adm-alert adm-alert-ok show'; alertEl.innerHTML = resp.saved + ' pares guardados correctamente.' + sheetLink; }
         admToast('✅ ' + resp.saved + ' pares guardados.', 'ok');
         initMemBatch();
         loadGameRecords('memoria');
