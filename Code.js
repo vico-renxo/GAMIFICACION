@@ -1451,6 +1451,7 @@ function saveGeneratedContent(gameType, data, source) {
 
 // ===== GET CONTENT (tries saved first, then generates) =====
 function getAIContent(gameType, params) {
+  loadConfig_();
   // SAFETY: This function must NEVER return null
   try {
     // 1) PRIMERO: Intentar hojas manuales (datos ingresados por humano)
@@ -2098,7 +2099,7 @@ function uploadImageToDrive(base64, fileName, mimeType) {
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     return {
       success: true,
-      url: 'https://drive.google.com/uc?export=view&id=' + file.getId(),
+      url: 'https://drive.google.com/thumbnail?id=' + file.getId() + '&sz=w800',
       fileId: file.getId(),
       folderUsed: folder.getId()
     };
