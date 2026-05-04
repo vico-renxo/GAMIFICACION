@@ -2159,7 +2159,8 @@ function guardarBatchMemoria(rows) {
       sh.appendRow([imageUrl, String(row.concepto || '').trim().toUpperCase(), String(row.explicacion || '').trim()]);
       saved++;
     }
-    return { success: true, saved: saved };
+    SpreadsheetApp.flush();
+    return { success: true, saved: saved, spreadsheetId: CONFIG.SPREADSHEET_ID };
   } catch(e) {
     return { success: false, error: e.message };
   }

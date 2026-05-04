@@ -940,7 +940,9 @@ function saveBatchMemoria() {
           return;
         }
         if (alertEl) alertEl.className = 'adm-alert';
-        admToast('✅ ' + resp.saved + ' pares guardados con imagen en Drive.', 'ok');
+        const sheetLink = resp.spreadsheetId ? ' — <a href="https://docs.google.com/spreadsheets/d/' + resp.spreadsheetId + '#gid=0" target="_blank" style="color:var(--cyan)">Ver hoja ↗</a>' : '';
+        if (alertEl) { alertEl.className = 'adm-alert adm-alert-ok show'; alertEl.innerHTML = '✅ ' + resp.saved + ' pares guardados correctamente.' + sheetLink; }
+        admToast('✅ ' + resp.saved + ' pares guardados.', 'ok');
         initMemBatch();
         loadGameRecords('memoria');
       })

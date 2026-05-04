@@ -331,6 +331,8 @@ Defined entirely client-side in `Portal.html`:
 | Drive/GAS error shown only as small toast | Admin.html `saveBatchMemoria` | Now renders full error in red `adm-alert-err` panel above the form |
 | `crearHojasManuales()` called inside `guardarBatchMemoria` caused GAS timeout before `appendRow` | `guardarBatchMemoria` | Removed — replaced with direct `ss.getSheetByName('Memoria_Manual')` + inline create if missing |
 | `openSpreadsheet_()` did not call `loadConfig_()` — all CRUD functions (getManualSheetRecords, saveManualSheetRecord, deleteManualSheetRecord) read from the hardcoded default spreadsheet while guardarBatchMemoria wrote to the Script Properties one | `openSpreadsheet_()` in Code.js | Added `loadConfig_()` as first line inside `openSpreadsheet_()` so all callers use the correct ID |
+| `uc?export=view` Drive URL deprecated — Google redirects to consent page instead of serving image directly | `uploadImageToDrive` in Code.js | Changed to `thumbnail?id=FILE_ID&sz=w800` which serves image directly for public files |
+| `getAIContent` did not call `loadConfig_()` — could read manual sheet data from wrong spreadsheet | `getAIContent` in Code.js | Added `loadConfig_()` at top of function |
 
 > **Pattern:** Every backend function that opens the Spreadsheet must call `loadConfig_()` first so `CONFIG.SPREADSHEET_ID` is loaded from Script Properties. Never assume CONFIG has the right value without loading it.
 
