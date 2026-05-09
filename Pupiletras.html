@@ -77,7 +77,7 @@ const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 let gameData=null, gridLetters=[], placedWords=[], foundCount=0, score=0, timerVal=0, timerInt=null;
 let selecting=false, selStart=null, selCells=[], selDir=null;
-let currentUser=null;
+let currentUser=null,gridAbort=null;
 
 function norm(w){ return String(w||'').toUpperCase().replace(/[ÁÀÄÂ]/g,'A').replace(/[ÉÈËÊ]/g,'E').replace(/[ÍÌÏÎ]/g,'I').replace(/[ÓÒÖÔ]/g,'O').replace(/[ÚÙÜÛ]/g,'U').replace(/Ñ/g,'N').replace(/[^A-Z]/g,''); }
 
@@ -178,8 +178,11 @@ function renderGrid(){
     },{passive:false});
     grid.appendChild(cell);
   }
-  document.addEventListener('mouseup',()=>{if(selecting)endSel()},{once:false});
-  document.addEventListener('touchend',()=>{if(selecting)endSel()},{once:false});
+  if(gridAbort) gridAbort.abort();
+  gridAbort=new AbortController();
+  const sig=gridAbort.signal;
+  document.addEventListener('mouseup',()=>{if(selecting)endSel()},{signal:sig});
+  document.addEventListener('touchend',()=>{if(selecting)endSel()},{signal:sig});
 }
 
 function getCell(r,c){return document.querySelector(`.pup-cell[data-r="${r}"][data-c="${c}"]`);}

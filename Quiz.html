@@ -99,7 +99,7 @@ let questions=[],curQ=0,score=0,ok=0,fail=0,streak=0,bestStreak=0,
     timerInt=null,timeLeft=100,answered=false,currentUser=null,startTime=0;
 
 document.addEventListener('DOMContentLoaded',()=>{
-  const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);
+  const s=sessionStorage.getItem('sst_user')||sessionStorage.getItem('sst_u');if(s)currentUser=JSON.parse(s);
   if(typeof createGameParticles==='function')createGameParticles('geParticles');
   startGame();
 });

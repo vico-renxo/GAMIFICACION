@@ -54,7 +54,7 @@
 <script>
 let scenario=null,hazards=[],foundSet=new Set(),score=0,timerInt=null,timeRem=90,gameOver=false,currentUser=null;
 
-document.addEventListener('DOMContentLoaded',()=>{const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);if(typeof createGameParticles==='function')createGameParticles('geParticles');startGame()});
+document.addEventListener('DOMContentLoaded',()=>{const s=sessionStorage.getItem('sst_user')||sessionStorage.getItem('sst_u');if(s)currentUser=JSON.parse(s);if(typeof createGameParticles==='function')createGameParticles('geParticles');startGame()});
 
 async function getDataFromAI(){return new Promise(r=>{try{google.script.run.withSuccessHandler(function(d){if(d&&d.scenario&&d.hazards)r(d);else r(simAI())}).withFailureHandler(function(){r(simAI())}).getAIContent('simulacion',{})}catch(e){r(simAI())}})}
 function simAI(){

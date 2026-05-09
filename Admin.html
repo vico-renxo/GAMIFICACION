@@ -234,7 +234,7 @@ body.admin-epic{display:flex;min-height:100vh;background:var(--bg,#0d1117)}
         <div class="adm-field"><label>Descripción</label><input id="arDesc" placeholder="Breve descripción"></div>
         <div class="adm-field"><label>Estado</label>
           <select id="arEstado"><option value="ACTIVO">🟢 Activo</option><option value="INACTIVO">🔴 Inactivo</option></select></div>
-        <div class="adm-field"><label>Imagen URL</label><input id="arImg" placeholder="https://drive.google.com/uc?export=view&id=..."></div>
+        <div class="adm-field"><label>Imagen URL</label><input id="arImg" placeholder="https://drive.google.com/thumbnail?id=TU_ID&sz=w800"></div>
       </div>
       <div class="adm-btn-row">
         <button class="adm-btn adm-btn-primary" onclick="saveNewArena()">💾 Guardar arena</button>
@@ -265,7 +265,7 @@ body.admin-epic{display:flex;min-height:100vh;background:var(--bg,#0d1117)}
           <select id="kqCorrecta"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
         <div class="adm-field"><label>Tiempo (seg)</label><input id="kqTiempo" type="number" value="20" min="5" max="60"></div>
         <div class="adm-field span-full"><label>🖼️ Imagen URL</label>
-          <input id="kqImg" placeholder="https://drive.google.com/uc?export=view&id=TU_ID">
+          <input id="kqImg" placeholder="https://drive.google.com/thumbnail?id=TU_ID&sz=w800">
           <small>Sube a Drive → Compartir → Cualquiera con enlace → Pega URL convertida aquí</small></div>
         <div class="adm-field span-full"><label>GIF respuesta correcta</label><input id="kqGifOk" placeholder="URL del GIF para acierto"></div>
         <div class="adm-field span-full"><label>GIF respuesta incorrecta</label><input id="kqGifFail" placeholder="URL del GIF para error"></div>
@@ -608,12 +608,13 @@ body.admin-epic{display:flex;min-height:100vh;background:var(--bg,#0d1117)}
   </div>
   <div style="margin-top:16px"><label style="display:block;font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Juego destino</label>
     <div class="adm-pills-row">
-      <button class="game-pill" onclick="selectGame(this,'mahjong')">🀄 Mahjong</button>
-      <button class="game-pill" onclick="selectGame(this,'memoria')">🧠 Memoria</button>
-      <button class="game-pill" onclick="selectGame(this,'dragdrop')">🎯 Drag &amp; Drop</button>
-      <button class="game-pill" onclick="selectGame(this,'simulacion')">🏗️ Simulación</button>
-      <button class="game-pill" onclick="selectGame(this,'pupiletras')">🔤 Pupiletras</button>
-      <button class="game-pill" onclick="selectGame(this,'crucigrama')">✏️ Crucigrama</button>
+      <button class="game-pill" onclick="selectGame(this,'quiz')">&#x2753; Quiz</button>
+      <button class="game-pill" onclick="selectGame(this,'mahjong')">&#x1F004; Mahjong</button>
+      <button class="game-pill" onclick="selectGame(this,'memoria')">&#x1F9E0; Memoria</button>
+      <button class="game-pill" onclick="selectGame(this,'dragdrop')">&#x1F3AF; Drag &amp; Drop</button>
+      <button class="game-pill" onclick="selectGame(this,'simulacion')">&#x1F3D7; Simulacion</button>
+      <button class="game-pill" onclick="selectGame(this,'pupiletras')">&#x1F524; Pupiletras</button>
+      <button class="game-pill" onclick="selectGame(this,'crucigrama')">&#x270F; Crucigrama</button>
     </div>
   </div>
   <div class="adm-btn-row" style="margin-top:16px">
@@ -725,11 +726,11 @@ function renderGameTable(game, records) {
     const cells = cols.map(c => {
       const val = String(r[c] || '');
       if (c === 'imagen_url' && (val.startsWith('http') || val.startsWith('data:'))) {
-        return '<td><img src="' + esc(val) + '" style="width:52px;height:52px;object-fit:cover;border-radius:7px;vertical-align:middle" onerror="this.outerHTML=\'🖼️\'"></td>';
+        return '<td><img src="' + esc(val) + '" style="width:52px;height:52px;object-fit:cover;border-radius:7px;vertical-align:middle" onerror="this.style.display=\'none\'"></td>';
       }
       return '<td>' + esc(val) + '</td>';
     }).join('');
-    return '<tr>' + cells + '<td style="white-space:nowrap"><button class="adm-btn adm-btn-secondary adm-btn-sm" onclick="editGameRecord(\'' + game + '\',' + r.row + ')">✏️</button> <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteGameRecord(\'' + game + '\',' + r.row + ')">🗑️</button></td></tr>';
+    return '<tr>' + cells + '<td style="white-space:nowrap"><button class="adm-btn adm-btn-secondary adm-btn-sm" onclick="editGameRecord(\'' + game + '\',' + r.row + ')">Editar</button> <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteGameRecord(\'' + game + '\',' + r.row + ')">Borrar</button></td></tr>';
   }).join('');
   tableEl.innerHTML = '<div class="adm-table-wrap"><table class="adm-table"><thead><tr>' + heads + '<th>Acciones</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
@@ -771,6 +772,7 @@ function editGameRecord(game, row) {
   if (card) card.scrollIntoView({ behavior: 'smooth' });
 }
 
+function cancelEdit(game) { resetGameForm(game); }
 function resetGameForm(game) {
   const rowEl = document.getElementById(game + 'Row');
   if (rowEl) rowEl.value = '';
@@ -929,28 +931,28 @@ function saveBatchMemoria() {
   }
   if (!toSave.length) { admToast('No hay datos para guardar. Agrega imágenes y conceptos primero.', 'warn'); return; }
   const alertEl = document.getElementById('memoriaAlert');
-  if (alertEl) { alertEl.className = 'adm-alert adm-alert-info show'; alertEl.innerHTML = '⏳ Subiendo ' + toSave.length + ' imagen(es) a Google Drive... <small>(puede tardar 10-30 seg)</small>'; }
+  if (alertEl) { alertEl.className = 'adm-alert adm-alert-info show'; alertEl.innerHTML = 'Subiendo ' + toSave.length + ' imagen(es) a Google Drive... <small>(puede tardar 10-30 seg)</small>'; }
   try {
     google.script.run
       .withSuccessHandler(function(resp) {
         if (!resp || !resp.success) {
           const msg = (resp && resp.error) || 'Error desconocido al guardar.';
-          if (alertEl) { alertEl.className = 'adm-alert adm-alert-err show'; alertEl.innerHTML = '❌ <strong>Error Drive:</strong> ' + msg; }
-          admToast('❌ Error Drive — revisa el panel rojo arriba.', 'err');
+          if (alertEl) { alertEl.className = 'adm-alert adm-alert-err show'; alertEl.innerHTML = '<strong>Error Drive:</strong> ' + msg; }
+          admToast('Error Drive - revisa el panel rojo arriba.', 'err');
           return;
         }
         if (alertEl) alertEl.className = 'adm-alert';
         const sheetUrl = resp.spreadsheetId ? 'https://docs.google.com/spreadsheets/d/' + resp.spreadsheetId : '';
         const sheetLink = sheetUrl ? ' <a href="' + sheetUrl + '" target="_blank" style="color:#3bdcff">[Ver hoja]</a>' : '';
         if (alertEl) { alertEl.className = 'adm-alert adm-alert-ok show'; alertEl.innerHTML = resp.saved + ' pares guardados correctamente.' + sheetLink; }
-        admToast('✅ ' + resp.saved + ' pares guardados.', 'ok');
+        admToast(resp.saved + ' pares guardados correctamente.', 'ok');
         initMemBatch();
         loadGameRecords('memoria');
       })
       .withFailureHandler(function(err) {
         const msg = err ? (err.message || String(err)) : 'Error GAS desconocido';
-        if (alertEl) { alertEl.className = 'adm-alert adm-alert-err show'; alertEl.innerHTML = '❌ <strong>Error GAS:</strong> ' + msg; }
-        admToast('❌ Error — revisa el panel rojo arriba.', 'err');
+        if (alertEl) { alertEl.className = 'adm-alert adm-alert-err show'; alertEl.innerHTML = '<strong>Error GAS:</strong> ' + msg; }
+        admToast('Error - revisa el panel rojo arriba.', 'err');
       })
       .guardarBatchMemoria(toSave);
   } catch(e) { if (alertEl) alertEl.style.display = 'none'; admToast('Requiere Apps Script desplegado.', 'err'); }
@@ -1033,7 +1035,7 @@ function loadKahootArenas() {
   try {
     google.script.run.withSuccessHandler(function(ts) {
       const sel = document.getElementById('kahootArenaSelect');
-      sel.innerHTML = '<option value="">— Elige una arena —</option>';
+      sel.innerHTML = '<option value="">-- Elige una arena --</option>';
       if (!ts || !ts.length) {
         document.getElementById('kahootArenasList').innerHTML = '<div class="adm-empty">Sin arenas. Crea la primera.</div>';
         return;
@@ -1109,7 +1111,7 @@ function loadKahootQuestions() {
       if (!qs || !qs.length) { ql.innerHTML = '<div class="adm-empty">Sin preguntas. Agrega la primera.</div>'; return; }
       let h = '<div class="adm-table-wrap"><table class="adm-table"><thead><tr><th>#</th><th>Pregunta</th><th>A</th><th>B</th><th>C</th><th>D</th><th>✓</th><th>Img</th></tr></thead><tbody>';
       qs.forEach(function(q, i) {
-        h += '<tr><td>' + (i + 1) + '</td><td style="max-width:200px">' + esc(q.pregunta) + '</td><td>' + esc(q.opciones[0]||'') + '</td><td>' + esc(q.opciones[1]||'') + '</td><td>' + esc(q.opciones[2]||'') + '</td><td>' + esc(q.opciones[3]||'') + '</td><td style="color:#4ade80;font-weight:800">' + (q.respuesta + 1) + '</td><td>' + (q.imagenUrl ? '<a href="' + esc(q.imagenUrl) + '" target="_blank" style="color:var(--cyan,#3bdcff)">Ver</a>' : '—') + '</td></tr>';
+        h += '<tr><td>' + (i + 1) + '</td><td style="max-width:200px">' + esc(q.pregunta) + '</td><td>' + esc(q.opciones[0]||'') + '</td><td>' + esc(q.opciones[1]||'') + '</td><td>' + esc(q.opciones[2]||'') + '</td><td>' + esc(q.opciones[3]||'') + '</td><td style="color:#4ade80;font-weight:800">' + (q.respuesta + 1) + '</td><td>' + (q.imagenUrl ? '<a href="' + esc(q.imagenUrl) + '" target="_blank" style="color:var(--cyan,#3bdcff)">Ver</a>' : '-') + '</td></tr>';
       });
       h += '</tbody></table></div>';
       ql.innerHTML = h;
@@ -1121,13 +1123,13 @@ function loadKahootQuestions() {
 const helpContexts = {
   dashboard: { title: '📊 Dashboard', html: '<h4>¿Qué es el Centro de Mando?</h4><p>Desde aquí controlas TODO el contenido de los juegos sin tocar Google Sheets. Haz clic en cualquier módulo para administrar su contenido.</p><h4>Flujo recomendado</h4><ol><li>Agrega registros en cada módulo (Memoria, Mahjong, etc.)</li><li>Los juegos leen esos datos automáticamente como primera prioridad</li><li>Usa la sección IA &amp; Config para generar contenido adicional con Gemini</li></ol>' },
   kahoot: { title: '🚀 Kahoot Arena', html: '<h4>¿Cómo funciona?</h4><p>Kahoot tiene <strong>Arenas</strong> (temas) con <strong>Preguntas</strong>. El jugador elige una arena y responde sus preguntas contra el reloj.</p><h4>Pasos</h4><ol><li>Crea una arena con un título (ej: "Trabajo en Altura")</li><li>Selecciona esa arena en el selector de preguntas</li><li>Agrega las preguntas con sus 4 opciones e indica la correcta (1-4)</li><li>Opcional: agrega una imagen URL y GIFs de retroalimentación</li></ol><h4>Imagen en preguntas</h4><p>Ve a la sección <strong>🖼️ Imágenes</strong>, convierte tu URL de Drive y pégala en el campo "Imagen URL" de la pregunta.</p>' },
-  memoria: { title: '🧠 Memoria SST', html: '<h4>¿Cómo funciona?</h4><p>Juego de memoria tipo flip-card. El jugador voltea tarjetas y debe encontrar los pares imagen-concepto.</p><h4>Flujo para agregar pares</h4><ol><li>Arrastra o haz clic en cada zona de imagen para cargar una foto SST</li><li>Llena los campos <strong>Concepto</strong> y <strong>Explicación</strong> — o usa el botón <strong>🤖 Completar con IA</strong> para que Gemini Vision los auto-rellene</li><li>Haz clic en <strong>💾 Guardar batch</strong> para subir las imágenes a Drive y guardar en la hoja</li></ol><h4>Campos</h4><ul><li><strong>Imagen:</strong> URL de Drive (sube vía batch) o emoji como fallback</li><li><strong>Concepto:</strong> En MAYÚSCULAS (ej: CASCO DE SEGURIDAD)</li><li><strong>Explicación:</strong> Se muestra cuando el jugador encuentra el par</li></ul><p>Mínimo 4 pares. El juego toma hasta 8 al azar.</p>' },
+  memoria: { title: 'Memoria SST', html: '<h4>Como funciona?</h4><p>Juego de memoria tipo flip-card. El jugador voltea tarjetas y debe encontrar los pares imagen-concepto.</p><h4>Flujo para agregar pares</h4><ol><li>Arrastra o haz clic en cada zona de imagen para cargar una foto SST</li><li>Llena los campos <strong>Concepto</strong> y <strong>Explicacion</strong> - o usa el boton <strong>IA: Completar</strong> para que Gemini Vision los auto-rellene</li><li>Haz clic en <strong>Guardar lote</strong> para subir las imagenes a Drive y guardar en la hoja</li></ol><h4>Campos</h4><ul><li><strong>Imagen:</strong> URL de Drive (sube via batch) o emoji como fallback</li><li><strong>Concepto:</strong> En MAYUSCULAS (ej: CASCO DE SEGURIDAD)</li><li><strong>Explicacion:</strong> Se muestra cuando el jugador encuentra el par</li></ul><p>Minimo 4 pares. El juego toma hasta 8 al azar.</p>' },
   mahjong: { title: '🀄 Mahjong SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador conecta fichas de concepto con sus definiciones. Se revelan por pares.</p><h4>Campos</h4><ul><li><strong>Concepto:</strong> Incluye un emoji al inicio (ej: 🪖 Casco)</li><li><strong>Definición:</strong> La explicación del concepto</li></ul><p>Mínimo 6 pares. El juego toma hasta 12 al azar.</p>' },
   dragdrop: { title: '🎯 Drag &amp; Drop SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador arrastra elementos y los suelta en la categoría correcta.</p><h4>Campos</h4><ul><li><strong>Categoría:</strong> El grupo al que pertenece (ej: EPP Obligatorio)</li><li><strong>Color Hex:</strong> Color visual de la categoría (ej: #e74c3c)</li><li><strong>Elemento:</strong> El ítem a clasificar</li><li><strong>Explicación:</strong> Por qué pertenece ahí</li></ul><p>Usa el mismo nombre de categoría para agrupar varios elementos. Mínimo 2 categorías.</p>' },
   simulacion: { title: '🏗️ Simulación SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador inspecciona una escena buscando zonas peligrosas clickeables.</p><h4>Campos clave</h4><ul><li><strong>Escenario ID:</strong> Todos los peligros del mismo escenario comparten este ID (ej: ESC1)</li><li><strong>Ambiente:</strong> Define el visual del fondo (<code>construccion</code>, <code>taller</code>, <code>oficina</code>)</li><li><strong>X, Y, Ancho, Alto:</strong> Porcentajes (0-100) que posicionan la zona clickeable</li><li><strong>Severidad:</strong> alta (+200pts), media (+150pts), baja (+100pts)</li></ul>' },
-  pupiletras: { title: '🔤 Pupiletras SSOMA', html: '<h4>¿Cómo funciona?</h4><p>El jugador busca palabras de SST/SSOMA ocultas en una grilla 15×15 de letras, arrastrando o haciendo clic.</p><h4>Reglas para las palabras</h4><ul><li><strong>Solo letras A-Z</strong> en MAYÚSCULAS, sin tildes ni espacios</li><li>Ejemplos: CASCO ✅ · ARNÉS ❌ → ARNES ✅</li><li>Longitud: entre 3 y 15 caracteres</li><li>Mínimo 6 palabras, máximo 15</li></ul><h4>Puntuación</h4><p>100 pts por palabra + bono por velocidad. El bono de tiempo se agrega al completar todas las palabras.</p>' },
+  pupiletras: { title: 'Pupiletras SSOMA', html: '<h4>Como funciona?</h4><p>El jugador busca palabras de SST/SSOMA ocultas en una grilla 15x15 de letras, arrastrando o haciendo clic.</p><h4>Reglas para las palabras</h4><ul><li><strong>Solo letras A-Z</strong> en MAYUSCULAS, sin tildes ni espacios</li><li>Ejemplos: CASCO [OK] - ARNES [OK] - ARNES (sin tilde)</li><li>Longitud: entre 3 y 15 caracteres</li><li>Minimo 6 palabras, maximo 15</li></ul><h4>Puntuacion</h4><p>100 pts por palabra + bono por velocidad. El bono de tiempo se agrega al completar todas las palabras.</p>' },
   crucigrama: { title: '✏️ Crucigrama SSOMA', html: '<h4>¿Cómo funciona?</h4><p>El motor genera automáticamente el layout del crucigrama cruzando las palabras. El jugador lee la pista y escribe la palabra en las celdas.</p><h4>Reglas para las palabras</h4><ul><li><strong>Solo letras A-Z</strong> en MAYÚSCULAS, sin tildes ni espacios</li><li>Ejemplos: ARNES ✅ · ARNÉS ❌</li><li>Las palabras deben poder cruzarse (compartir letras comunes)</li><li>Longitud recomendada: 4-12 caracteres</li><li>Mínimo 6 palabras</li></ul><h4>Puntuación</h4><p>150 pts por palabra + 10 pts por cada letra. Bono de tiempo al completar todo.</p>' },
-  imagenes: { title: '🖼️ Imágenes', html: '<h4>¿Cómo subir imágenes?</h4><ol><li>Sube la imagen a <strong>Google Drive</strong></li><li>Click derecho → Compartir → Cualquiera con enlace → Copiar URL</li><li>Pega esa URL en el <strong>Conversor de URL</strong> de esta sección</li><li>Copia la URL directa resultante</li><li>Pégala en el campo "Imagen URL" del módulo deseado</li></ol><h4>Formatos soportados</h4><p>JPG, PNG, GIF, WEBP. Tamaño recomendado: menos de 2MB para carga rápida.</p>' },
+  imagenes: { title: 'Imagenes', html: '<h4>Como subir imagenes?</h4><ol><li>Sube la imagen a <strong>Google Drive</strong></li><li>Click derecho &gt; Compartir &gt; Cualquiera con enlace &gt; Copiar URL</li><li>Pega esa URL en el <strong>Conversor de URL</strong> de esta seccion</li><li>Copia la URL directa resultante</li><li>Pegala en el campo "Imagen URL" del modulo deseado</li></ol><h4>Formatos soportados</h4><p>JPG, PNG, GIF, WEBP. Tamano recomendado: menos de 2MB para carga rapida.</p>' },
   ia: { title: '🤖 IA &amp; Config', html: '<h4>Configuración de Gemini AI</h4><ol><li>Ve a <strong>aistudio.google.com</strong> y crea una API Key gratuita</li><li>Pégala en el campo "Gemini API Key"</li><li>Agrega el ID de tu Google Sheet</li><li>Haz clic en "Guardar configuración"</li></ol><h4>Generar contenido</h4><p>Sube un documento PDF/imagen sobre SST, elige el juego destino y haz clic en "Generar con IA". Gemini analizará el documento y creará el contenido automáticamente.</p><h4>Sin API Key</h4><p>Los juegos funcionan con el contenido manual que ingresas en cada módulo.</p>' }
 };
 let currentHelpContext = 'dashboard';
@@ -1136,7 +1138,7 @@ function convertDriveUrl() {
   const raw = document.getElementById('driveUrlIn').value.trim();
   const match = raw.match(/\/d\/([a-zA-Z0-9_-]+)/);
   if (!match) { admToast('URL no reconocida. Copia el enlace completo de Drive.', 'err'); return; }
-  const direct = 'https://drive.google.com/uc?export=view&id=' + match[1];
+  const direct = 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w800';
   document.getElementById('driveUrlResult').value = direct;
   document.getElementById('driveUrlOut').style.display = 'block';
 }

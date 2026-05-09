@@ -141,7 +141,7 @@ function handleMiss(a,b){
   errors++;score=Math.max(0,score-20);updateStats();
   if(typeof SFX!=='undefined')SFX.play('wrong');
   a.el.classList.add('wrong');b.el.classList.add('wrong');
-  const frontLabel=isImgUrl(a.card.pair.front)?'[imagen] → '+a.card.pair.back:a.card.pair.front;
+  const frontLabel=isImgUrl(a.card.pair.front)?'[imagen] - '+a.card.pair.back:a.card.pair.front;
   showExp('error','❌ No son pareja',`${frontLabel}. ${a.card.pair.explanation||''}`);
   setTimeout(()=>{a.el.classList.remove('flipped','wrong');b.el.classList.remove('flipped','wrong');flipped=[];processing=false},400);
 }

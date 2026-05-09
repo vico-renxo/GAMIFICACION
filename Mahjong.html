@@ -49,7 +49,7 @@
 let gameData=null,tiles=[],selectedTile=null,matchedCount=0,totalPairs=0,score=0,timerInt=null,seconds=0,hints=0,currentUser=null;
 
 document.addEventListener('DOMContentLoaded',()=>{
-  const s=sessionStorage.getItem('sst_user');if(s)currentUser=JSON.parse(s);
+  const s=sessionStorage.getItem('sst_user')||sessionStorage.getItem('sst_u');if(s)currentUser=JSON.parse(s);
   if(typeof createGameParticles==='function')createGameParticles('geParticles');
   startGame();
 });

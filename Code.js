@@ -92,6 +92,7 @@ function doGet(e) {
 
 function validateLogin(dni) {
   try {
+    loadConfig_();
     const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
     const sheet = ss.getSheetByName(CONFIG.SHEET_PERSONAL);
     if (!sheet) return { success: false, error: 'PestaÃ±a PERSONAL no encontrada' };
@@ -352,10 +353,11 @@ function obtenerPreguntasJuego(titulo) {
   return rawQuestions.map(function(question) {
     var options = question.opciones || question.options || [];
     var answerIndex = typeof question.respuesta === 'number' ? question.respuesta : question.correct;
-    answerIndex = Number(answerIndex);
+    answerIndex = parseInt(answerIndex, 10);
     if (isNaN(answerIndex)) answerIndex = 0;
+    // AI sometimes returns 1-4 instead of 0-3; map > 3 down by 1
     if (answerIndex > 3) answerIndex = answerIndex - 1;
-    if (answerIndex < 0 || answerIndex > 3) answerIndex = 0;
+    answerIndex = Math.max(0, Math.min(3, answerIndex));
     return {
       pregunta: String(question.pregunta || question.question || '').trim(),
       opciones: options.map(function(option) { return String(option || '').trim(); }).slice(0, 4),
@@ -538,6 +540,7 @@ function obtenerRankingDetallado(titulo) {
 // ===== GUARDAR RESULTADOS =====
 function saveScore(d) {
   try {
+    loadConfig_();
     const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
     let sh = ss.getSheetByName(CONFIG.SHEET_RESULTADOS);
     if (!sh) {
@@ -572,6 +575,7 @@ function getWebAppUrl() { return ScriptApp.getService().getUrl(); }
 // ===== GAMIFICATION: LEADERBOARD GLOBAL =====
 function getLeaderboardGlobal() {
   try {
+    loadConfig_();
     const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
     const sh = ss.getSheetByName(CONFIG.SHEET_RESULTADOS);
     if (!sh || sh.getLastRow() < 2) return { success: true, players: [] };
@@ -604,6 +608,7 @@ function getLeaderboardGlobal() {
 // ===== ADMIN: TOP SCORES PARA DASHBOARD =====
 function getTopScores(limit) {
   try {
+    loadConfig_();
     const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
     const sh = ss.getSheetByName(CONFIG.SHEET_RESULTADOS);
     if (!sh || sh.getLastRow() < 2) return [];
@@ -623,6 +628,7 @@ function getTopScores(limit) {
 
 function getRecentScores(limit) {
   try {
+    loadConfig_();
     const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
     const sh = ss.getSheetByName(CONFIG.SHEET_RESULTADOS);
     if (!sh || sh.getLastRow() < 2) return [];
@@ -642,6 +648,7 @@ function getRecentScores(limit) {
 // ===== GAMIFICATION: PERFIL COMPLETO DE USUARIO =====
 function getUserProfileFull(dni) {
   try {
+    loadConfig_();
     const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
     const sh = ss.getSheetByName(CONFIG.SHEET_RESULTADOS);
     if (!sh) return { success: true, scores: [], totalXP: 0, bestScore: 0, uniqueGames: [] };
@@ -1205,11 +1212,12 @@ function normalizeQuizQuestions_(questions) {
 }
 
 function saveQuizQuestionsToManualSheet_(questions, replaceExisting) {
-  crearHojasManuales();
-
   var ss = openSpreadsheet_();
   var sh = ss.getSheetByName('Quiz_Manual');
-  if (!sh) return { success: false, error: 'No se encontrÃ³ la hoja Quiz_Manual.' };
+  if (!sh) {
+    sh = ss.insertSheet('Quiz_Manual');
+    sh.appendRow(['pregunta','opA','opB','opC','opD','correcta','explicacion']);
+  }
 
   if (replaceExisting && sh.getLastRow() > 1) {
     sh.getRange(2, 1, sh.getLastRow() - 1, 7).clearContent();

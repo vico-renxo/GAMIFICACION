@@ -322,12 +322,14 @@ const TransitionEngine = (() => {
 /* ═══════════════════════════════════════════════
    💬 TOASTS
 ═══════════════════════════════════════════════ */
+function escT(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showToast(title, message, type) {
   const c = document.getElementById('toastContainer');
   const t = document.createElement('div');
   t.className = 'toast ' + (type||'info');
-  const icons = {success:'✅',error:'❌',info:'ℹ️'};
-  t.innerHTML = '<div class="toast-icon">'+(icons[type]||icons.info)+'</div><div class="toast-content"><div class="toast-title">'+title+'</div><div class="toast-message">'+message+'</div></div>';
+  const icons = {success:'✓',error:'✗',info:'ⓘ'};
+  const icon = icons[type]||icons.info;
+  t.innerHTML = '<div class="toast-icon">'+icon+'</div><div class="toast-content"><div class="toast-title">'+escT(title)+'</div><div class="toast-message">'+escT(message)+'</div></div>';
   c.appendChild(t);
   setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all .3s';setTimeout(()=>t.remove(),300);},3500);
 }

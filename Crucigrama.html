@@ -287,8 +287,8 @@ function renderGrid(){
 function renderClues(){
   const hEl=document.getElementById('cluesH');
   const vEl=document.getElementById('cluesV');
-  hEl.innerHTML='<h3>→ Horizontales</h3>';
-  vEl.innerHTML='<h3>↓ Verticales</h3>';
+  hEl.innerHTML='<h3>&#x2192; Horizontales</h3>';
+  vEl.innerHTML='<h3>&#x2193; Verticales</h3>';
   const hWords=cwWords.filter(w=>w.direction==='H').sort((a,b)=>a.num-b.num);
   const vWords=cwWords.filter(w=>w.direction==='V').sort((a,b)=>a.num-b.num);
   hWords.forEach((pw,i)=>{
