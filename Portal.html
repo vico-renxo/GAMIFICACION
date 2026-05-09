@@ -423,14 +423,14 @@ function renderProfile(){
       <div style="font-size:10px;font-weight:700;color:${b.earned?'var(--text)':'var(--text3)'};line-height:1.3">${b.n}</div>
     </div>`;
   });
-  const recientes=PROF.scores.slice(-8).reverse().map(s=>`<tr><td style="padding:8px 10px;font-size:12px;color:var(--text2)">${String(s.fecha).split(' ')[0]||'—'}</td><td style="padding:8px 10px;font-size:12px;color:var(--text);font-weight:600">${s.juego||'—'}</td><td style="padding:8px 10px;font-size:12px;font-weight:700;color:var(--gold)">${s.puntaje||0}</td></tr>`).join('');
+  const recientes=PROF.scores.slice(-8).reverse().map(s=>`<tr><td style="padding:8px 10px;font-size:12px;color:var(--text2)">${escH(String(s.fecha).split(' ')[0])||'&mdash;'}</td><td style="padding:8px 10px;font-size:12px;color:var(--text);font-weight:600">${escH(s.juego)||'&mdash;'}</td><td style="padding:8px 10px;font-size:12px;font-weight:700;color:var(--gold)">${Number(s.puntaje)||0}</td></tr>`).join('');
   document.getElementById('VP').innerHTML=`
   <div style="max-width:680px;margin:0 auto">
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px;display:flex;align-items:center;gap:20px">
-      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#3fb950,#56d364);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 0 0 4px ${lv.c}55,0 0 0 6px ${lv.c}22">${ini}</div>
+      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#3fb950,#56d364);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 0 0 4px ${lv.c}55,0 0 0 6px ${lv.c}22">${escH(ini)}</div>
       <div style="flex:1">
-        <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.3px">${n}</div>
-        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">DNI: ${U.dni||'—'}</div>
+        <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.3px">${escH(n)}</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">DNI: ${escH(U.dni||'')}</div>
         <div style="display:inline-flex;align-items:center;gap:6px;background:${lv.c}22;border-radius:20px;padding:4px 12px">
           <span style="font-size:12px;font-weight:700;color:${lv.c}">⚡ Nivel ${lv.l} · ${lv.n}</span>
         </div>

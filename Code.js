@@ -1282,6 +1282,7 @@ function generateManualQuizWithAIChunked(uploadId, totalChunks, fileName, mimeTy
 
 // ===== PROCESAR ARCHIVO SUBIDO =====
 function processUploadedFile(fileBase64, fileName, mimeType, gameType) {
+  loadConfig_();
   // Validate inputs
   if (!fileBase64) {
     return { success: false, error: 'No se recibiÃ³ el archivo. Intenta subirlo de nuevo.' };
@@ -1445,6 +1446,7 @@ Reglas CRITICAS para "palabra":
 
 function saveGeneratedContent(gameType, data, source) {
   try {
+    loadConfig_();
     const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
     let sh = ss.getSheetByName(CONFIG.SHEET_CONTENIDO);
     if (!sh) {
@@ -1521,6 +1523,7 @@ function getExplanationFromAI(context) {
 // ===== GET SAVED CONTENT LIST (for Admin panel) =====
 function getSavedContentList() {
   try {
+    loadConfig_();
     const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
     const sh = ss.getSheetByName(CONFIG.SHEET_CONTENIDO);
     if (!sh) return [];
@@ -1535,6 +1538,7 @@ function getSavedContentList() {
 
 function deleteContent(row) {
   try {
+    loadConfig_();
     const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
     const sh = ss.getSheetByName(CONFIG.SHEET_CONTENIDO);
     if (sh) sh.deleteRow(row);
@@ -1689,11 +1693,12 @@ function saveManualSheetRecord(gameType, payload) {
     var def = getManualSheetDefinition_(gameType);
     if (!def) return { success: false, error: 'Juego manual no soportado.' };
 
-    crearHojasManuales();
-
     var ss = openSpreadsheet_();
     var sh = ss.getSheetByName(def.sheetName);
-    if (!sh) return { success: false, error: 'No se encontrÃ³ la hoja manual ' + def.sheetName };
+    if (!sh) {
+      sh = ss.insertSheet(def.sheetName);
+      sh.appendRow(def.columns.map(function(c) { return c.label || c.key; }));
+    }
 
     payload = payload || {};
     var values = [];

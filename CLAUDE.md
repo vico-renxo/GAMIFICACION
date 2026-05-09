@@ -93,7 +93,9 @@ var DRIVE_IMAGES_FOLDER_ID = '1s7uxYhyIkLoDFNL0HhkfZGtM9k8fxKx2';
 `uploadImageToDrive()` uses `DriveApp.getFolderById(DRIVE_IMAGES_FOLDER_ID)` directly — no name search, no folder creation. The GAS account must have **Editor** access to this folder.
 
 Uploaded files are set to `ANYONE_WITH_LINK VIEW` sharing and the URL returned is:
-`https://drive.google.com/uc?export=view&id=FILE_ID`
+`https://drive.google.com/thumbnail?id=FILE_ID&sz=w800`
+
+> **`uc?export=view` is deprecated.** Google now redirects it to a consent page. Always use `thumbnail?id=FILE_ID&sz=w800` for direct image serving of public Drive files.
 
 **To diagnose Drive permission issues:** run `testDriveAccess()` from the GAS editor (Run menu). It logs the active user email, folder name and folder ID used.
 
@@ -181,8 +183,8 @@ Uploaded files are set to `ANYONE_WITH_LINK VIEW` sharing and the URL returned i
 ## Authentication Flow
 
 1. **Portal login:** user enters DNI → `validateLogin(dni)` checks PERSONAL sheet → returns `{success, user:{dni, nombre, apellido}}`
-2. User data stored in `sessionStorage` as `sst_user` JSON (legacy key: `sst_u` — both handled in game pages)
-3. Game pages read `sessionStorage.getItem('sst_user')` to get `currentUser`
+2. User data stored in `sessionStorage` as `sst_u` JSON (all game pages also read `sst_user` as fallback)
+3. Game pages read `sessionStorage.getItem('sst_user') || sessionStorage.getItem('sst_u')` — ALWAYS use both keys
 4. Score saved via `saveScore({dni, nombre, juego, puntaje, tiempo, detalles})` → writes to RESULTADOS sheet
 5. **Kahoot** has its own separate login/alias system (`validarUsuarioPorDNI`, `guardarIntento`) that bridges to the same RESULTADOS sheet
 
@@ -194,6 +196,7 @@ Uploaded files are set to `ANYONE_WITH_LINK VIEW` sharing and the URL returned i
 
 **`gameSchemas`** — columns array per game type (order = column order in sheet):
 ```javascript
+quiz:       ['pregunta','opcion_a','opcion_b','opcion_c','opcion_d','correcta','explicacion'],
 memoria:    ['imagen_url','concepto','explicacion'],
 mahjong:    ['concepto','definicion'],
 dragdrop:   ['categoria','color_hex','elemento','explicacion'],
@@ -261,7 +264,9 @@ memoria: { imagen_url:'Imagen', concepto:'Concepto', explicacion:'Explicación' 
 | `leerDatosManualCrucigrama()` | Reads Crucigrama_Manual, normalizes words to A-Z uppercase |
 | `uploadImageToDrive(base64, fileName, mimeType)` | Uploads image blob to Drive folder `DRIVE_IMAGES_FOLDER_ID`, sets public sharing, returns `{success, url, fileId}` |
 | `analizarImagenesMemoria(imagesData)` | Gemini Vision per image → returns `{success, results:[{concepto, explicacion}], errors[]}` |
-| `guardarBatchMemoria(rows)` | Calls `loadConfig_()` + `crearHojasManuales()`, uploads images to Drive, appends rows to Memoria_Manual |
+| `guardarBatchMemoria(rows)` | Calls `loadConfig_()`, uploads images to Drive, appends rows to Memoria_Manual (lazy sheet creation — does NOT call `crearHojasManuales()`) |
+| `getSavedContentList()` | Lists saved AI content from CONTENIDO_IA sheet |
+| `deleteContent(row)` | Deletes a row from CONTENIDO_IA sheet |
 
 ---
 
@@ -334,8 +339,27 @@ Defined entirely client-side in `Portal.html`:
 | `uc?export=view` Drive URL deprecated — Google redirects to consent page instead of serving image directly | `uploadImageToDrive` in Code.js | Changed to `thumbnail?id=FILE_ID&sz=w800` which serves image directly for public files |
 | Unicode chars (em-dash, arrows, emoji) inside JS string literals in HTML cause GAS `document.write()` SyntaxError breaking ALL JS on the page | Admin.html JS strings | Never put non-ASCII chars inside dynamically built JS strings in GAS HTML — use ASCII only or set via `textContent`/`innerHTML` from safe variables |
 | `getAIContent` did not call `loadConfig_()` — could read manual sheet data from wrong spreadsheet | `getAIContent` in Code.js | Added `loadConfig_()` at top of function |
+| Auth bypass: Portal.html catch block in `doLogin()` created a fake user `{dni, nombre:'Usuario', apellido:''}` allowing anyone to bypass login on network error | `doLogin()` in Portal.html | Removed fake user creation; now shows proper error message and re-enables the login button |
+| Answer index off-by-one: AI sometimes returns `correct` as 1-indexed (1-4) but game expected 0-indexed (0-3); old fix only handled value 4, values 1-3 were left wrong | `getAIContent`/`processUploadedFile` in Code.js | `parseInt(answerIndex,10)` + `if(answerIndex>3) answerIndex--` + `Math.max(0,Math.min(3,answerIndex))` |
+| `convertDriveUrl()` in Admin.html generated deprecated `uc?export=view` URL | Admin.html | Changed to `thumbnail?id=FILE_ID&sz=w800` |
+| `cancelEdit(game)` called by Pupiletras/Crucigrama cancel buttons but function didn't exist | Admin.html | Added `function cancelEdit(game){ resetGameForm(game); }` |
+| sessionStorage key mismatch: Portal writes `'sst_u'` but DragDrop, Mahjong, Quiz, Simulación only read `'sst_user'` | DragDrop.html, Mahjong.html, Quiz.html, Simulación.html | Added `\|\| sessionStorage.getItem('sst_u')` fallback |
+| `renderGrid()` in Pupiletras added `mouseup`/`touchend` listeners to `document` without cleanup — stacking on every game restart | Pupiletras.html | AbortController pattern: `if(gridAbort) gridAbort.abort(); gridAbort=new AbortController();` then `{signal: gridAbort.signal}` on each listener |
+| `saveGameRecord(game)` only accepted one param but Pupiletras/Crucigrama/Quiz forms called `onsubmit="saveGameRecord(event,'gamename')"` — event object was passed as `game`, `gameSchemas[EventObject]` was `undefined` | Admin.html | Changed signature to `saveGameRecord(gameOrEvent, gameName)` with `if(gameOrEvent.preventDefault){ gameOrEvent.preventDefault(); game=gameName; }` |
+| `crearHojasManuales()` called inside `saveManualSheetRecord` and `saveQuizQuestionsToManualSheet_` on every save — GAS timeout before appendRow | Code.js | Replaced with lazy single-sheet creation: `var sh = ss.getSheetByName(name); if(!sh){ sh = ss.insertSheet(name); sh.appendRow(headers); }` |
+| XSS in `renderRanking()`: `p.nombre` from server injected raw into innerHTML | Portal.html | Added `escH(s)` helper; all server strings escaped before injection |
+| XSS in `renderProfile()`: `n` (nombre+apellido), `U.dni`, `s.juego`, `s.fecha` from server injected raw into innerHTML | Portal.html | All wrapped with `escH()` |
+| XSS in Kahoot `showToast()`: title/message params injected raw into innerHTML | kahoot.html | Added `escT(s)` helper; all injected strings escaped |
+| `getSavedContentList()` and `deleteContent()` and `saveGeneratedContent()` and `processUploadedFile()` opened Spreadsheet without calling `loadConfig_()` first | Code.js | Added `loadConfig_()` at top of each function |
+| Unicode chars in JS string literals (em-dash `—`, arrows `→`, 4-byte emoji) in GAS-template-processed HTML files cause `document.write()` SyntaxError breaking ALL JS | Admin.html, Crucigrama.html, Memoria.html | Replaced with HTML entities (`&mdash;`, `&#x2192;`, `&#x2193;`) or ASCII text; all helpContexts, medals, activity icons, alert text cleaned to ASCII-only |
+| Missing CSS accent color variables for `page-pupiletras` and `page-crucigrama` body classes | css.html | Added `--accent`, `--accent-strong`, `--accent-soft`, `--accent-surface` for both body classes |
+| Admin had no Quiz CRUD section — quiz content unmanageable through Admin UI | Admin.html | Added full `sec-quiz` section: form with pregunta/opcionA-D/correcta/explicacion fields, table view, nav button, helpContext, and IA game pill |
 
 > **Pattern:** Every backend function that opens the Spreadsheet must call `loadConfig_()` first so `CONFIG.SPREADSHEET_ID` is loaded from Script Properties. Never assume CONFIG has the right value without loading it.
+
+> **Pattern:** Never put non-ASCII chars (em-dash, arrows, emoji) inside JS string literals in `<script>` blocks of GAS HTML files. GAS template evaluation corrupts multi-byte chars. Use HTML entities in HTML contexts, or assign via `element.textContent` in JS.
+
+> **Pattern:** All server-sourced strings injected into `innerHTML` must be HTML-escaped. Use a local `escH(s)` helper in every page that does innerHTML injection of server data.
 
 ---
 
