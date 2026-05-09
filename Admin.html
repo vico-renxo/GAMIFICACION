@@ -899,7 +899,7 @@ function aiCompleteMemoria() {
   try {
     google.script.run
       .withSuccessHandler(function(resp) {
-        btn.disabled = false; btn.textContent = '🤖 IA: Completar vacíos';
+        btn.disabled = false; btn.textContent = 'IA: Completar vacios';
         if (!resp || !resp.success) { admToast((resp && resp.error) || 'Error de IA. Verifica tu API Key en Configuración.', 'err'); return; }
         const results = resp.results || [];
         let filled = 0;
@@ -914,11 +914,11 @@ function aiCompleteMemoria() {
         else admToast('✅ ' + filled + ' pares completados por Gemini Vision.', 'ok');
       })
       .withFailureHandler(function(err) {
-        btn.disabled = false; btn.textContent = '🤖 IA: Completar vacíos';
+        btn.disabled = false; btn.textContent = 'IA: Completar vacios';
         admToast('Error: ' + (err.message || String(err)), 'err');
       })
       .analizarImagenesMemoria(imagesData);
-  } catch(e) { btn.disabled = false; btn.textContent = '🤖 IA: Completar vacíos'; admToast('Requiere Apps Script desplegado.', 'err'); }
+  } catch(e) { btn.disabled = false; btn.textContent = 'IA: Completar vacios'; admToast('Requiere Apps Script desplegado.', 'err'); }
 }
 
 function saveBatchMemoria() {
@@ -980,10 +980,10 @@ function loadRanking() {
     google.script.run.withSuccessHandler(function(rows) {
       if (!rows || !rows.length) { el.innerHTML = '<div class="adm-empty">Sin partidas registradas aún.</div>'; return; }
       const top = rows.slice(0, 8);
-      const medals = ['🥇','🥈','🥉'];
+      const medals = ['1','2','3'];
       el.innerHTML = top.map((r, i) => `
         <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">
-          <span style="font-size:1.1rem;width:24px;text-align:center">${medals[i]||'#'+(i+1)}</span>
+          <span style="font-size:.85rem;font-weight:800;width:24px;text-align:center;color:var(--cyan,#3bdcff)">${medals[i]?'#'+medals[i]:'#'+(i+1)}</span>
           <div style="flex:1">
             <div style="color:#fff;font-size:.85rem;font-weight:600">${esc(r.nombre||'?')}</div>
             <div style="color:rgba(255,255,255,.35);font-size:.72rem">${esc(r.juego||'')} · ${esc(r.fecha||'')}</div>
@@ -996,14 +996,14 @@ function loadRanking() {
 
 function loadActivity() {
   const el = document.getElementById('dashActivity');
-  const gameIcons = { 'Kahoot':'🚀','Memoria':'🧠','Mahjong':'🀄','Drag & Drop':'🎯','Simulación':'🏗️','Simulacion SST':'🏗️' };
+  const gameIcons = { 'Kahoot':'KH','Memoria':'MEM','Mahjong':'MAH','Drag & Drop':'DD','Simulacion':'SIM','Pupiletras':'PUP','Crucigrama':'CRU','Quiz':'QZ' };
   try {
     google.script.run.withSuccessHandler(function(rows) {
       if (!rows || !rows.length) { el.innerHTML = '<div class="adm-empty">Sin actividad reciente.</div>'; return; }
       el.innerHTML = rows.slice(0, 8).map(r => {
         const icon = Object.keys(gameIcons).find(k => (r.juego||'').includes(k));
         return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">
-          <span style="font-size:1.1rem">${gameIcons[icon]||'🎮'}</span>
+          <span style="font-size:.72rem;font-weight:800;color:var(--cyan,#3bdcff);min-width:30px">${gameIcons[icon]||'GAME'}</span>
           <div style="flex:1"><div style="color:#fff;font-size:.82rem">${esc(r.nombre||'?')}</div>
           <div style="color:rgba(255,255,255,.3);font-size:.72rem">${esc(r.juego||'')} · ${esc(r.tiempo||'')}s</div></div>
           <span style="color:#4ade80;font-size:.85rem;font-weight:700">+${esc(String(r.puntaje||0))}</span>
@@ -1044,9 +1044,9 @@ function loadKahootArenas() {
       ts.forEach(function(t) {
         const isActive = t.estado === 'ACTIVO' || t.estado === 'DISPONIBLE';
         h += '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px;border:1px solid rgba(255,255,255,.07)">';
-        h += '<div style="flex:1"><div style="font-weight:700;color:#fff">🎯 ' + esc(t.titulo) + '</div>';
+        h += '<div style="flex:1"><div style="font-weight:700;color:#fff">' + esc(t.titulo) + '</div>';
         if (t.desc) h += '<div style="font-size:.78rem;color:rgba(255,255,255,.4);margin-top:2px">' + esc(t.desc) + '</div>';
-        h += '</div><span class="adm-badge ' + (isActive ? 'adm-badge-active' : 'adm-badge-inactive') + '">' + (isActive ? '🟢 ACTIVO' : '🔴 INACTIVO') + '</span>';
+        h += '</div><span class="adm-badge ' + (isActive ? 'adm-badge-active' : 'adm-badge-inactive') + '">' + (isActive ? 'ACTIVO' : 'INACTIVO') + '</span>';
         h += '<button class="adm-btn adm-btn-secondary adm-btn-sm" onclick="toggleArena(' + t.fila + ',\'' + (isActive ? 'INACTIVO' : 'ACTIVO') + '\')">' + (isActive ? 'Desactivar' : 'Activar') + '</button></div>';
         sel.innerHTML += '<option value="' + esc(t.titulo) + '">' + esc(t.titulo) + '</option>';
       });
@@ -1121,16 +1121,16 @@ function loadKahootQuestions() {
 
 /* ── HELP SYSTEM ── */
 const helpContexts = {
-  dashboard: { title: '📊 Dashboard', html: '<h4>¿Qué es el Centro de Mando?</h4><p>Desde aquí controlas TODO el contenido de los juegos sin tocar Google Sheets. Haz clic en cualquier módulo para administrar su contenido.</p><h4>Flujo recomendado</h4><ol><li>Agrega registros en cada módulo (Memoria, Mahjong, etc.)</li><li>Los juegos leen esos datos automáticamente como primera prioridad</li><li>Usa la sección IA &amp; Config para generar contenido adicional con Gemini</li></ol>' },
-  kahoot: { title: '🚀 Kahoot Arena', html: '<h4>¿Cómo funciona?</h4><p>Kahoot tiene <strong>Arenas</strong> (temas) con <strong>Preguntas</strong>. El jugador elige una arena y responde sus preguntas contra el reloj.</p><h4>Pasos</h4><ol><li>Crea una arena con un título (ej: "Trabajo en Altura")</li><li>Selecciona esa arena en el selector de preguntas</li><li>Agrega las preguntas con sus 4 opciones e indica la correcta (1-4)</li><li>Opcional: agrega una imagen URL y GIFs de retroalimentación</li></ol><h4>Imagen en preguntas</h4><p>Ve a la sección <strong>🖼️ Imágenes</strong>, convierte tu URL de Drive y pégala en el campo "Imagen URL" de la pregunta.</p>' },
+  dashboard: { title: 'Dashboard', html: '<h4>Centro de Mando</h4><p>Desde aqui controlas TODO el contenido de los juegos sin tocar Google Sheets. Haz clic en cualquier modulo para administrar su contenido.</p><h4>Flujo recomendado</h4><ol><li>Agrega registros en cada modulo (Memoria, Mahjong, etc.)</li><li>Los juegos leen esos datos automaticamente como primera prioridad</li><li>Usa la seccion IA &amp; Config para generar contenido adicional con Gemini</li></ol>' },
+  kahoot: { title: 'Kahoot Arena', html: '<h4>Como funciona?</h4><p>Kahoot tiene <strong>Arenas</strong> (temas) con <strong>Preguntas</strong>. El jugador elige una arena y responde sus preguntas contra el reloj.</p><h4>Pasos</h4><ol><li>Crea una arena con un titulo (ej: "Trabajo en Altura")</li><li>Selecciona esa arena en el selector de preguntas</li><li>Agrega las preguntas con sus 4 opciones e indica la correcta (1-4)</li><li>Opcional: agrega una imagen URL y GIFs de retroalimentacion</li></ol><h4>Imagen en preguntas</h4><p>Ve a la seccion <strong>Imagenes</strong>, convierte tu URL de Drive y pegala en el campo "Imagen URL" de la pregunta.</p>' },
   memoria: { title: 'Memoria SST', html: '<h4>Como funciona?</h4><p>Juego de memoria tipo flip-card. El jugador voltea tarjetas y debe encontrar los pares imagen-concepto.</p><h4>Flujo para agregar pares</h4><ol><li>Arrastra o haz clic en cada zona de imagen para cargar una foto SST</li><li>Llena los campos <strong>Concepto</strong> y <strong>Explicacion</strong> - o usa el boton <strong>IA: Completar</strong> para que Gemini Vision los auto-rellene</li><li>Haz clic en <strong>Guardar lote</strong> para subir las imagenes a Drive y guardar en la hoja</li></ol><h4>Campos</h4><ul><li><strong>Imagen:</strong> URL de Drive (sube via batch) o emoji como fallback</li><li><strong>Concepto:</strong> En MAYUSCULAS (ej: CASCO DE SEGURIDAD)</li><li><strong>Explicacion:</strong> Se muestra cuando el jugador encuentra el par</li></ul><p>Minimo 4 pares. El juego toma hasta 8 al azar.</p>' },
-  mahjong: { title: '🀄 Mahjong SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador conecta fichas de concepto con sus definiciones. Se revelan por pares.</p><h4>Campos</h4><ul><li><strong>Concepto:</strong> Incluye un emoji al inicio (ej: 🪖 Casco)</li><li><strong>Definición:</strong> La explicación del concepto</li></ul><p>Mínimo 6 pares. El juego toma hasta 12 al azar.</p>' },
-  dragdrop: { title: '🎯 Drag &amp; Drop SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador arrastra elementos y los suelta en la categoría correcta.</p><h4>Campos</h4><ul><li><strong>Categoría:</strong> El grupo al que pertenece (ej: EPP Obligatorio)</li><li><strong>Color Hex:</strong> Color visual de la categoría (ej: #e74c3c)</li><li><strong>Elemento:</strong> El ítem a clasificar</li><li><strong>Explicación:</strong> Por qué pertenece ahí</li></ul><p>Usa el mismo nombre de categoría para agrupar varios elementos. Mínimo 2 categorías.</p>' },
-  simulacion: { title: '🏗️ Simulación SST', html: '<h4>¿Cómo funciona?</h4><p>El jugador inspecciona una escena buscando zonas peligrosas clickeables.</p><h4>Campos clave</h4><ul><li><strong>Escenario ID:</strong> Todos los peligros del mismo escenario comparten este ID (ej: ESC1)</li><li><strong>Ambiente:</strong> Define el visual del fondo (<code>construccion</code>, <code>taller</code>, <code>oficina</code>)</li><li><strong>X, Y, Ancho, Alto:</strong> Porcentajes (0-100) que posicionan la zona clickeable</li><li><strong>Severidad:</strong> alta (+200pts), media (+150pts), baja (+100pts)</li></ul>' },
-  pupiletras: { title: 'Pupiletras SSOMA', html: '<h4>Como funciona?</h4><p>El jugador busca palabras de SST/SSOMA ocultas en una grilla 15x15 de letras, arrastrando o haciendo clic.</p><h4>Reglas para las palabras</h4><ul><li><strong>Solo letras A-Z</strong> en MAYUSCULAS, sin tildes ni espacios</li><li>Ejemplos: CASCO [OK] - ARNES [OK] - ARNES (sin tilde)</li><li>Longitud: entre 3 y 15 caracteres</li><li>Minimo 6 palabras, maximo 15</li></ul><h4>Puntuacion</h4><p>100 pts por palabra + bono por velocidad. El bono de tiempo se agrega al completar todas las palabras.</p>' },
-  crucigrama: { title: '✏️ Crucigrama SSOMA', html: '<h4>¿Cómo funciona?</h4><p>El motor genera automáticamente el layout del crucigrama cruzando las palabras. El jugador lee la pista y escribe la palabra en las celdas.</p><h4>Reglas para las palabras</h4><ul><li><strong>Solo letras A-Z</strong> en MAYÚSCULAS, sin tildes ni espacios</li><li>Ejemplos: ARNES ✅ · ARNÉS ❌</li><li>Las palabras deben poder cruzarse (compartir letras comunes)</li><li>Longitud recomendada: 4-12 caracteres</li><li>Mínimo 6 palabras</li></ul><h4>Puntuación</h4><p>150 pts por palabra + 10 pts por cada letra. Bono de tiempo al completar todo.</p>' },
+  mahjong: { title: 'Mahjong SST', html: '<h4>Como funciona?</h4><p>El jugador conecta fichas de concepto con sus definiciones. Se revelan por pares.</p><h4>Campos</h4><ul><li><strong>Concepto:</strong> El termino SST (ej: Casco)</li><li><strong>Definicion:</strong> La explicacion del concepto</li></ul><p>Minimo 6 pares. El juego toma hasta 12 al azar.</p>' },
+  dragdrop: { title: 'Drag &amp; Drop SST', html: '<h4>Como funciona?</h4><p>El jugador arrastra elementos y los suelta en la categoria correcta.</p><h4>Campos</h4><ul><li><strong>Categoria:</strong> El grupo al que pertenece (ej: EPP Obligatorio)</li><li><strong>Color Hex:</strong> Color visual de la categoria (ej: #e74c3c)</li><li><strong>Elemento:</strong> El item a clasificar</li><li><strong>Explicacion:</strong> Por que pertenece ahi</li></ul><p>Usa el mismo nombre de categoria para agrupar varios elementos. Minimo 2 categorias.</p>' },
+  simulacion: { title: 'Simulacion SST', html: '<h4>Como funciona?</h4><p>El jugador inspecciona una escena buscando zonas peligrosas clickeables.</p><h4>Campos clave</h4><ul><li><strong>Escenario ID:</strong> Todos los peligros del mismo escenario comparten este ID (ej: ESC1)</li><li><strong>Ambiente:</strong> Define el visual del fondo (<code>construccion</code>, <code>taller</code>, <code>oficina</code>)</li><li><strong>X, Y, Ancho, Alto:</strong> Porcentajes (0-100) que posicionan la zona clickeable</li><li><strong>Severidad:</strong> alta (+200pts), media (+150pts), baja (+100pts)</li></ul>' },
+  pupiletras: { title: 'Pupiletras SSOMA', html: '<h4>Como funciona?</h4><p>El jugador busca palabras de SST/SSOMA ocultas en una grilla 15x15 de letras, arrastrando o haciendo clic.</p><h4>Reglas para las palabras</h4><ul><li><strong>Solo letras A-Z</strong> en MAYUSCULAS, sin tildes ni espacios</li><li>Ejemplos: CASCO [OK] - ARNES [OK] (sin tilde)</li><li>Longitud: entre 3 y 15 caracteres</li><li>Minimo 6 palabras, maximo 15</li></ul><h4>Puntuacion</h4><p>100 pts por palabra + bono por velocidad. El bono de tiempo se agrega al completar todas las palabras.</p>' },
+  crucigrama: { title: 'Crucigrama SSOMA', html: '<h4>Como funciona?</h4><p>El motor genera automaticamente el layout del crucigrama cruzando las palabras. El jugador lee la pista y escribe la palabra en las celdas.</p><h4>Reglas para las palabras</h4><ul><li><strong>Solo letras A-Z</strong> en MAYUSCULAS, sin tildes ni espacios</li><li>Ejemplos: ARNES [OK] - ARNES (sin tilde, sin acento)</li><li>Las palabras deben poder cruzarse (compartir letras comunes)</li><li>Longitud recomendada: 4-12 caracteres</li><li>Minimo 6 palabras</li></ul><h4>Puntuacion</h4><p>150 pts por palabra + 10 pts por cada letra. Bono de tiempo al completar todo.</p>' },
   imagenes: { title: 'Imagenes', html: '<h4>Como subir imagenes?</h4><ol><li>Sube la imagen a <strong>Google Drive</strong></li><li>Click derecho &gt; Compartir &gt; Cualquiera con enlace &gt; Copiar URL</li><li>Pega esa URL en el <strong>Conversor de URL</strong> de esta seccion</li><li>Copia la URL directa resultante</li><li>Pegala en el campo "Imagen URL" del modulo deseado</li></ol><h4>Formatos soportados</h4><p>JPG, PNG, GIF, WEBP. Tamano recomendado: menos de 2MB para carga rapida.</p>' },
-  ia: { title: '🤖 IA &amp; Config', html: '<h4>Configuración de Gemini AI</h4><ol><li>Ve a <strong>aistudio.google.com</strong> y crea una API Key gratuita</li><li>Pégala en el campo "Gemini API Key"</li><li>Agrega el ID de tu Google Sheet</li><li>Haz clic en "Guardar configuración"</li></ol><h4>Generar contenido</h4><p>Sube un documento PDF/imagen sobre SST, elige el juego destino y haz clic en "Generar con IA". Gemini analizará el documento y creará el contenido automáticamente.</p><h4>Sin API Key</h4><p>Los juegos funcionan con el contenido manual que ingresas en cada módulo.</p>' }
+  ia: { title: 'IA &amp; Config', html: '<h4>Configuracion de Gemini AI</h4><ol><li>Ve a <strong>aistudio.google.com</strong> y crea una API Key gratuita</li><li>Pegala en el campo "Gemini API Key"</li><li>Agrega el ID de tu Google Sheet</li><li>Haz clic en "Guardar configuracion"</li></ol><h4>Generar contenido</h4><p>Sube un documento PDF/imagen sobre SST, elige el juego destino y haz clic en "Generar con IA". Gemini analizara el documento y creara el contenido automaticamente.</p><h4>Sin API Key</h4><p>Los juegos funcionan con el contenido manual que ingresas en cada modulo.</p>' }
 };
 let currentHelpContext = 'dashboard';
 /* ── DRIVE URL CONVERTER ── */
@@ -1153,9 +1153,9 @@ function handleFile(input) { if (input.files.length) processFile(input.files[0])
 function processFile(file) {
   if (file.size > 10 * 1024 * 1024) { admToast('Archivo muy grande. Máximo 10MB.', 'err'); return; }
   selectedFile = file; selectedFileBase64 = null;
-  const icons = { pdf:'📕', jpg:'🖼️', jpeg:'🖼️', png:'🖼️', doc:'📄', docx:'📄', txt:'📝' };
+  const icons = { pdf:'PDF', jpg:'IMG', jpeg:'IMG', png:'IMG', doc:'DOC', docx:'DOC', txt:'TXT' };
   const ext = file.name.split('.').pop().toLowerCase();
-  document.getElementById('fpIcon').textContent = icons[ext] || '📄';
+  document.getElementById('fpIcon').textContent = icons[ext] || 'FILE';
   document.getElementById('fpName').textContent = file.name;
   document.getElementById('fpSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
   document.getElementById('filePreview').classList.add('show');
@@ -1241,7 +1241,7 @@ function saveConfig() {
           const parts = [];
           if (status.geminiConnected) parts.push('Gemini');
           if (status.openaiConnected) parts.push('OpenAI');
-          if (parts.length) { document.getElementById('apiStatus').className = 'adm-badge adm-badge-active'; document.getElementById('apiStatus').textContent = '🟢 ' + parts.join(' + '); }
+          if (parts.length) { document.getElementById('apiStatus').className = 'adm-badge adm-badge-active'; document.getElementById('apiStatus').textContent = '[OK] ' + parts.join(' + '); }
           showAlert('configAlert', status.sheetConnected || parts.length > 0, '¡Configuración guardada!', [status.sheetConnected ? '✅ Google Sheet conectado' : (status.sheetError ? '❌ Sheet: ' + status.sheetError : ''), status.geminiConnected ? '✅ Gemini conectado' : (status.geminiError ? '❌ Gemini: ' + status.geminiError : ''), status.openaiConnected ? '✅ OpenAI conectado' : (status.openaiError ? '❌ OpenAI: ' + status.openaiError : '')].filter(Boolean).join('<br>'));
         } else { showAlert('configAlert', false, 'Error', status && status.error ? status.error : 'Respuesta inválida.'); }
       })
@@ -1255,13 +1255,13 @@ function testConnection() {
   try {
     google.script.run
       .withSuccessHandler(function(r) {
-        btn.disabled = false; btn.textContent = '🧪 Probar Gemini';
-        if (r && r.success) { showAlert('configAlert', true, 'Gemini funciona', r.message); document.getElementById('apiStatus').className = 'adm-badge adm-badge-active'; document.getElementById('apiStatus').textContent = '🟢 Gemini'; }
+        btn.disabled = false; btn.textContent = 'Probar Gemini';
+        if (r && r.success) { showAlert('configAlert', true, 'Gemini funciona', r.message); document.getElementById('apiStatus').className = 'adm-badge adm-badge-active'; document.getElementById('apiStatus').textContent = '[OK] Gemini'; }
         else { showAlert('configAlert', false, 'Gemini no responde', r && r.message ? r.message : 'Verifica tu API Key.'); }
       })
-      .withFailureHandler(function(err) { btn.disabled = false; btn.textContent = '🧪 Probar Gemini'; showAlert('configAlert', false, 'Error', err ? err.message || String(err) : 'desconocido'); })
+      .withFailureHandler(function(err) { btn.disabled = false; btn.textContent = 'Probar Gemini'; showAlert('configAlert', false, 'Error', err ? err.message || String(err) : 'desconocido'); })
       .testGeminiConnection();
-  } catch(e) { btn.disabled = false; btn.textContent = '🧪 Probar Gemini'; }
+  } catch(e) { btn.disabled = false; btn.textContent = 'Probar Gemini'; }
 }
 function crearHojasManuales() {
   const btn = document.getElementById('btnCrearHojas');
@@ -1269,13 +1269,13 @@ function crearHojasManuales() {
   try {
     google.script.run
       .withSuccessHandler(function(r) {
-        btn.disabled = false; btn.textContent = '📊 Crear hojas manuales';
+        btn.disabled = false; btn.textContent = 'Crear hojas manuales';
         if (r && r.success) showAlert('hojasAlert', true, '¡Hojas creadas!', r.message);
         else showAlert('hojasAlert', false, 'Error', r ? r.error : 'No se pudieron crear.');
       })
-      .withFailureHandler(function(err) { btn.disabled = false; btn.textContent = '📊 Crear hojas manuales'; showAlert('hojasAlert', false, 'Error', err ? err.message || String(err) : ''); })
+      .withFailureHandler(function(err) { btn.disabled = false; btn.textContent = 'Crear hojas manuales'; showAlert('hojasAlert', false, 'Error', err ? err.message || String(err) : ''); })
       .crearHojasManuales();
-  } catch(e) { btn.disabled = false; btn.textContent = '📊 Crear hojas manuales'; }
+  } catch(e) { btn.disabled = false; btn.textContent = 'Crear hojas manuales'; }
 }
 
 /* ── DRAG & DROP UPLOAD ZONE ── */
@@ -1293,7 +1293,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const parts = [];
       if (cfg.hasGeminiKey) { parts.push('Gemini'); document.getElementById('apiKeyInput').placeholder = 'Guardada: ' + cfg.apiKeyPreview; }
       if (cfg.hasOpenAIKey) { parts.push('OpenAI'); document.getElementById('openaiKeyInput').placeholder = 'Guardada: ' + cfg.openaiKeyPreview; }
-      if (parts.length) { document.getElementById('apiStatus').className = 'adm-badge adm-badge-active'; document.getElementById('apiStatus').textContent = '🟢 ' + parts.join(' + '); }
+      if (parts.length) { document.getElementById('apiStatus').className = 'adm-badge adm-badge-active'; document.getElementById('apiStatus').textContent = '[OK] ' + parts.join(' + '); }
       if (cfg.hasSheetId) document.getElementById('sheetIdInput').placeholder = 'Guardado: ' + cfg.sheetIdPreview;
       if (cfg.aiProvider) document.getElementById('aiProviderSelect').value = cfg.aiProvider;
     }).getConfigStatus();
