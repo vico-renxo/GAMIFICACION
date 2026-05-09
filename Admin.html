@@ -140,6 +140,7 @@ body.admin-epic{display:flex;min-height:100vh;background:var(--bg,#0d1117)}
   <nav class="adm-nav">
     <button class="adm-nav-item active" onclick="switchSection('dashboard',this)"><span class="ni">📊</span>Dashboard</button>
     <button class="adm-nav-item" onclick="switchSection('kahoot',this)"><span class="ni">🚀</span>Kahoot Arena</button>
+    <button class="adm-nav-item" onclick="switchSection('quiz',this)"><span class="ni">❓</span>Quiz SST</button>
     <button class="adm-nav-item" onclick="switchSection('memoria',this)"><span class="ni">🧠</span>Memoria</button>
     <button class="adm-nav-item" onclick="switchSection('mahjong',this)"><span class="ni">🀄</span>Mahjong</button>
     <button class="adm-nav-item" onclick="switchSection('dragdrop',this)"><span class="ni">🎯</span>Drag &amp; Drop</button>
@@ -506,6 +507,40 @@ body.admin-epic{display:flex;min-height:100vh;background:var(--bg,#0d1117)}
 </div>
 </div>
 
+<!-- ═══ SECTION: QUIZ ═══ -->
+<div class="adm-section" id="sec-quiz">
+<div class="adm-section-hdr">
+  <div class="adm-section-title">❓ <span>Quiz SST</span></div>
+  <div class="adm-section-sub">Gestiona las preguntas del quiz clásico. La columna "Correcta" usa 1-4 (no 0-3).</div>
+</div>
+<div class="adm-card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <h4>Preguntas Quiz</h4>
+    <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="toggleForm('quizForm')">+ Agregar pregunta</button>
+  </div>
+  <div class="adm-collapsible" id="quizForm">
+    <form onsubmit="saveGameRecord(event,'quiz')">
+      <input type="hidden" id="quizRow">
+      <div class="adm-form-grid">
+        <div class="adm-field span-full"><label>Pregunta *</label><textarea id="quiz_pregunta" rows="2" placeholder="¿Qué EPP protege la cabeza?"></textarea></div>
+        <div class="adm-field"><label>Opción A *</label><input id="quiz_opcion_a" placeholder="Casco de seguridad"></div>
+        <div class="adm-field"><label>Opción B *</label><input id="quiz_opcion_b" placeholder="Guantes"></div>
+        <div class="adm-field"><label>Opción C *</label><input id="quiz_opcion_c" placeholder="Lentes"></div>
+        <div class="adm-field"><label>Opción D *</label><input id="quiz_opcion_d" placeholder="Zapatos"></div>
+        <div class="adm-field"><label>Correcta * (1, 2, 3 o 4)</label><input id="quiz_correcta" type="number" min="1" max="4" placeholder="1"></div>
+        <div class="adm-field span-full"><label>Explicación</label><textarea id="quiz_explicacion" rows="2" placeholder="El casco protege contra impactos y caída de objetos"></textarea></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px">
+        <button type="submit" class="adm-btn adm-btn-primary">Guardar</button>
+        <button type="button" class="adm-btn adm-btn-secondary" onclick="cancelEdit('quiz')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+  <div class="adm-alert" id="quizAlert"></div>
+  <div class="adm-table-wrap"><div id="quizTable"><div class="adm-empty">Cargando...</div></div></div>
+</div>
+</div>
+
 <!-- ═══ SECTION: IMÁGENES ═══ -->
 <div class="adm-section" id="sec-imagenes">
 <div class="adm-section-hdr">
@@ -666,6 +701,7 @@ function switchSection(sec, btn) {
   else if (sec === 'mahjong') loadGameRecords('mahjong');
   else if (sec === 'dragdrop') loadGameRecords('dragdrop');
   else if (sec === 'simulacion') loadGameRecords('simulacion');
+  else if (sec === 'quiz') loadGameRecords('quiz');
   else if (sec === 'pupiletras') loadGameRecords('pupiletras');
   else if (sec === 'crucigrama') loadGameRecords('crucigrama');
   else if (sec === 'dashboard') loadDashStats();
@@ -679,6 +715,7 @@ function goBack(){try{google.script.run.withSuccessHandler(function(u){window.to
 
 /* ── GAME SCHEMAS ── */
 const gameSchemas = {
+  quiz: ['pregunta','opcion_a','opcion_b','opcion_c','opcion_d','correcta','explicacion'],
   memoria: ['imagen_url','concepto','explicacion'],
   mahjong: ['concepto','definicion'],
   dragdrop: ['categoria','color_hex','elemento','explicacion'],
@@ -687,12 +724,13 @@ const gameSchemas = {
   crucigrama: ['palabra','pista']
 };
 const gameLabels = {
-  memoria: { imagen_url:'Imagen', concepto:'Concepto', explicacion:'Explicación' },
-  mahjong: { concepto:'Concepto', definicion:'Definición' },
-  dragdrop: { categoria:'Categoría', color_hex:'Color', elemento:'Elemento', explicacion:'Explicación' },
-  simulacion: { escenario_id:'ESC ID', titulo:'Título', descripcion_escenario:'Descripción', ambiente:'Ambiente', nombre_peligro:'Peligro', desc_peligro:'Desc.Peligro', severidad:'Severidad', x:'X%', y:'Y%', ancho:'Ancho%', alto:'Alto%', solucion:'Solución' },
-  pupiletras: { palabra:'Palabra', categoria:'Categoría', descripcion:'Descripción' },
-  crucigrama: { palabra:'Palabra', pista:'Pista / Definición' }
+  quiz: { pregunta:'Pregunta', opcion_a:'Op.A', opcion_b:'Op.B', opcion_c:'Op.C', opcion_d:'Op.D', correcta:'Correcta', explicacion:'Explicacion' },
+  memoria: { imagen_url:'Imagen', concepto:'Concepto', explicacion:'Explicacion' },
+  mahjong: { concepto:'Concepto', definicion:'Definicion' },
+  dragdrop: { categoria:'Categoria', color_hex:'Color', elemento:'Elemento', explicacion:'Explicacion' },
+  simulacion: { escenario_id:'ESC ID', titulo:'Titulo', descripcion_escenario:'Descripcion', ambiente:'Ambiente', nombre_peligro:'Peligro', desc_peligro:'Desc.Peligro', severidad:'Severidad', x:'X%', y:'Y%', ancho:'Ancho%', alto:'Alto%', solucion:'Solucion' },
+  pupiletras: { palabra:'Palabra', categoria:'Categoria', descripcion:'Descripcion' },
+  crucigrama: { palabra:'Palabra', pista:'Pista / Definicion' }
 };
 
 /* ── CRUD ── */
@@ -735,7 +773,10 @@ function renderGameTable(game, records) {
   tableEl.innerHTML = '<div class="adm-table-wrap"><table class="adm-table"><thead><tr>' + heads + '<th>Acciones</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-function saveGameRecord(game) {
+function saveGameRecord(gameOrEvent, gameName) {
+  var game = (gameOrEvent && typeof gameOrEvent === 'object' && gameOrEvent.preventDefault)
+    ? (gameOrEvent.preventDefault(), gameName)
+    : gameOrEvent;
   const cols = gameSchemas[game] || [];
   const payload = { row: document.getElementById(game + 'Row') ? document.getElementById(game + 'Row').value || '' : '' };
   let hasContent = false;
@@ -1025,7 +1066,7 @@ function showAlert(id, ok, title, msg) {
   const el = document.getElementById(id);
   if (!el) return;
   el.className = 'adm-alert show ' + (ok ? 'adm-alert-ok' : 'adm-alert-err');
-  el.innerHTML = '<strong>' + (ok ? '✅ ' : '❌ ') + title + '</strong><br>' + (msg || '');
+  el.innerHTML = '<strong>' + (ok ? '[OK] ' : '[ERR] ') + esc(title) + '</strong><br>' + esc(msg || '');
   setTimeout(() => el.classList.remove('show'), 5000);
 }
 
